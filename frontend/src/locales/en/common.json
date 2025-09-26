@@ -1,0 +1,68 @@
+{
+  "welcome": "Welcome",
+  "hello": "Hello",
+  "goodbye": "Goodbye",
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "buttons": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "schools": "Schools",
+    "projects": "Projects",
+    "logout": "Logout"
+  },
+  "header": {
+    "theme": {
+      "toggleDark": "Switch to dark mode",
+      "toggleLight": "Switch to light mode"
+    },
+    "language": {
+      "select": "Select language",
+      "english": "English",
+      "czech": "Čeština"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "password": "Password",
+      "passwordPlaceholder": "Enter your password",
+      "submit": "Sign In",
+      "forgotPassword": "Forgot password?",
+      "rememberMe": "Remember me"
+    },
+    "register": {
+      "title": "Register",
+      "email": "Email",
+      "emailPlaceholder": "Enter your email",
+      "username": "Username",
+      "usernamePlaceholder": "Choose a username",
+      "password": "Password",
+      "passwordPlaceholder": "Create a password",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "Confirm your password",
+      "submit": "Create Account",
+      "terms": "I agree to the Terms of Service and Privacy Policy"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "passwordRequired": "Password is required",
+      "passwordTooShort": "Password must be at least 8 characters",
+      "usernameRequired": "Username is required",
+      "usernameTooShort": "Username must be at least 3 characters",
+      "passwordMismatch": "Passwords do not match"
+    },
+    "loading": "Please wait...",
+    "error": "Something went wrong. Please try again."
+  }
+}

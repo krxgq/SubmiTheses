@@ -1,0 +1,68 @@
+{
+  "welcome": "Vítejte",
+  "hello": "Ahoj",
+  "goodbye": "Nashledanou",
+  "navigation": {
+    "home": "Domů",
+    "about": "O nás",
+    "contact": "Kontakt"
+  },
+  "buttons": {
+    "submit": "Odeslat",
+    "cancel": "Zrušit",
+    "save": "Uložit"
+  },
+  "sidebar": {
+    "dashboard": "Nástěnka",
+    "schools": "Školy",
+    "projects": "Projekty",
+    "logout": "Odhlásit se"
+  },
+  "header": {
+    "theme": {
+      "toggleDark": "Přepnout na tmavý režim",
+      "toggleLight": "Přepnout na světlý režim"
+    },
+    "language": {
+      "select": "Vybrat jazyk",
+      "english": "English",
+      "czech": "Čeština"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Přihlášení",
+      "email": "Email",
+      "emailPlaceholder": "Zadejte váš email",
+      "password": "Heslo",
+      "passwordPlaceholder": "Zadejte vaše heslo",
+      "submit": "Přihlásit se",
+      "forgotPassword": "Zapomenuté heslo?",
+      "rememberMe": "Zapamatovat si mě"
+    },
+    "register": {
+      "title": "Registrace",
+      "email": "Email",
+      "emailPlaceholder": "Zadejte váš email",
+      "username": "Uživatelské jméno",
+      "usernamePlaceholder": "Zvolte uživatelské jméno",
+      "password": "Heslo",
+      "passwordPlaceholder": "Vytvořte heslo",
+      "confirmPassword": "Potvrdit heslo",
+      "confirmPasswordPlaceholder": "Potvrďte vaše heslo",
+      "submit": "Vytvořit účet",
+      "terms": "Souhlasím s podmínkami služby a zásadami ochrany osobních údajů"
+    },
+    "validation": {
+      "emailRequired": "Email je povinný",
+      "emailInvalid": "Zadejte platný email",
+      "passwordRequired": "Heslo je povinné",
+      "passwordTooShort": "Heslo musí mít alespoň 8 znaků",
+      "usernameRequired": "Uživatelské jméno je povinné",
+      "usernameTooShort": "Uživatelské jméno musí mít alespoň 3 znaky",
+      "passwordMismatch": "Hesla se neshodují"
+    },
+    "loading": "Prosím čekejte...",
+    "error": "Něco se pokazilo. Zkuste to znovu."
+  }
+}

@@ -1,0 +1,273 @@
+@import "tailwindcss";
+
+@theme {
+  /* Your specified color system */
+
+  /* Light theme colors */
+  --color-background: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-background-tertiary: #eff6ff;
+  --color-background-elevated: #ffffff;
+  --color-background-hover: #f1f5f9;
+  --color-background-active: #e2e8f0;
+
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-text-disabled: #cbd5e1;
+  --color-text-inverse: #ffffff;
+  --color-text-accent: #3b82f6;
+
+  --color-border: #e2e8f0;
+  --color-border-strong: #cbd5e1;
+  --color-border-subtle: #f1f5f9;
+
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+
+  --color-interactive-primary: #3b82f6;
+  --color-interactive-primary-hover: #2563eb;
+  --color-interactive-secondary: #f1f5f9;
+  --color-interactive-secondary-hover: #e2e8f0;
+
+  --color-input-background: #ffffff;
+
+  --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+
+  --color-accent-success: #10b981;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #ef4444;
+
+  --color-focus: rgba(59, 130, 246, 0.2);
+  --color-selection: rgba(59, 130, 246, 0.1);
+  --color-backdrop: rgba(0, 0, 0, 0.5);
+  --color-surface: #ffffff;
+  --color-surface-overlay: rgba(255, 255, 255, 0.95);
+}
+
+.dark {
+  /* Dark theme colors - your specifications */
+  --color-background: #0f172a;
+  --color-background-secondary: #0f172a;
+  --color-background-tertiary: #1e293b;
+  --color-background-elevated: #0f172a;
+  --color-background-hover: #1e293b;
+  --color-background-active: #334155;
+
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #64748b;
+  --color-text-disabled: #475569;
+  --color-text-inverse: #1e293b;
+  --color-text-accent: #60a5fa;
+
+  --color-border: #334155;
+  --color-border-strong: #475569;
+  --color-border-subtle: #1e293b;
+
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-active: #1d4ed8;
+
+  --color-interactive-primary: #3b82f6;
+  --color-interactive-primary-hover: #2563eb;
+  --color-interactive-secondary: #1e293b;
+  --color-interactive-secondary-hover: #334155;
+
+  --color-input-background: #334155;
+
+  --color-success: #10b981;
+  --color-success-hover: #059669;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #d97706;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+
+  --color-accent-success: #10b981;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #ef4444;
+
+  --color-focus: rgba(96, 165, 250, 0.3);
+  --color-selection: rgba(96, 165, 250, 0.2);
+  --color-backdrop: rgba(0, 0, 0, 0.8);
+  --color-surface: #1e293b;
+  --color-surface-overlay: rgba(15, 23, 42, 0.95);
+}
+
+/* Global theming */
+html {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+}
+
+/* Force solid dropdown backgrounds with high specificity */
+.bg-background-elevated,
+div.bg-background-elevated,
+.absolute.bg-background-elevated {
+  background-color: var(--color-background-elevated) !important;
+  opacity: 1 !important;
+}
+
+/* Ensure no transparency for dropdown containers */
+[class*="absolute"][class*="bg-background-elevated"] {
+  background-color: var(--color-background-elevated) !important;
+  backdrop-filter: none !important;
+}
+
+/* Override any potential Flowbite or other library conflicts */
+.dark [class*="bg-background-elevated"],
+.dark div[class*="bg-background-elevated"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+.light [class*="bg-background-elevated"],
+[class*="bg-background-elevated"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Force solid sidebar backgrounds */
+.bg-background-elevated.shadow-sm,
+div.bg-background-elevated.shadow-sm,
+[class*="bg-background-elevated"][class*="shadow-sm"] {
+  background-color: var(--color-background-elevated) !important;
+  opacity: 1 !important;
+}
+
+/* Override Flowbite Sidebar component backgrounds */
+.flowbite-sidebar,
+.flowbite-sidebar .bg-transparent,
+[data-testid="flowbite-sidebar"] {
+  background-color: transparent !important;
+}
+
+/* Force Flowbite Sidebar to use our color system */
+[class*="bg-gray-50"],
+.bg-gray-50 {
+  background-color: var(--color-background-elevated) !important;
+}
+
+.dark [class*="bg-gray-800"],
+.dark .bg-gray-800 {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Override any Flowbite sidebar specific classes */
+.sidebar,
+.flowbite-sidebar,
+[data-testid="flowbite-sidebar"],
+div[class*="bg-gray-50"],
+div[class*="bg-gray-800"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* More specific Flowbite overrides */
+div.h-full.overflow-y-auto.overflow-x-hidden.rounded.bg-gray-50,
+div.h-full.overflow-y-auto.overflow-x-hidden.rounded.bg-gray-800 {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Target the exact Flowbite Sidebar class combination */
+.h-full.overflow-y-auto.overflow-x-hidden.rounded.bg-gray-50.px-3.py-4,
+.h-full.overflow-y-auto.overflow-x-hidden.rounded.bg-gray-800.px-3.py-4 {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Ultra-specific override for stubborn Flowbite classes */
+div[class*="h-full"][class*="overflow-y-auto"][class*="bg-gray-50"],
+div[class*="h-full"][class*="overflow-y-auto"][class*="bg-gray-800"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Nuclear option - override any bg-gray-50/800 within sidebar context */
+[data-testid="flowbite-sidebar"] *[class*="bg-gray-50"],
+[data-testid="flowbite-sidebar"] *[class*="bg-gray-800"],
+.flowbite-sidebar *[class*="bg-gray-50"],
+.flowbite-sidebar *[class*="bg-gray-800"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Ensure sidebar container is solid */
+.dark .bg-background-elevated.shadow-sm,
+.dark [class*="bg-background-elevated"][class*="shadow-sm"] {
+  background-color: var(--color-background-elevated) !important;
+}
+
+/* Global theme transition for interactive elements */
+body,
+[class*="bg-"],
+[class*="text-"],
+[class*="border-"],
+button,
+input,
+textarea,
+select,
+a {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Ensure Flowbite components inherit theme colors */
+.dark .flowbite-react .bg-gray-800 {
+  background-color: var(--color-background-secondary) !important;
+}
+
+.dark .flowbite-react .text-white {
+  color: var(--color-text-primary) !important;
+}
+
+.dark .flowbite-react .border-gray-700 {
+  border-color: var(--color-border) !important;
+}
+
+/* Enhanced focus states */
+*:focus-visible {
+  outline: 2px solid var(--color-interactive-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-tertiary);
+}
+
+/* Enhanced form styling */
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--color-interactive-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Enhanced button hover states */
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dark button:hover:not(:disabled) {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}

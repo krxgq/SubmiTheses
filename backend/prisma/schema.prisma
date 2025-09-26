@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model attachments {
+  id           BigInt    @id @default(autoincrement())
+  project_id   BigInt?
+  filename     String    @db.VarChar
+  storage_path String    @db.VarChar
+  description  String?   @db.VarChar
+  uploaded_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime  @updatedAt @db.Timestamptz(6)
+  projects     projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model external_links {
+  id          BigInt    @id @default(autoincrement())
+  project_id  BigInt?
+  url         String?   @db.VarChar
+  title       String?   @db.VarChar
+  description String?   @db.VarChar
+  added_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @updatedAt @db.Timestamptz(6)
+  projects    projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id])
+}
+
+/// Junction table for many-to-many relationship between projects and students
+model project_students {
+  id         BigInt       @id @default(autoincrement())
+  project_id BigInt
+  student_id BigInt
+  created_at DateTime     @default(now()) @db.Timestamptz(6)
+  projects   projects     @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  students   school_users @relation("project_students_students", fields: [student_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([project_id, student_id])
+  @@index([project_id])
+  @@index([student_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model projects {
+  id                                                BigInt              @id @default(autoincrement())
+  title                                             String              @db.VarChar
+  supervisor_id                                     BigInt
+  created_at                                        DateTime            @default(now()) @db.Timestamptz(6)
+  opponent_id                                       BigInt
+  subject                                           String              @db.VarChar
+  description                                       String?             @db.VarChar
+  main_document                                     String?             @db.VarChar
+  locked_until                                      DateTime?           @db.Timestamptz(6)
+  updated_at                                        DateTime            @updatedAt @db.Timestamptz(6)
+  status                                            status              @default(draft)
+  attachments                                       attachments[]
+  external_links                                    external_links[]
+  project_students                                  project_students[]
+  school_users_projects_opponent_idToschool_users   school_users        @relation("projects_opponent_idToschool_users", fields: [opponent_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  school_users_projects_supervisor_idToschool_users school_users        @relation("projects_supervisor_idToschool_users", fields: [supervisor_id], references: [id], onDelete: SetNull, onUpdate: NoAction)
+  reviews                                           reviews[]
+
+  @@index([supervisor_id])
+  @@index([opponent_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model reviews {
+  id           BigInt       @id @default(autoincrement())
+  project_id   BigInt
+  reviewer_id  BigInt
+  comments     String       @db.VarChar
+  submitted_at DateTime     @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime     @updatedAt @db.Timestamptz(6)
+  projects     projects     @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  school_users school_users @relation(fields: [reviewer_id], references: [id], onUpdate: NoAction)
+
+  @@index([project_id])
+  @@index([reviewer_id])
+  @@index([submitted_at])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model school_users {
+  id                                            BigInt              @id @default(autoincrement())
+  first_name                                    String?             @db.VarChar
+  last_name                                     String?             @db.VarChar
+  school_id                                     BigInt
+  created_at                                    DateTime            @default(now()) @db.Timestamptz(6)
+  role_id                                       BigInt
+  email                                         String              @unique @db.VarChar
+  updated_at                                    DateTime            @updatedAt @db.Timestamptz(6)
+  project_students                              project_students[]  @relation("project_students_students")
+  projects_projects_opponent_idToschool_users   projects[]          @relation("projects_opponent_idToschool_users")
+  projects_projects_supervisor_idToschool_users projects[]          @relation("projects_supervisor_idToschool_users")
+  reviews                                       reviews[]
+  user_roles                                    user_roles          @relation(fields: [role_id], references: [id], onUpdate: NoAction)
+  schools                                       schools             @relation(fields: [school_id], references: [id], onUpdate: NoAction)
+
+  @@index([email])
+  @@index([school_id])
+  @@index([role_id])
+  @@index([school_id, role_id])
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model schools {
+  id           BigInt         @id @default(autoincrement())
+  name         String         @db.VarChar
+  domain       String         @unique @db.VarChar
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime       @updatedAt @db.Timestamptz(6)
+  school_users school_users[]
+
+  @@index([domain])
+}
+
+/// New table for roles (replaces enum)
+model user_roles {
+  id           BigInt         @id @default(autoincrement())
+  name         String         @unique @db.VarChar
+  created_at   DateTime       @default(now()) @db.Timestamptz(6)
+  description  String?        @db.VarChar
+  updated_at   DateTime       @updatedAt @db.Timestamptz(6)
+  school_users school_users[]
+
+  @@index([name])
+}
+
+enum status {
+  draft
+  submitted
+  locked
+  public
+}
