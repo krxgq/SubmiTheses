@@ -1,22 +1,33 @@
 import { Router } from 'express'
 import { authenticated, isAdmin, canAccessUser } from '../middleware/auth'
+import {
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser
+} from '../controllers/users.controller'
+import { validate } from '../middleware/validate'
+import { updateUserSchema } from '../validation/schemas'
+import { z } from 'zod'
 
 const router = Router()
 
-router.get('/', authenticated, isAdmin, (req, res) => {
-  res.json({ message: 'List all users' })
+const userIdSchema = z.object({
+  params: z.object({
+    id: z.string().uuid(),
+  }),
 })
 
-router.get('/:id', authenticated, canAccessUser, (req, res) => {
-  res.json({ message: `Get user with ID: ${req.params.id}` })
-}) //get user details (admin or the user themself)
+// Get all users (admin only)
+router.get('/', authenticated, isAdmin, getAllUsers)
 
-router.put('/:id', authenticated, canAccessUser, (req, res) => {
-  res.json({ message: `Update user with ID: ${req.params.id}` })
-}) //update user profile (self or admin)
+// Get user by ID (admin or the user themselves)
+router.get('/:id', authenticated, canAccessUser, validate(userIdSchema), getUserById)
 
-router.delete('/:id', authenticated, isAdmin, (req, res) => {
-  res.json({ message: `Delete user with ID: ${req.params.id}` })
-})
+// Update user profile (self or admin)
+router.put('/:id', authenticated, canAccessUser, validate(updateUserSchema), updateUser)
+
+// Delete user (admin only)
+router.delete('/:id', authenticated, isAdmin, validate(userIdSchema), deleteUser)
 
 export default router

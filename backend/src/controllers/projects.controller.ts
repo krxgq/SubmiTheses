@@ -1,7 +1,6 @@
 import { ProjectService } from '../services/projects.service';
 import { Request, Response } from 'express';
 import type { components } from '../types/api';
-import { AddStudentToProjectSchema, UpdateProjectStudentsSchema } from '../types';
 
 // Types from OpenAPI spec
 type Project = components['schemas']['Project'];
@@ -9,7 +8,7 @@ type CreateProject = components['schemas']['CreateProject'];
 type UpdateProject = components['schemas']['UpdateProject'];
 type SchoolUser = components['schemas']['SchoolUser'];
 
-export async function getAllProjects(req: Request, res: Response<Project[]>) {
+export async function getAllProjects(req: Request, res: Response<Project[]|{ error: string }>) {
   try {
     const projects = await ProjectService.getAllProjects();
     return res.status(200).json(projects);
@@ -18,7 +17,7 @@ export async function getAllProjects(req: Request, res: Response<Project[]>) {
   }
 }
 
-export async function getProjectById(req: Request<{ id: string }>, res: Response<Project>) {
+export async function getProjectById(req: Request<{ id: string }>, res: Response<Project | { error: string }>) {
   try {
     const id = BigInt(req.params.id);
     const project = await ProjectService.getProjectById(id);
@@ -33,7 +32,7 @@ export async function getProjectById(req: Request<{ id: string }>, res: Response
   }
 }
 
-export async function createProject(req: Request<{}, Project, CreateProject>, res: Response<Project>) {
+export async function createProject(req: Request<{}, Project, CreateProject>, res: Response<Project | { error: string }>) {
   try {
     const project = await ProjectService.createProject(req.body);
     return res.status(201).json(project);
@@ -42,7 +41,7 @@ export async function createProject(req: Request<{}, Project, CreateProject>, re
   }
 }
 
-export async function updateProject(req: Request<{ id: string }, Project, UpdateProject>, res: Response<Project>) {
+export async function updateProject(req: Request<{ id: string }, Project, UpdateProject>, res: Response<Project | { error: string }>) {
   try {
     const id = BigInt(req.params.id);
     const project = await ProjectService.updateProject(id, req.body);
@@ -72,7 +71,7 @@ export async function deleteProject(req: Request<{ id: string }>, res: Response)
   }
 }
 
-export async function getProjectStudents(req: Request<{ id: string }>, res: Response<SchoolUser[]>) {
+export async function getProjectStudents(req: Request<{ id: string }>, res: Response<SchoolUser[] | { error: string }>) {
   try {
     const projectId = BigInt(req.params.id);
     const students = await ProjectService.getProjectStudents(projectId);
@@ -117,7 +116,7 @@ export async function removeStudentFromProject(
 
 export async function updateProjectStudents(
   req: Request<{ id: string }, SchoolUser[], { studentIds: number[] }>,
-  res: Response<SchoolUser[]>
+  res: Response<SchoolUser[] | { error: string }>,
 ) {
   try {
     const projectId = BigInt(req.params.id);

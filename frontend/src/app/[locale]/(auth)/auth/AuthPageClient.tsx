@@ -129,7 +129,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
             if (result.success) {
                 setSuccessMessage('Successfully logged in!')
                 setTimeout(() => {
-                    router.push(`/${locale}/dashboard`)
+                    router.push(`/${locale}/projects`)
                 }, 1500)
             } else {
                 setAuthError(result.error || 'An error occurred during login')
@@ -188,11 +188,11 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
     }
 
     return (
-        <div className="min-h-screen bg-background dark:bg-background-dark flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-foreground dark:text-foreground-dark mb-2">Welcome</h1>
-                    <p className="text-foreground-muted dark:text-foreground-dark-muted">Sign in to your account or create a new one</p>
+                    <h1 className="text-3xl font-bold text-primary mb-2">Welcome</h1>
+                    <p className="text-secondary">Sign in to your account or create a new one</p>
                 </div>
 
                 {/* Global Messages */}
@@ -210,17 +210,18 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                     </div>
                 )}
 
-                <div className="bg-background-card dark:bg-background-dark-card rounded-xl shadow-sm border border-border dark:border-border-dark">
-                    <Tabs
-                        aria-label="Auth tabs"
-                        variant="underline"
-                        className="p-6"
-                        onActiveTabChange={(tab) => setActiveTab(tab === 0 ? 'login' : 'register')}
-                    >
+                <div className="bg-surface rounded-xl shadow-sm border">
+                    <div className="[&_.flex.text-center]:w-full [&_.flex.text-center]:mx-auto [&_.flex.text-center]:justify-center [&_button]:flex-1 [&_button]:px-8 [&_button]:py-3">
+                        <Tabs
+                            aria-label="Auth tabs"
+                            variant="underline"
+                            className="px-6 pt-3 pb-6"
+                            onActiveTabChange={(tab) => setActiveTab(tab === 0 ? 'login' : 'register')}
+                        >
                         <TabItem title="Sign In" active={activeTab === 'login'}>
                             <form onSubmit={handleLogin} className="space-y-4 mt-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Email Address
                                     </label>
                                     <div className="relative">
@@ -228,11 +229,11 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="email"
                                             value={loginForm.email}
                                             onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input dark:bg-input-dark border ${loginErrors.email ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${loginErrors.email ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Enter your email"
                                         />
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                     </div>
                                     {loginErrors.email && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{loginErrors.email}</p>
@@ -240,7 +241,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Password
                                     </label>
                                     <div className="relative">
@@ -248,15 +249,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type={showPassword ? "text" : "password"}
                                             value={loginForm.password}
                                             onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input dark:bg-input-dark border ${loginErrors.password ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${loginErrors.password ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Enter your password"
                                         />
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-muted dark:text-foreground-dark-muted hover:text-foreground dark:hover:text-foreground-dark"
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -272,11 +273,11 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="checkbox"
                                             checked={loginForm.rememberMe}
                                             onChange={(e) => setLoginForm(prev => ({ ...prev, rememberMe: e.target.checked }))}
-                                            className="w-4 h-4 text-primary bg-input dark:bg-input-dark border-border dark:border-border-dark rounded focus:ring-primary dark:focus:ring-primary-dark focus:ring-2"
+                                            className="w-4 h-4 text-primary bg-input-background border rounded focus:ring-primary focus:ring-2"
                                         />
-                                        <span className="ml-2 text-sm text-foreground-muted dark:text-foreground-dark-muted">Remember me</span>
+                                        <span className="ml-2 text-sm text-secondary">Remember me</span>
                                     </label>
-                                    <button type="button" className="text-sm text-primary dark:text-primary-dark hover:text-blue-700 dark:hover:text-blue-400">
+                                    <button type="button" className="text-sm text-primary hover:text-blue-700 dark:hover:text-blue-400">
                                         Forgot password?
                                     </button>
                                 </div>
@@ -284,7 +285,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 <button
                                     type="submit"
                                     disabled={isLoading || authLoading}
-                                    className="w-full bg-primary dark:bg-primary-dark hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    className="w-full bg-primary hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                                 >
                                     {(isLoading || authLoading) ? 'Signing In...' : 'Sign In'}
                                 </button>
@@ -295,15 +296,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                             <form onSubmit={handleRegister} className="space-y-4 mt-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                        <label className="block text-sm font-medium text-primary mb-2">
                                             First Name
                                         </label>
                                         <input
                                             type="text"
                                             value={registerForm.firstName}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, firstName: e.target.value }))}
-                                            className={`w-full px-4 py-3 bg-input dark:bg-input-dark border ${registerErrors.firstName ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full px-4 py-3 bg-input-background border ${registerErrors.firstName ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="First name"
                                         />
                                         {registerErrors.firstName && (
@@ -312,15 +313,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                        <label className="block text-sm font-medium text-primary mb-2">
                                             Last Name
                                         </label>
                                         <input
                                             type="text"
                                             value={registerForm.lastName}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, lastName: e.target.value }))}
-                                            className={`w-full px-4 py-3 bg-input dark:bg-input-dark border ${registerErrors.lastName ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full px-4 py-3 bg-input-background border ${registerErrors.lastName ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Last name"
                                         />
                                         {registerErrors.lastName && (
@@ -330,7 +331,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Username
                                     </label>
                                     <div className="relative">
@@ -338,11 +339,11 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="text"
                                             value={registerForm.username}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, username: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input dark:bg-input-dark border ${registerErrors.username ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${registerErrors.username ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Choose a username"
                                         />
-                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                     </div>
                                     {registerErrors.username && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.username}</p>
@@ -350,7 +351,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Email Address
                                     </label>
                                     <div className="relative">
@@ -358,11 +359,11 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="email"
                                             value={registerForm.email}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, email: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input dark:bg-input-dark border ${registerErrors.email ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${registerErrors.email ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Enter your email"
                                         />
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                     </div>
                                     {registerErrors.email && (
                                         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.email}</p>
@@ -370,7 +371,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Password
                                     </label>
                                     <div className="relative">
@@ -378,15 +379,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type={showPassword ? "text" : "password"}
                                             value={registerForm.password}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input dark:bg-input-dark border ${registerErrors.password ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${registerErrors.password ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Create a password"
                                         />
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-muted dark:text-foreground-dark-muted hover:text-foreground dark:hover:text-foreground-dark"
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -394,14 +395,14 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                     {registerForm.password && (
                                         <div className="mt-2">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs text-foreground-muted dark:text-foreground-dark-muted">Password strength:</span>
+                                                <span className="text-xs text-secondary">Password strength:</span>
                                                 <span className={`text-xs font-medium ${passwordStrength <= 1 ? 'text-red-600 dark:text-red-400' :
                                                         passwordStrength <= 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'
                                                     }`}>
                                                     {getPasswordStrengthText()}
                                                 </span>
                                             </div>
-                                            <div className="w-full bg-border dark:bg-border-dark rounded-full h-2">
+                                            <div className="w-full bg-border rounded-full h-2">
                                                 <div
                                                     className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
                                                     style={{ width: `${(passwordStrength / 5) * 100}%` }}
@@ -415,7 +416,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-foreground dark:text-foreground-dark mb-2">
+                                    <label className="block text-sm font-medium text-primary mb-2">
                                         Confirm Password
                                     </label>
                                     <div className="relative">
@@ -423,15 +424,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type={showConfirmPassword ? "text" : "password"}
                                             value={registerForm.confirmPassword}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input dark:bg-input-dark border ${registerErrors.confirmPassword ? 'border-red-500 dark:border-red-400' : 'border-border dark:border-border-dark'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 dark:focus:ring-primary-dark/20 focus:border-primary dark:focus:border-primary-dark outline-none transition-colors text-foreground dark:text-foreground-dark`}
+                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${registerErrors.confirmPassword ? 'border-red-500 dark:border-red-400' : 'border'
+                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
                                             placeholder="Confirm your password"
                                         />
-                                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-foreground-muted dark:text-foreground-dark-muted" />
+                                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-foreground-muted dark:text-foreground-dark-muted hover:text-foreground dark:hover:text-foreground-dark"
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
                                         >
                                             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -447,15 +448,15 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="checkbox"
                                             checked={registerForm.acceptTerms}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, acceptTerms: e.target.checked }))}
-                                            className="w-4 h-4 text-primary bg-input dark:bg-input-dark border-border dark:border-border-dark rounded focus:ring-primary dark:focus:ring-primary-dark focus:ring-2 mt-0.5"
+                                            className="w-4 h-4 text-primary bg-input-background border rounded focus:ring-primary focus:ring-2 mt-0.5"
                                         />
-                                        <span className="ml-2 text-sm text-foreground-muted dark:text-foreground-dark-muted">
+                                        <span className="ml-2 text-sm text-secondary">
                                             I agree to the{' '}
-                                            <a href="/terms" className="text-primary dark:text-primary-dark hover:text-blue-700 dark:hover:text-blue-400 underline">
+                                            <a href="/terms" className="text-primary hover:text-blue-700 dark:hover:text-blue-400 underline">
                                                 Terms and Conditions
                                             </a>{' '}
                                             and{' '}
-                                            <a href="/privacy" className="text-primary dark:text-primary-dark hover:text-blue-700 dark:hover:text-blue-400 underline">
+                                            <a href="/privacy" className="text-primary hover:text-blue-700 dark:hover:text-blue-400 underline">
                                                 Privacy Policy
                                             </a>
                                         </span>
@@ -469,9 +470,9 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                             type="checkbox"
                                             checked={registerForm.subscribeNewsletter}
                                             onChange={(e) => setRegisterForm(prev => ({ ...prev, subscribeNewsletter: e.target.checked }))}
-                                            className="w-4 h-4 text-primary bg-input dark:bg-input-dark border-border dark:border-border-dark rounded focus:ring-primary dark:focus:ring-primary-dark focus:ring-2"
+                                            className="w-4 h-4 text-primary bg-input-background border rounded focus:ring-primary focus:ring-2"
                                         />
-                                        <span className="ml-2 text-sm text-foreground-muted dark:text-foreground-dark-muted">
+                                        <span className="ml-2 text-sm text-secondary">
                                             Subscribe to our newsletter for updates and news
                                         </span>
                                     </label>
@@ -480,13 +481,14 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
                                 <button
                                     type="submit"
                                     disabled={isLoading || authLoading}
-                                    className="w-full bg-primary dark:bg-primary-dark hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    className="w-full bg-primary hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
                                 >
                                     {(isLoading || authLoading) ? 'Creating Account...' : 'Create Account'}
                                 </button>
                             </form>
                         </TabItem>
                     </Tabs>
+                    </div>
                 </div>
             </div>
         </div>

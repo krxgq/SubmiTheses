@@ -3,1026 +3,557 @@
  * Do not make direct changes to the file.
  */
 
-export interface paths {
-    "/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get all projects */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of projects */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Project"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        put?: never;
-        /** Create a new project */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateProject"];
-                };
-            };
-            responses: {
-                /** @description Project created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Project"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get project by ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Project details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Project"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        /** Update project */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateProject"];
-                };
-            };
-            responses: {
-                /** @description Project updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Project"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        post?: never;
-        /** Delete project */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Project deleted successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{id}/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get students assigned to project */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of students assigned to project */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SchoolUser"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        /** Update all students assigned to project */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateProjectStudents"];
-                };
-            };
-            responses: {
-                /** @description Project students updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SchoolUser"][];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        /** Add student to project */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["AddStudentToProject"];
-                };
-            };
-            responses: {
-                /** @description Student added to project successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ProjectStudent"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{id}/students/{studentId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /** Remove student from project */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                    studentId: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description Student removed from project successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/schools": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get all schools */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of schools */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["School"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        put?: never;
-        /** Create a new school */
-        post: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["CreateSchool"];
-                };
-            };
-            responses: {
-                /** @description School created successfully */
-                201: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["School"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/schools/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get school by ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description School details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["School"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        /** Update school */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateSchool"];
-                };
-            };
-            responses: {
-                /** @description School updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["School"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        post?: never;
-        /** Delete school */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description School deleted successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/schools/{id}/students": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get students by school ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of students in school */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SchoolUser"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/schools/{id}/teachers": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get teachers by school ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: number;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of teachers in school */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["SchoolUser"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get all users */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description List of users */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["User"][];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/users/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Get user by ID */
-        get: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User details */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["User"];
-                    };
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        /** Update user */
-        put: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody: {
-                content: {
-                    "application/json": components["schemas"]["UpdateUser"];
-                };
-            };
-            responses: {
-                /** @description User updated successfully */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["User"];
-                    };
-                };
-                400: components["responses"]["ValidationError"];
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        post?: never;
-        /** Delete user */
-        delete: {
-            parameters: {
-                query?: never;
-                header?: never;
-                path: {
-                    id: string;
-                };
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description User deleted successfully */
-                204: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content?: never;
-                };
-                401: components["responses"]["UnauthorizedError"];
-                403: components["responses"]["ForbiddenError"];
-                404: components["responses"]["NotFoundError"];
-                500: components["responses"]["ServerError"];
-            };
-        };
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-}
+export type paths = Record<string, never>;
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
-        /**
-         * @description Project status
-         * @enum {string}
-         */
-        Status: "draft" | "submitted" | "locked" | "public";
-        UserRole: {
-            /** Format: int64 */
-            id: number;
-            name: string;
-            description?: string | null;
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        audit_log_entries: {
+            instance_id?: string;
+            id: string;
+            payload?: Record<string, never>;
             /** Format: date-time */
-            created_at: string;
+            created_at?: string;
+            ip_address: string;
+        };
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        flow_state: {
+            id: string;
+            user_id?: string;
+            auth_code: string;
+            code_challenge_method: components["schemas"]["code_challenge_method"];
+            code_challenge: string;
+            provider_type: string;
+            provider_access_token?: string;
+            provider_refresh_token?: string;
             /** Format: date-time */
-            updated_at: string;
-        };
-        CreateUserRole: {
-            name: string;
-            description?: string;
-        };
-        UpdateUserRole: {
-            name?: string;
-            description?: string;
-        };
-        School: {
-            /** Format: int64 */
-            id: number;
-            name: string;
-            domain: string;
+            created_at?: string;
             /** Format: date-time */
-            created_at: string;
+            updated_at?: string;
+            authentication_method: string;
             /** Format: date-time */
-            updated_at: string;
+            auth_code_issued_at?: string;
+            saml_relay_states: components["schemas"]["saml_relay_states"][];
         };
-        CreateSchool: {
-            name: string;
-            domain: string;
-        };
-        UpdateSchool: {
-            name?: string;
-            domain?: string;
-        };
-        SchoolUser: {
-            /** Format: int64 */
-            id: number;
-            /** Format: email */
-            email: string;
-            first_name?: string | null;
-            last_name?: string | null;
-            /** Format: int64 */
-            school_id: number;
-            /** Format: int64 */
-            role_id: number;
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        identities: {
+            provider_id: string;
+            user_id: string;
+            identity_data: Record<string, never>;
+            provider: string;
             /** Format: date-time */
-            created_at: string;
+            last_sign_in_at?: string;
             /** Format: date-time */
-            updated_at: string;
-        };
-        CreateSchoolUser: {
-            /** Format: email */
-            email: string;
-            first_name?: string;
-            last_name?: string;
-            /** Format: int64 */
-            school_id: number;
-            /** Format: int64 */
-            role_id: number;
-        };
-        UpdateSchoolUser: {
-            /** Format: email */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
             email?: string;
-            first_name?: string;
-            last_name?: string;
-            /** Format: int64 */
-            school_id?: number;
-            /** Format: int64 */
-            role_id?: number;
+            id: string;
+            users: components["schemas"]["users"];
         };
-        ProjectStudent: {
-            /** Format: int64 */
-            id: number;
-            /** Format: int64 */
-            project_id: number;
-            /** Format: int64 */
-            student_id: number;
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        instances: {
+            id: string;
+            uuid?: string;
+            raw_base_config?: string;
             /** Format: date-time */
-            created_at: string;
-            students?: components["schemas"]["SchoolUser"];
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
         };
-        Project: {
-            /** Format: int64 */
-            id: number;
-            title: string;
-            /** Format: int64 */
-            supervisor_id: number;
-            /** Format: int64 */
-            opponent_id: number;
-            subject: string;
-            description?: string | null;
-            main_document?: string | null;
-            /** Format: date-time */
-            locked_until?: string | null;
-            status: components["schemas"]["Status"];
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        mfa_amr_claims: {
+            session_id: string;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
             updated_at: string;
-            project_students?: components["schemas"]["ProjectStudent"][];
-            school_users_projects_supervisor_idToschool_users?: components["schemas"]["SchoolUser"];
-            school_users_projects_opponent_idToschool_users?: components["schemas"]["SchoolUser"];
+            authentication_method: string;
+            id: string;
+            sessions: components["schemas"]["sessions"];
         };
-        CreateProject: {
-            title: string;
-            /** Format: int64 */
-            supervisor_id: number;
-            /** Format: int64 */
-            opponent_id: number;
-            subject: string;
-            description?: string;
-            main_document?: string;
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        mfa_challenges: {
+            id: string;
+            factor_id: string;
             /** Format: date-time */
-            locked_until?: string;
-            status?: components["schemas"]["Status"];
+            created_at: string;
+            /** Format: date-time */
+            verified_at?: string;
+            ip_address: string;
+            otp_code?: string;
+            web_authn_session_data?: Record<string, never>;
+            mfa_factors: components["schemas"]["mfa_factors"];
         };
-        UpdateProject: {
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        mfa_factors: {
+            id: string;
+            user_id: string;
+            friendly_name?: string;
+            factor_type: components["schemas"]["factor_type"];
+            status: components["schemas"]["factor_status"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            secret?: string;
+            phone?: string;
+            /** Format: date-time */
+            last_challenged_at?: string;
+            web_authn_credential?: Record<string, never>;
+            web_authn_aaguid?: string;
+            mfa_challenges: components["schemas"]["mfa_challenges"][];
+            users: components["schemas"]["users"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info. */
+        oauth_authorizations: {
+            id: string;
+            authorization_id: string;
+            client_id: string;
+            user_id?: string;
+            redirect_uri: string;
+            scope: string;
+            state?: string;
+            resource?: string;
+            code_challenge?: string;
+            code_challenge_method?: components["schemas"]["code_challenge_method"];
+            response_type: components["schemas"]["oauth_response_type"];
+            status: components["schemas"]["oauth_authorization_status"];
+            authorization_code?: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            expires_at: string;
+            /** Format: date-time */
+            approved_at?: string;
+            oauth_clients: components["schemas"]["oauth_clients"];
+            users?: components["schemas"]["users"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info. */
+        oauth_clients: {
+            id: string;
+            client_secret_hash?: string;
+            registration_type: components["schemas"]["oauth_registration_type"];
+            redirect_uris: string;
+            grant_types: string;
+            client_name?: string;
+            client_uri?: string;
+            logo_uri?: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            /** Format: date-time */
+            deleted_at?: string;
+            client_type: components["schemas"]["oauth_client_type"];
+            oauth_authorizations: components["schemas"]["oauth_authorizations"][];
+            oauth_consents: components["schemas"]["oauth_consents"][];
+            sessions: components["schemas"]["sessions"][];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info. */
+        oauth_consents: {
+            id: string;
+            user_id: string;
+            client_id: string;
+            scopes: string;
+            /** Format: date-time */
+            granted_at: string;
+            /** Format: date-time */
+            revoked_at?: string;
+            oauth_clients: components["schemas"]["oauth_clients"];
+            users: components["schemas"]["users"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        one_time_tokens: {
+            id: string;
+            user_id: string;
+            token_type: components["schemas"]["one_time_token_type"];
+            token_hash: string;
+            relates_to: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            users: components["schemas"]["users"];
+        };
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        refresh_tokens: {
+            instance_id?: string;
+            /** Format: int64 */
+            id: number;
+            token?: string;
+            user_id?: string;
+            revoked?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            parent?: string;
+            session_id?: string;
+            sessions?: components["schemas"]["sessions"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        saml_providers: {
+            id: string;
+            sso_provider_id: string;
+            entity_id: string;
+            metadata_xml: string;
+            metadata_url?: string;
+            attribute_mapping?: Record<string, never>;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            name_id_format?: string;
+            sso_providers: components["schemas"]["sso_providers"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        saml_relay_states: {
+            id: string;
+            sso_provider_id: string;
+            request_id: string;
+            for_email?: string;
+            redirect_to?: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            flow_state_id?: string;
+            flow_state?: components["schemas"]["flow_state"];
+            sso_providers: components["schemas"]["sso_providers"];
+        };
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        schema_migrations: {
+            version: string;
+        };
+        /** @description This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        sessions: {
+            id: string;
+            user_id: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            factor_id?: string;
+            aal?: components["schemas"]["aal_level"];
+            /** Format: date-time */
+            not_after?: string;
+            /** Format: date-time */
+            refreshed_at?: string;
+            user_agent?: string;
+            ip?: string;
+            tag?: string;
+            oauth_client_id?: string;
+            mfa_amr_claims: components["schemas"]["mfa_amr_claims"][];
+            refresh_tokens: components["schemas"]["refresh_tokens"][];
+            oauth_clients?: components["schemas"]["oauth_clients"];
+            users: components["schemas"]["users"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+         *     This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info. */
+        sso_domains: {
+            id: string;
+            sso_provider_id: string;
+            domain: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            sso_providers: components["schemas"]["sso_providers"];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+         *     This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info. */
+        sso_providers: {
+            id: string;
+            resource_id?: string;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            disabled?: boolean;
+            saml_providers: components["schemas"]["saml_providers"][];
+            saml_relay_states: components["schemas"]["saml_relay_states"][];
+            sso_domains: components["schemas"]["sso_domains"][];
+        };
+        /** @description This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+         *     This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+         *     This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+         *     This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info. */
+        users: {
+            instance_id?: string;
+            id: string;
+            aud?: string;
+            role?: string;
+            email?: string;
+            encrypted_password?: string;
+            /** Format: date-time */
+            email_confirmed_at?: string;
+            /** Format: date-time */
+            invited_at?: string;
+            confirmation_token?: string;
+            /** Format: date-time */
+            confirmation_sent_at?: string;
+            recovery_token?: string;
+            /** Format: date-time */
+            recovery_sent_at?: string;
+            email_change_token_new?: string;
+            email_change?: string;
+            /** Format: date-time */
+            email_change_sent_at?: string;
+            /** Format: date-time */
+            last_sign_in_at?: string;
+            raw_app_meta_data?: Record<string, never>;
+            raw_user_meta_data?: Record<string, never>;
+            is_super_admin?: boolean;
+            /** Format: date-time */
+            created_at?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            phone?: string;
+            /** Format: date-time */
+            phone_confirmed_at?: string;
+            phone_change?: string;
+            phone_change_token?: string;
+            /** Format: date-time */
+            phone_change_sent_at?: string;
+            /** Format: date-time */
+            confirmed_at?: string;
+            email_change_token_current?: string;
+            /** Format: int32 */
+            email_change_confirm_status?: number;
+            /** Format: date-time */
+            banned_until?: string;
+            reauthentication_token?: string;
+            /** Format: date-time */
+            reauthentication_sent_at?: string;
+            is_sso_user: boolean;
+            /** Format: date-time */
+            deleted_at?: string;
+            is_anonymous: boolean;
+            identities: components["schemas"]["identities"][];
+            mfa_factors: components["schemas"]["mfa_factors"][];
+            oauth_authorizations: components["schemas"]["oauth_authorizations"][];
+            oauth_consents: components["schemas"]["oauth_consents"][];
+            one_time_tokens: components["schemas"]["one_time_tokens"][];
+            sessions: components["schemas"]["sessions"][];
+            grades: components["schemas"]["grades"][];
+            project_students: components["schemas"]["project_students"][];
+            projects_projects_opponent_idTousers: components["schemas"]["projects"][];
+            projects_projects_supervisor_idTousers: components["schemas"]["projects"][];
+            reviews: components["schemas"]["reviews"][];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        attachments: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            project_id?: number;
+            filename: string;
+            storage_path: string;
+            description?: string;
+            /** Format: date-time */
+            uploaded_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            projects?: components["schemas"]["projects"];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        external_links: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            project_id?: number;
+            url?: string;
             title?: string;
-            /** Format: int64 */
-            supervisor_id?: number;
-            /** Format: int64 */
-            opponent_id?: number;
-            subject?: string;
             description?: string;
-            main_document?: string;
             /** Format: date-time */
-            locked_until?: string;
-            status?: components["schemas"]["Status"];
+            added_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            projects?: components["schemas"]["projects"];
         };
-        AddStudentToProject: {
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        grades: {
             /** Format: int64 */
-            studentId: number;
+            id: number;
+            /** Format: int64 */
+            value: number;
+            /** Format: int64 */
+            year_id: number;
+            /** Format: int64 */
+            project_id: number;
+            reviewer_id: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: int64 */
+            scale_id?: number;
+            projects: components["schemas"]["projects"];
+            years: components["schemas"]["years"];
+            users: components["schemas"]["users"];
+            scales?: components["schemas"]["scales"];
         };
-        UpdateProjectStudents: {
-            studentIds: number[];
-        };
-        Review: {
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        project_students: {
             /** Format: int64 */
             id: number;
             /** Format: int64 */
             project_id: number;
+            student_id: string;
+            /** Format: date-time */
+            created_at?: string;
+            projects: components["schemas"]["projects"];
+            users: components["schemas"]["users"];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        projects: {
             /** Format: int64 */
-            reviewer_id: number;
+            id: number;
+            title: string;
+            supervisor_id: string;
+            opponent_id: string;
+            subject: string;
+            description?: string;
+            main_documentation?: string;
+            /** Format: date-time */
+            updated_at: string;
+            attachments: components["schemas"]["attachments"][];
+            external_links: components["schemas"]["external_links"][];
+            grades: components["schemas"]["grades"][];
+            project_students: components["schemas"]["project_students"][];
+            users_projects_opponent_idTousers: components["schemas"]["users"];
+            users_projects_supervisor_idTousers: components["schemas"]["users"];
+            reviews: components["schemas"]["reviews"][];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        reviews: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            project_id: number;
+            reviewer_id: string;
             comments: string;
             /** Format: date-time */
             submitted_at: string;
             /** Format: date-time */
             updated_at: string;
+            projects: components["schemas"]["projects"];
+            users: components["schemas"]["users"];
         };
-        CreateReview: {
-            /** Format: int64 */
-            project_id: number;
-            /** Format: int64 */
-            reviewer_id: number;
-            comments: string;
-        };
-        UpdateReview: {
-            comments: string;
-        };
-        Attachment: {
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        roles: {
             /** Format: int64 */
             id: number;
-            /** Format: int64 */
-            project_id?: number | null;
-            filename: string;
-            storage_path: string;
-            description?: string | null;
-            /** Format: date-time */
-            uploaded_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateAttachment: {
-            /** Format: int64 */
-            project_id?: number;
-            filename: string;
-            storage_path: string;
-            description?: string;
-        };
-        UpdateAttachment: {
-            filename?: string;
-            description?: string;
-        };
-        ExternalLink: {
-            /** Format: int64 */
-            id: number;
-            /** Format: int64 */
-            project_id?: number | null;
-            /** Format: uri */
-            url?: string | null;
-            title?: string | null;
-            description?: string | null;
-            /** Format: date-time */
-            added_at: string;
-            /** Format: date-time */
-            updated_at: string;
-        };
-        CreateExternalLink: {
-            /** Format: int64 */
-            project_id?: number;
-            /** Format: uri */
-            url?: string;
-            title?: string;
-            description?: string;
-        };
-        UpdateExternalLink: {
-            /** Format: int64 */
-            project_id?: number;
-            /** Format: uri */
-            url?: string;
-            title?: string;
-            description?: string;
-        };
-        User: {
-            /** Format: uuid */
-            id: string;
-            /** Format: email */
-            email: string;
-            role: string;
-            /** Format: int64 */
-            school_id?: number | null;
+            name: string;
             /** Format: date-time */
             created_at: string;
+            description?: string;
             /** Format: date-time */
             updated_at: string;
+            scale_sets: components["schemas"]["scale_sets"][];
         };
-        CreateUser: {
-            /** Format: email */
-            email: string;
-            /** @default student */
-            role: string;
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        scale_set_scales: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            scale_set_id: number;
+            /** Format: int64 */
+            scale_id: number;
+            /** Format: int32 */
+            weight: number;
+            /** Format: int32 */
+            display_order?: number;
+            /** Format: date-time */
+            created_at: string;
+            scales: components["schemas"]["scales"];
+            scale_sets: components["schemas"]["scale_sets"];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        scale_sets: {
+            /** Format: int64 */
+            id: number;
+            name?: string;
+            /** Format: int64 */
+            role_id?: number;
+            /** Format: int64 */
+            year_id?: number;
+            /** Format: date-time */
+            created_at: string;
+            scale_set_scales: components["schemas"]["scale_set_scales"][];
+            roles?: components["schemas"]["roles"];
+            years?: components["schemas"]["years"];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        scales: {
+            /** Format: int64 */
+            id: number;
+            /** Format: int64 */
+            maxVal: number;
+            name: string;
+            desc?: string;
+            /** Format: date-time */
+            created_at: string;
+            grades: components["schemas"]["grades"][];
+            scale_set_scales: components["schemas"]["scale_set_scales"][];
+        };
+        /** @description This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info. */
+        years: {
+            /** Format: int64 */
+            id: number;
             /** Format: int64 */
             school_id?: number;
+            /** Format: date-time */
+            assignment_date?: string;
+            /** Format: date-time */
+            submission_date?: string;
+            /** Format: date-time */
+            feedback_date?: string;
+            /** Format: date-time */
+            created_at: string;
+            grades: components["schemas"]["grades"][];
+            scale_sets: components["schemas"]["scale_sets"][];
         };
-        UpdateUser: {
-            role?: string;
-            /** Format: int64 */
-            school_id?: number;
-        };
-        Error: {
-            error: string;
-        };
-        ValidationError: {
-            error: string;
-            details?: {
-                field?: string;
-                message?: string;
-            }[];
-        };
+        /** @enum {string} */
+        aal_level: "aal1" | "aal2" | "aal3";
+        /** @enum {string} */
+        code_challenge_method: "s256" | "plain";
+        /** @enum {string} */
+        factor_status: "unverified" | "verified";
+        /** @enum {string} */
+        factor_type: "totp" | "webauthn" | "phone";
+        /** @enum {string} */
+        oauth_authorization_status: "pending" | "approved" | "denied" | "expired";
+        /** @enum {string} */
+        oauth_client_type: "public" | "confidential";
+        /** @enum {string} */
+        oauth_registration_type: "dynamic" | "manual";
+        /** @enum {string} */
+        oauth_response_type: "code";
+        /** @enum {string} */
+        one_time_token_type: "confirmation_token" | "reauthentication_token" | "recovery_token" | "email_change_token_new" | "email_change_token_current" | "phone_change_token";
+        /** @enum {string} */
+        status: "draft" | "submitted" | "locked" | "public";
     };
-    responses: {
-        /** @description Authentication information is missing or invalid */
-        UnauthorizedError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /** @example {
-                 *       "error": "Unauthorized"
-                 *     } */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Access forbidden */
-        ForbiddenError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /** @example {
-                 *       "error": "Forbidden"
-                 *     } */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Resource not found */
-        NotFoundError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /** @example {
-                 *       "error": "Not found"
-                 *     } */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-        /** @description Validation error */
-        ValidationError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /** @example {
-                 *       "error": "Validation failed",
-                 *       "details": [
-                 *         {
-                 *           "field": "title",
-                 *           "message": "Title is required"
-                 *         }
-                 *       ]
-                 *     } */
-                "application/json": components["schemas"]["ValidationError"];
-            };
-        };
-        /** @description Internal server error */
-        ServerError: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                /** @example {
-                 *       "error": "Internal server error"
-                 *     } */
-                "application/json": components["schemas"]["Error"];
-            };
-        };
-    };
+    responses: never;
     parameters: never;
     requestBodies: never;
     headers: never;

@@ -1,75 +1,648 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
-  title: SumbiTheses API
+  title: Prisma API
+  description: ""
   version: 1.0.0
-  description: API for managing thesis projects, students, supervisors, and schools
-  contact:
-    name: API Support
-    email: support@sumbitheses.com
-
-servers:
-  - url: http://localhost:5000/api
-    description: Development server
-
+paths: {}
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT Authorization header using the Bearer scheme
-
   schemas:
-    Status:
-      type: string
-      enum: [draft, submitted, locked, public]
-      description: Project status
-
-    UserRole:
+    audit_log_entries:
       type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        instance_id:
+          type: string
+        id:
+          type: string
+        payload:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        ip_address:
+          type: string
+      required:
+        - id
+        - ip_address
+    flow_state:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
       properties:
         id:
-          type: integer
-          format: int64
-        name:
           type: string
-        description:
+        user_id:
           type: string
-          nullable: true
+        auth_code:
+          type: string
+        code_challenge_method:
+          $ref: "#/components/schemas/code_challenge_method"
+        code_challenge:
+          type: string
+        provider_type:
+          type: string
+        provider_access_token:
+          type: string
+        provider_refresh_token:
+          type: string
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-      required: [id, name, created_at, updated_at]
-
-    CreateUserRole:
+        authentication_method:
+          type: string
+        auth_code_issued_at:
+          type: string
+          format: date-time
+        saml_relay_states:
+          type: array
+          items:
+            $ref: "#/components/schemas/saml_relay_states"
+      required:
+        - id
+        - auth_code
+        - code_challenge_method
+        - code_challenge
+        - provider_type
+        - authentication_method
+        - saml_relay_states
+    identities:
       type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-        description:
-          type: string
-      required: [name]
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
 
-    UpdateUserRole:
-      type: object
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
       properties:
-        name:
+        provider_id:
           type: string
-          minLength: 1
-        description:
+        user_id:
           type: string
+        identity_data:
+          type: object
+        provider:
+          type: string
+        last_sign_in_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        email:
+          type: string
+        id:
+          type: string
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - provider_id
+        - user_id
+        - identity_data
+        - provider
+        - id
+        - users
+    instances:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
 
-    School:
-      type: object
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
       properties:
+        id:
+          type: string
+        uuid:
+          type: string
+        raw_base_config:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+    mfa_amr_claims:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        session_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        authentication_method:
+          type: string
+        id:
+          type: string
+        sessions:
+          $ref: "#/components/schemas/sessions"
+      required:
+        - session_id
+        - created_at
+        - updated_at
+        - authentication_method
+        - id
+        - sessions
+    mfa_challenges:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        factor_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        verified_at:
+          type: string
+          format: date-time
+        ip_address:
+          type: string
+        otp_code:
+          type: string
+        web_authn_session_data:
+          type: object
+        mfa_factors:
+          $ref: "#/components/schemas/mfa_factors"
+      required:
+        - id
+        - factor_id
+        - created_at
+        - ip_address
+        - mfa_factors
+    mfa_factors:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        friendly_name:
+          type: string
+        factor_type:
+          $ref: "#/components/schemas/factor_type"
+        status:
+          $ref: "#/components/schemas/factor_status"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        secret:
+          type: string
+        phone:
+          type: string
+        last_challenged_at:
+          type: string
+          format: date-time
+        web_authn_credential:
+          type: object
+        web_authn_aaguid:
+          type: string
+        mfa_challenges:
+          type: array
+          items:
+            $ref: "#/components/schemas/mfa_challenges"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - user_id
+        - factor_type
+        - status
+        - created_at
+        - updated_at
+        - mfa_challenges
+        - users
+    oauth_authorizations:
+      type: object
+      description: This table contains check constraints and requires additional setup
+        for migrations. Visit https://pris.ly/d/check-constraints for more info.
+      properties:
+        id:
+          type: string
+        authorization_id:
+          type: string
+        client_id:
+          type: string
+        user_id:
+          type: string
+        redirect_uri:
+          type: string
+        scope:
+          type: string
+        state:
+          type: string
+        resource:
+          type: string
+        code_challenge:
+          type: string
+        code_challenge_method:
+          $ref: "#/components/schemas/code_challenge_method"
+        response_type:
+          $ref: "#/components/schemas/oauth_response_type"
+        status:
+          $ref: "#/components/schemas/oauth_authorization_status"
+        authorization_code:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        approved_at:
+          type: string
+          format: date-time
+        oauth_clients:
+          $ref: "#/components/schemas/oauth_clients"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - authorization_id
+        - client_id
+        - redirect_uri
+        - scope
+        - response_type
+        - status
+        - created_at
+        - expires_at
+        - oauth_clients
+    oauth_clients:
+      type: object
+      description: This table contains check constraints and requires additional setup
+        for migrations. Visit https://pris.ly/d/check-constraints for more info.
+      properties:
+        id:
+          type: string
+        client_secret_hash:
+          type: string
+        registration_type:
+          $ref: "#/components/schemas/oauth_registration_type"
+        redirect_uris:
+          type: string
+        grant_types:
+          type: string
+        client_name:
+          type: string
+        client_uri:
+          type: string
+        logo_uri:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        deleted_at:
+          type: string
+          format: date-time
+        client_type:
+          $ref: "#/components/schemas/oauth_client_type"
+        oauth_authorizations:
+          type: array
+          items:
+            $ref: "#/components/schemas/oauth_authorizations"
+        oauth_consents:
+          type: array
+          items:
+            $ref: "#/components/schemas/oauth_consents"
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/sessions"
+      required:
+        - id
+        - registration_type
+        - redirect_uris
+        - grant_types
+        - created_at
+        - updated_at
+        - client_type
+        - oauth_authorizations
+        - oauth_consents
+        - sessions
+    oauth_consents:
+      type: object
+      description: This table contains check constraints and requires additional setup
+        for migrations. Visit https://pris.ly/d/check-constraints for more info.
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        client_id:
+          type: string
+        scopes:
+          type: string
+        granted_at:
+          type: string
+          format: date-time
+        revoked_at:
+          type: string
+          format: date-time
+        oauth_clients:
+          $ref: "#/components/schemas/oauth_clients"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - user_id
+        - client_id
+        - scopes
+        - granted_at
+        - oauth_clients
+        - users
+    one_time_tokens:
+      type: object
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        token_type:
+          $ref: "#/components/schemas/one_time_token_type"
+        token_hash:
+          type: string
+        relates_to:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - user_id
+        - token_type
+        - token_hash
+        - relates_to
+        - created_at
+        - updated_at
+        - users
+    refresh_tokens:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        instance_id:
+          type: string
         id:
           type: integer
           format: int64
-        name:
+        token:
+          type: string
+        user_id:
+          type: string
+        revoked:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        parent:
+          type: string
+        session_id:
+          type: string
+        sessions:
+          $ref: "#/components/schemas/sessions"
+      required:
+        - id
+    saml_providers:
+      type: object
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        sso_provider_id:
+          type: string
+        entity_id:
+          type: string
+        metadata_xml:
+          type: string
+        metadata_url:
+          type: string
+        attribute_mapping:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        name_id_format:
+          type: string
+        sso_providers:
+          $ref: "#/components/schemas/sso_providers"
+      required:
+        - id
+        - sso_provider_id
+        - entity_id
+        - metadata_xml
+        - sso_providers
+    saml_relay_states:
+      type: object
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        sso_provider_id:
+          type: string
+        request_id:
+          type: string
+        for_email:
+          type: string
+        redirect_to:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        flow_state_id:
+          type: string
+        flow_state:
+          $ref: "#/components/schemas/flow_state"
+        sso_providers:
+          $ref: "#/components/schemas/sso_providers"
+      required:
+        - id
+        - sso_provider_id
+        - request_id
+        - sso_providers
+    schema_migrations:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        version:
+          type: string
+      required:
+        - version
+    sessions:
+      type: object
+      description: >-
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        factor_id:
+          type: string
+        aal:
+          $ref: "#/components/schemas/aal_level"
+        not_after:
+          type: string
+          format: date-time
+        refreshed_at:
+          type: string
+          format: date-time
+        user_agent:
+          type: string
+        ip:
+          type: string
+        tag:
+          type: string
+        oauth_client_id:
+          type: string
+        mfa_amr_claims:
+          type: array
+          items:
+            $ref: "#/components/schemas/mfa_amr_claims"
+        refresh_tokens:
+          type: array
+          items:
+            $ref: "#/components/schemas/refresh_tokens"
+        oauth_clients:
+          $ref: "#/components/schemas/oauth_clients"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - user_id
+        - mfa_amr_claims
+        - refresh_tokens
+        - users
+    sso_domains:
+      type: object
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+        This model contains an expression index which requires additional setup
+        for migrations. Visit https://pris.ly/d/expression-indexes for more
+        info.
+      properties:
+        id:
+          type: string
+        sso_provider_id:
           type: string
         domain:
           type: string
@@ -79,95 +652,331 @@ components:
         updated_at:
           type: string
           format: date-time
-      required: [id, name, domain, created_at, updated_at]
-
-    CreateSchool:
+        sso_providers:
+          $ref: "#/components/schemas/sso_providers"
+      required:
+        - id
+        - sso_provider_id
+        - domain
+        - sso_providers
+    sso_providers:
       type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-        domain:
-          type: string
-          minLength: 1
-      required: [name, domain]
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
 
-    UpdateSchool:
-      type: object
-      properties:
-        name:
-          type: string
-          minLength: 1
-        domain:
-          type: string
-          minLength: 1
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
 
-    SchoolUser:
-      type: object
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+        This model contains an expression index which requires additional setup
+        for migrations. Visit https://pris.ly/d/expression-indexes for more
+        info.
       properties:
         id:
-          type: integer
-          format: int64
-        email:
           type: string
-          format: email
-        first_name:
+        resource_id:
           type: string
-          nullable: true
-        last_name:
-          type: string
-          nullable: true
-        school_id:
-          type: integer
-          format: int64
-        role_id:
-          type: integer
-          format: int64
         created_at:
           type: string
           format: date-time
         updated_at:
           type: string
           format: date-time
-      required: [id, email, school_id, role_id, created_at, updated_at]
-
-    CreateSchoolUser:
+        disabled:
+          type: boolean
+        saml_providers:
+          type: array
+          items:
+            $ref: "#/components/schemas/saml_providers"
+        saml_relay_states:
+          type: array
+          items:
+            $ref: "#/components/schemas/saml_relay_states"
+        sso_domains:
+          type: array
+          items:
+            $ref: "#/components/schemas/sso_domains"
+      required:
+        - id
+        - saml_providers
+        - saml_relay_states
+        - sso_domains
+    users:
       type: object
+      description: >-
+        This table contains check constraints and requires additional setup for
+        migrations. Visit https://pris.ly/d/check-constraints for more info.
+
+        This model or at least one of its fields has comments in the database,
+        and requires an additional setup for migrations: Read more:
+        https://pris.ly/d/database-comments
+
+        This model contains row level security and requires additional setup for
+        migrations. Visit https://pris.ly/d/row-level-security for more info.
+
+        This model contains an expression index which requires additional setup
+        for migrations. Visit https://pris.ly/d/expression-indexes for more
+        info.
       properties:
+        instance_id:
+          type: string
+        id:
+          type: string
+        aud:
+          type: string
+        role:
+          type: string
         email:
           type: string
-          format: email
-        first_name:
+        encrypted_password:
           type: string
-        last_name:
+        email_confirmed_at:
           type: string
-        school_id:
+          format: date-time
+        invited_at:
+          type: string
+          format: date-time
+        confirmation_token:
+          type: string
+        confirmation_sent_at:
+          type: string
+          format: date-time
+        recovery_token:
+          type: string
+        recovery_sent_at:
+          type: string
+          format: date-time
+        email_change_token_new:
+          type: string
+        email_change:
+          type: string
+        email_change_sent_at:
+          type: string
+          format: date-time
+        last_sign_in_at:
+          type: string
+          format: date-time
+        raw_app_meta_data:
+          type: object
+        raw_user_meta_data:
+          type: object
+        is_super_admin:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        phone:
+          type: string
+        phone_confirmed_at:
+          type: string
+          format: date-time
+        phone_change:
+          type: string
+        phone_change_token:
+          type: string
+        phone_change_sent_at:
+          type: string
+          format: date-time
+        confirmed_at:
+          type: string
+          format: date-time
+        email_change_token_current:
+          type: string
+        email_change_confirm_status:
           type: integer
-          format: int64
-        role_id:
-          type: integer
-          format: int64
-      required: [email, school_id, role_id]
-
-    UpdateSchoolUser:
+          format: int32
+        banned_until:
+          type: string
+          format: date-time
+        reauthentication_token:
+          type: string
+        reauthentication_sent_at:
+          type: string
+          format: date-time
+        is_sso_user:
+          type: boolean
+        deleted_at:
+          type: string
+          format: date-time
+        is_anonymous:
+          type: boolean
+        identities:
+          type: array
+          items:
+            $ref: "#/components/schemas/identities"
+        mfa_factors:
+          type: array
+          items:
+            $ref: "#/components/schemas/mfa_factors"
+        oauth_authorizations:
+          type: array
+          items:
+            $ref: "#/components/schemas/oauth_authorizations"
+        oauth_consents:
+          type: array
+          items:
+            $ref: "#/components/schemas/oauth_consents"
+        one_time_tokens:
+          type: array
+          items:
+            $ref: "#/components/schemas/one_time_tokens"
+        sessions:
+          type: array
+          items:
+            $ref: "#/components/schemas/sessions"
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/grades"
+        project_students:
+          type: array
+          items:
+            $ref: "#/components/schemas/project_students"
+        projects_projects_opponent_idTousers:
+          type: array
+          items:
+            $ref: "#/components/schemas/projects"
+        projects_projects_supervisor_idTousers:
+          type: array
+          items:
+            $ref: "#/components/schemas/projects"
+        reviews:
+          type: array
+          items:
+            $ref: "#/components/schemas/reviews"
+      required:
+        - id
+        - is_sso_user
+        - is_anonymous
+        - identities
+        - mfa_factors
+        - oauth_authorizations
+        - oauth_consents
+        - one_time_tokens
+        - sessions
+        - grades
+        - project_students
+        - projects_projects_opponent_idTousers
+        - projects_projects_supervisor_idTousers
+        - reviews
+    attachments:
       type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
       properties:
-        email:
-          type: string
-          format: email
-        first_name:
-          type: string
-        last_name:
-          type: string
-        school_id:
+        id:
           type: integer
           format: int64
-        role_id:
+        project_id:
           type: integer
           format: int64
-
-    ProjectStudent:
+        filename:
+          type: string
+        storage_path:
+          type: string
+        description:
+          type: string
+        uploaded_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        projects:
+          $ref: "#/components/schemas/projects"
+      required:
+        - id
+        - filename
+        - storage_path
+        - uploaded_at
+        - updated_at
+    external_links:
       type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        project_id:
+          type: integer
+          format: int64
+        url:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        added_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        projects:
+          $ref: "#/components/schemas/projects"
+      required:
+        - id
+        - added_at
+        - updated_at
+    grades:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        value:
+          type: integer
+          format: int64
+        year_id:
+          type: integer
+          format: int64
+        project_id:
+          type: integer
+          format: int64
+        reviewer_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        scale_id:
+          type: integer
+          format: int64
+        projects:
+          $ref: "#/components/schemas/projects"
+        years:
+          $ref: "#/components/schemas/years"
+        users:
+          $ref: "#/components/schemas/users"
+        scales:
+          $ref: "#/components/schemas/scales"
+      required:
+        - id
+        - value
+        - year_id
+        - project_id
+        - reviewer_id
+        - created_at
+        - projects
+        - years
+        - users
+    project_students:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
       properties:
         id:
           type: integer
@@ -176,17 +985,25 @@ components:
           type: integer
           format: int64
         student_id:
-          type: integer
-          format: int64
+          type: string
         created_at:
           type: string
           format: date-time
-        students:
-          $ref: '#/components/schemas/SchoolUser'
-      required: [id, project_id, student_id, created_at]
-
-    Project:
+        projects:
+          $ref: "#/components/schemas/projects"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - project_id
+        - student_id
+        - projects
+        - users
+    projects:
       type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
       properties:
         id:
           type: integer
@@ -194,112 +1011,61 @@ components:
         title:
           type: string
         supervisor_id:
-          type: integer
-          format: int64
+          type: string
         opponent_id:
-          type: integer
-          format: int64
+          type: string
         subject:
           type: string
         description:
           type: string
-          nullable: true
-        main_document:
+        main_documentation:
           type: string
-          nullable: true
-        locked_until:
-          type: string
-          format: date-time
-          nullable: true
-        status:
-          $ref: '#/components/schemas/Status'
-        created_at:
-          type: string
-          format: date-time
         updated_at:
           type: string
           format: date-time
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/attachments"
+        external_links:
+          type: array
+          items:
+            $ref: "#/components/schemas/external_links"
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/grades"
         project_students:
           type: array
           items:
-            $ref: '#/components/schemas/ProjectStudent'
-        school_users_projects_supervisor_idToschool_users:
-          $ref: '#/components/schemas/SchoolUser'
-        school_users_projects_opponent_idToschool_users:
-          $ref: '#/components/schemas/SchoolUser'
-      required: [id, title, supervisor_id, opponent_id, subject, status, created_at, updated_at]
-
-    CreateProject:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-        supervisor_id:
-          type: integer
-          format: int64
-        opponent_id:
-          type: integer
-          format: int64
-        subject:
-          type: string
-          minLength: 1
-        description:
-          type: string
-        main_document:
-          type: string
-        locked_until:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/Status'
-      required: [title, supervisor_id, opponent_id, subject]
-
-    UpdateProject:
-      type: object
-      properties:
-        title:
-          type: string
-          minLength: 1
-        supervisor_id:
-          type: integer
-          format: int64
-        opponent_id:
-          type: integer
-          format: int64
-        subject:
-          type: string
-          minLength: 1
-        description:
-          type: string
-        main_document:
-          type: string
-        locked_until:
-          type: string
-          format: date-time
-        status:
-          $ref: '#/components/schemas/Status'
-
-    AddStudentToProject:
-      type: object
-      properties:
-        studentId:
-          type: integer
-          format: int64
-      required: [studentId]
-
-    UpdateProjectStudents:
-      type: object
-      properties:
-        studentIds:
+            $ref: "#/components/schemas/project_students"
+        users_projects_opponent_idTousers:
+          $ref: "#/components/schemas/users"
+        users_projects_supervisor_idTousers:
+          $ref: "#/components/schemas/users"
+        reviews:
           type: array
           items:
-            type: integer
-            format: int64
-      required: [studentIds]
-
-    Review:
+            $ref: "#/components/schemas/reviews"
+      required:
+        - id
+        - title
+        - supervisor_id
+        - opponent_id
+        - subject
+        - updated_at
+        - attachments
+        - external_links
+        - grades
+        - project_students
+        - users_projects_opponent_idTousers
+        - users_projects_supervisor_idTousers
+        - reviews
+    reviews:
       type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
       properties:
         id:
           type: integer
@@ -308,8 +1074,7 @@ components:
           type: integer
           format: int64
         reviewer_id:
-          type: integer
-          format: int64
+          type: string
         comments:
           type: string
         submitted_at:
@@ -318,797 +1083,253 @@ components:
         updated_at:
           type: string
           format: date-time
-      required: [id, project_id, reviewer_id, comments, submitted_at, updated_at]
-
-    CreateReview:
+        projects:
+          $ref: "#/components/schemas/projects"
+        users:
+          $ref: "#/components/schemas/users"
+      required:
+        - id
+        - project_id
+        - reviewer_id
+        - comments
+        - submitted_at
+        - updated_at
+        - projects
+        - users
+    roles:
       type: object
-      properties:
-        project_id:
-          type: integer
-          format: int64
-        reviewer_id:
-          type: integer
-          format: int64
-        comments:
-          type: string
-          minLength: 1
-      required: [project_id, reviewer_id, comments]
-
-    UpdateReview:
-      type: object
-      properties:
-        comments:
-          type: string
-          minLength: 1
-      required: [comments]
-
-    Attachment:
-      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
       properties:
         id:
           type: integer
           format: int64
-        project_id:
-          type: integer
-          format: int64
-          nullable: true
-        filename:
+        name:
           type: string
-        storage_path:
-          type: string
-        description:
-          type: string
-          nullable: true
-        uploaded_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required: [id, filename, storage_path, uploaded_at, updated_at]
-
-    CreateAttachment:
-      type: object
-      properties:
-        project_id:
-          type: integer
-          format: int64
-        filename:
-          type: string
-          minLength: 1
-        storage_path:
-          type: string
-          minLength: 1
-        description:
-          type: string
-      required: [filename, storage_path]
-
-    UpdateAttachment:
-      type: object
-      properties:
-        filename:
-          type: string
-          minLength: 1
-        description:
-          type: string
-
-    ExternalLink:
-      type: object
-      properties:
-        id:
-          type: integer
-          format: int64
-        project_id:
-          type: integer
-          format: int64
-          nullable: true
-        url:
-          type: string
-          format: uri
-          nullable: true
-        title:
-          type: string
-          nullable: true
-        description:
-          type: string
-          nullable: true
-        added_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-      required: [id, added_at, updated_at]
-
-    CreateExternalLink:
-      type: object
-      properties:
-        project_id:
-          type: integer
-          format: int64
-        url:
-          type: string
-          format: uri
-        title:
-          type: string
-        description:
-          type: string
-
-    UpdateExternalLink:
-      type: object
-      properties:
-        project_id:
-          type: integer
-          format: int64
-        url:
-          type: string
-          format: uri
-        title:
-          type: string
-        description:
-          type: string
-
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-        school_id:
-          type: integer
-          format: int64
-          nullable: true
         created_at:
           type: string
           format: date-time
+        description:
+          type: string
         updated_at:
           type: string
           format: date-time
-      required: [id, email, role, created_at, updated_at]
-
-    CreateUser:
-      type: object
-      properties:
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-          default: student
-        school_id:
-          type: integer
-          format: int64
-      required: [email]
-
-    UpdateUser:
-      type: object
-      properties:
-        role:
-          type: string
-        school_id:
-          type: integer
-          format: int64
-
-    # Error response schemas
-    Error:
-      type: object
-      properties:
-        error:
-          type: string
-      required: [error]
-
-    ValidationError:
-      type: object
-      properties:
-        error:
-          type: string
-        details:
+        scale_sets:
           type: array
           items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
-      required: [error]
-
-  responses:
-    UnauthorizedError:
-      description: Authentication information is missing or invalid
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Unauthorized
-
-    ForbiddenError:
-      description: Access forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Forbidden
-
-    NotFoundError:
-      description: Resource not found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Not found
-
-    ValidationError:
-      description: Validation error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ValidationError'
-          example:
-            error: Validation failed
-            details:
-              - field: title
-                message: Title is required
-
-    ServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-          example:
-            error: Internal server error
-
-security:
-  - bearerAuth: []
-
-paths:
-  # Projects endpoints
-  /projects:
-    get:
-      summary: Get all projects
-      tags: [Projects]
-      responses:
-        '200':
-          description: List of projects
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Project'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    post:
-      summary: Create a new project
-      tags: [Projects]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateProject'
-      responses:
-        '201':
-          description: Project created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /projects/{id}:
-    get:
-      summary: Get project by ID
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: Project details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    put:
-      summary: Update project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProject'
-      responses:
-        '200':
-          description: Project updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Project'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    delete:
-      summary: Delete project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '204':
-          description: Project deleted successfully
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /projects/{id}/students:
-    get:
-      summary: Get students assigned to project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of students assigned to project
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SchoolUser'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    post:
-      summary: Add student to project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AddStudentToProject'
-      responses:
-        '201':
-          description: Student added to project successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProjectStudent'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    put:
-      summary: Update all students assigned to project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateProjectStudents'
-      responses:
-        '200':
-          description: Project students updated successfully
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SchoolUser'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /projects/{id}/students/{studentId}:
-    delete:
-      summary: Remove student from project
-      tags: [Projects]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-        - name: studentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '204':
-          description: Student removed from project successfully
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  # Schools endpoints
-  /schools:
-    get:
-      summary: Get all schools
-      tags: [Schools]
-      responses:
-        '200':
-          description: List of schools
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/School'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    post:
-      summary: Create a new school
-      tags: [Schools]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSchool'
-      responses:
-        '201':
-          description: School created successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/School'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /schools/{id}:
-    get:
-      summary: Get school by ID
-      tags: [Schools]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: School details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/School'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    put:
-      summary: Update school
-      tags: [Schools]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSchool'
-      responses:
-        '200':
-          description: School updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/School'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    delete:
-      summary: Delete school
-      tags: [Schools]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '204':
-          description: School deleted successfully
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /schools/{id}/students:
-    get:
-      summary: Get students by school ID
-      tags: [Schools]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of students in school
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SchoolUser'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /schools/{id}/teachers:
-    get:
-      summary: Get teachers by school ID
-      tags: [Schools]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '200':
-          description: List of teachers in school
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SchoolUser'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  # Users endpoints
-  /users:
-    get:
-      summary: Get all users
-      tags: [Users]
-      responses:
-        '200':
-          description: List of users
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /users/{id}:
-    get:
-      summary: Get user by ID
-      tags: [Users]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: User details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    put:
-      summary: Update user
-      tags: [Users]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUser'
-      responses:
-        '200':
-          description: User updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/ValidationError'
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-    delete:
-      summary: Delete user
-      tags: [Users]
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '204':
-          description: User deleted successfully
-        '401':
-          $ref: '#/components/responses/UnauthorizedError'
-        '403':
-          $ref: '#/components/responses/ForbiddenError'
-        '404':
-          $ref: '#/components/responses/NotFoundError'
-        '500':
-          $ref: '#/components/responses/ServerError'
+            $ref: "#/components/schemas/scale_sets"
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+        - scale_sets
+    scale_set_scales:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        scale_set_id:
+          type: integer
+          format: int64
+        scale_id:
+          type: integer
+          format: int64
+        weight:
+          type: integer
+          format: int32
+        display_order:
+          type: integer
+          format: int32
+        created_at:
+          type: string
+          format: date-time
+        scales:
+          $ref: "#/components/schemas/scales"
+        scale_sets:
+          $ref: "#/components/schemas/scale_sets"
+      required:
+        - id
+        - scale_set_id
+        - scale_id
+        - weight
+        - created_at
+        - scales
+        - scale_sets
+    scale_sets:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        role_id:
+          type: integer
+          format: int64
+        year_id:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        scale_set_scales:
+          type: array
+          items:
+            $ref: "#/components/schemas/scale_set_scales"
+        roles:
+          $ref: "#/components/schemas/roles"
+        years:
+          $ref: "#/components/schemas/years"
+      required:
+        - id
+        - created_at
+        - scale_set_scales
+    scales:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        maxVal:
+          type: integer
+          format: int64
+        name:
+          type: string
+        desc:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/grades"
+        scale_set_scales:
+          type: array
+          items:
+            $ref: "#/components/schemas/scale_set_scales"
+      required:
+        - id
+        - maxVal
+        - name
+        - created_at
+        - grades
+        - scale_set_scales
+    years:
+      type: object
+      description: This model contains row level security and requires additional
+        setup for migrations. Visit https://pris.ly/d/row-level-security for
+        more info.
+      properties:
+        id:
+          type: integer
+          format: int64
+        school_id:
+          type: integer
+          format: int64
+        assignment_date:
+          type: string
+          format: date-time
+        submission_date:
+          type: string
+          format: date-time
+        feedback_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        grades:
+          type: array
+          items:
+            $ref: "#/components/schemas/grades"
+        scale_sets:
+          type: array
+          items:
+            $ref: "#/components/schemas/scale_sets"
+      required:
+        - id
+        - created_at
+        - grades
+        - scale_sets
+    aal_level:
+      type: string
+      enum:
+        - aal1
+        - aal2
+        - aal3
+    code_challenge_method:
+      type: string
+      enum:
+        - s256
+        - plain
+    factor_status:
+      type: string
+      enum:
+        - unverified
+        - verified
+    factor_type:
+      type: string
+      enum:
+        - totp
+        - webauthn
+        - phone
+    oauth_authorization_status:
+      type: string
+      enum:
+        - pending
+        - approved
+        - denied
+        - expired
+    oauth_client_type:
+      type: string
+      enum:
+        - public
+        - confidential
+    oauth_registration_type:
+      type: string
+      enum:
+        - dynamic
+        - manual
+    oauth_response_type:
+      type: string
+      enum:
+        - code
+    one_time_token_type:
+      type: string
+      enum:
+        - confirmation_token
+        - reauthentication_token
+        - recovery_token
+        - email_change_token_new
+        - email_change_token_current
+        - phone_change_token
+    status:
+      type: string
+      enum:
+        - draft
+        - submitted
+        - locked
+        - public
+  responses: {}
+  parameters: {}
+  examples: {}
+  requestBodies: {}
+  headers: {}
+  securitySchemes: {}
+  links: {}
+  callbacks: {}
+tags: []
+servers: []

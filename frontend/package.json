@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "npm run generate-types && next build --turbopack",
     "start": "next start",
-    "generate-types": "openapi-typescript openapi.yaml -o src/types/api.ts"
+    "sync-openapi": "cp ../backend/openapi.yaml ./openapi.yaml",
+    "generate-types": "npm run sync-openapi && openapi-typescript openapi.yaml -o src/types/api.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

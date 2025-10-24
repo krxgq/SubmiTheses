@@ -195,14 +195,14 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
 
     return (
         <>
-            <header className="bg-background-card dark:bg-background-dark-card shadow-sm border-b border-border dark:border-border-dark px-6 py-4">
+            <header className="bg-background-elevated shadow-sm border-b px-6 py-4">
                 <div className="flex items-center justify-end">
 
                     {/* Compact Search Button */}
                     <div className="mx-8">
                         <button
                             onClick={() => setIsSearchModalOpen(true)}
-                            className="flex items-center px-3 py-2 text-sm text-foreground-muted bg-muted dark:bg-muted-dark hover:bg-background-secondary dark:hover:bg-muted-dark rounded-lg transition-colors duration-200"
+                            className="flex items-center px-3 py-2 text-sm text-secondary bg-background-secondary hover:bg-background-hover rounded-lg transition-colors duration-200"
                         >
                             <Search className="w-4 h-4 mr-2" />
                             <span className="hidden sm:inline">Search...</span>
@@ -228,7 +228,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
 
                             {/* Language Dropdown */}
                             {showLanguageMenu && (
-                                <div className="absolute right-0 mt-2 w-32 bg-background-elevated border border rounded-lg shadow-lg z-50">
+                                <div className="absolute right-0 mt-2 w-32 bg-background-elevated border-border rounded-lg shadow-lg z-50">
                                     <div className="py-1">
                                         <button
                                             onClick={() => changeLanguage('en')}
@@ -265,9 +265,9 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
 
                             {/* Notifications Dropdown */}
                             {showNotifications && (
-                                <div className="absolute right-0 mt-2 w-80 bg-background-elevated border rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
+                                <div className="absolute right-0 mt-2 w-80 bg-background-elevated border-border rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
                                     {/* Header */}
-                                    <div className="px-4 py-3 border-b  flex items-center justify-between">
+                                    <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                                         <h3 className="text-sm font-semibold text-primary">Notifications</h3>
                                         {unreadCount > 0 && (
                                             <button
@@ -308,7 +308,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
                                                                     className="p-1 text-tertiary hover:text-primary transition-colors"
                                                                     title="Mark as read"
                                                                 >
-                                                                    <div className="w-3 h-3 rounded-full border border-current"></div>
+                                                                    <div className="w-3 h-3 rounded-full border-border border-current"></div>
                                                                 </button>
                                                             )}
                                                             <button
@@ -331,7 +331,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="px-4 py-3 bg-background-secondary border-t border">
+                                    <div className="px-4 py-3 bg-background-secondary border-t border-border">
                                         <button className="w-full text-center text-sm text-primary hover:text-primary transition-colors">
                                             View all notifications
                                         </button>
@@ -358,7 +358,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
 
                             {/* User Dropdown */}
                             {showUserMenu && (
-                                <div className="absolute right-0 mt-2 w-48 bg-background-elevated border rounded-lg shadow-xl z-50">
+                                <div className="absolute right-0 mt-2 w-48 bg-background-elevated border-border rounded-lg shadow-xl z-50">
                                     <div className="py-1">
                                         <div className="px-3 py-2 border-b">
                                             <p className="text-sm font-medium text-primary">{getDisplayName()}</p>
@@ -387,7 +387,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
                                             Settings
                                         </button>
 
-                                        <div className="border-t border my-1"></div>
+                                        <div className="border-t border-border my-1"></div>
 
                                         <button
                                             onClick={handleLogout}
@@ -438,7 +438,7 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
 
                             {/* Search Results */}
                             {searchQuery && (
-                                <div className="border-t border max-h-96 overflow-y-auto">
+                                <div className="border-t  max-h-96 overflow-y-auto">
                                     {filteredSuggestions.length > 0 ? (
                                         <div className="py-2">
                                             <div className="px-6 py-3 text-xs font-semibold text-secondary uppercase tracking-wide bg-background-secondary">
@@ -468,10 +468,10 @@ export default function Header({ locale = 'en', dictionary }: HeaderProps) {
                             )}
 
                             {/* Footer */}
-                            <div className="px-6 py-4 bg-background-secondary border-t border text-xs text-secondary flex items-center justify-between">
+                            <div className="px-6 py-4 bg-background-secondary border-t text-xs text-secondary flex items-center justify-between">
                                 <div className="flex items-center space-x-4">
-                                    <span>Press <kbd className="px-2 py-1 bg-background-elevated border border rounded text-xs">↵</kbd> to select</span>
-                                    <span>Press <kbd className="px-2 py-1 bg-background-elevated border border rounded text-xs">Esc</kbd> to close</span>
+                                    <span>Press <kbd className="px-2 py-1 bg-background-elevated border-border rounded text-xs">↵</kbd> to select</span>
+                                    <span>Press <kbd className="px-2 py-1 bg-background-elevated border-border rounded text-xs">Esc</kbd> to close</span>
                                 </div>
                                 <span>⌘K to search</span>
                             </div>

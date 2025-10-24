@@ -18,19 +18,19 @@ export function ThemeToggle() {
     return (
       <div className="flex items-center space-x-2">
         <button
-          className="p-2 rounded-lg transition-colors hover:bg-muted text-foreground-muted"
+          className="p-2 rounded-lg transition-colors hover:bg-background-hover text-secondary"
           disabled
         >
           <Sun className="w-4 h-4" />
         </button>
         <button
-          className="p-2 rounded-lg transition-colors hover:bg-muted text-foreground-muted"
+          className="p-2 rounded-lg transition-colors hover:bg-background-hover text-secondary"
           disabled
         >
           <Moon className="w-4 h-4" />
         </button>
         <button
-          className="p-2 rounded-lg transition-colors hover:bg-muted text-foreground-muted"
+          className="p-2 rounded-lg transition-colors hover:bg-background-hover text-secondary"
           disabled
         >
           <Monitor className="w-4 h-4" />
@@ -44,8 +44,8 @@ export function ThemeToggle() {
       <button
         onClick={() => setTheme("light")}
         className={`p-2 rounded-lg transition-colors ${theme === "light"
-            ? "bg-muted text-primary"
-            : "hover:bg-muted text-foreground-muted hover:text-foreground"
+            ? "bg-background-secondary text-primary"
+            : "hover:bg-background-hover text-secondary hover:text-primary"
           }`}
         title="Light mode"
       >
@@ -54,8 +54,8 @@ export function ThemeToggle() {
       <button
         onClick={() => setTheme("dark")}
         className={`p-2 rounded-lg transition-colors ${theme === "dark"
-            ? "bg-muted dark:bg-muted-dark text-primary"
-            : "hover:bg-muted dark:hover:bg-muted-dark text-foreground-muted hover:text-foreground"
+            ? "bg-background-secondary text-primary"
+            : "hover:bg-background-hover text-secondary hover:text-primary"
           }`}
         title="Dark mode"
       >
@@ -64,8 +64,8 @@ export function ThemeToggle() {
       <button
         onClick={() => setTheme("system")}
         className={`p-2 rounded-lg transition-colors ${theme === "system"
-            ? "bg-muted dark:bg-muted-dark text-primary"
-            : "hover:bg-muted dark:hover:bg-muted-dark text-foreground-muted hover:text-foreground"
+            ? "bg-background-secondary text-primary"
+            : "hover:bg-background-hover text-secondary hover:text-primary"
           }`}
         title="System preference"
       >

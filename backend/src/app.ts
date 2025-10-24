@@ -25,13 +25,15 @@ app.get('/api-docs.json', (req: Request, res: Response) => {
 
 app.use('/api', routes);
 
+// 404 handler - must be after all routes
+app.use((_req: Request, res: Response, next: NextFunction) => {
+  res.status(404).json({ error: 'Route not found' });
+});
+
+// Error handler - must be last
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Something went wrong!' });
-});
-
-app.use('*', (req: Request, res: Response) => {
-  res.status(404).json({ error: 'Route not found' });
 });
 
 export default app;

@@ -11,7 +11,6 @@ export default function AppSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/dashboard' },
     { id: 'projects', label: 'Projects', icon: Folder, path: '/projects' },
     { id: 'reviews', label: 'Reviews', icon: Star, path: '/reviews' },
     { id: 'attachments', label: 'Attachments', icon: Paperclip, path: '/attachments' },
@@ -62,20 +61,22 @@ export default function AppSidebar() {
       <div className={`
         fixed lg:static inset-y-0 left-0 z-40 w-64 transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-        bg-background-elevated shadow-sm border-r border flex flex-col
+        bg-background-elevated shadow-sm border-r border-border flex flex-col
       `}>
         {/* Logo */}
-        <div className="p-6 border-b border">
+        <div className="p-6 mb-2">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-primary rounded-lg mr-3"></div>
             <span className="font-bold text-xl text-primary">SubmiTheses</span>
           </div>
         </div>
 
+          <div className='w-0.8 mx-2 rounded bg-border-strong h-0.5'/>
+
         {/* Navigation */}
-        <Sidebar className="flex-1 bg-transparent border-none shadow-none">
-          <SidebarItems className="px-4 py-6">
-            <SidebarItemGroup className="space-y-2">
+        <Sidebar className="flex-1 bg-transparent shadow-none border-r border-border">
+          <SidebarItems >
+            <SidebarItemGroup className='border-none'>
               {navItems.map((item) => {
                 const IconComponent = item.icon;
                 const isActive = isActiveItem(item.path);
@@ -83,13 +84,13 @@ export default function AppSidebar() {
                   <SidebarItem
                     key={item.id}
                     onClick={() => handleNavigation(item.path)}
-                    className={`text-sm font-medium transition-colors cursor-pointer ${
-                      isActive
-                        ? 'bg-primary text-text-inverse'
-                        : 'text-secondary hover:bg-background-hover'
-                    }`}
+                    className="text-sm font-medium border-none transition-colors cursor-pointer"
+                    style={isActive ? {
+                      backgroundColor: 'var(--color-primary)',
+                      color: 'var(--color-text-inverse)'
+                    } : {}}
                   >
-                    <div className="flex items-center">
+                    <div className={`flex items-center ${isActive ? '' : 'text-secondary hover:bg-background-hover'}`}>
                       <IconComponent className="mr-3 w-5 h-5" />
                       {item.label}
                     </div>

@@ -2,7 +2,6 @@
 import { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { i18n, type Locale } from '../../lib/i18n-config'
-
 interface LocaleLayoutProps {
   children: ReactNode
   params: Promise<{ locale: string }>
@@ -21,5 +20,5 @@ export default async function LocaleLayout({
     notFound()
   }
 
-  return children
+  return children;
 }
