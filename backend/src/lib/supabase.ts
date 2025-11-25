@@ -1,6 +1,7 @@
   import { createClient } from '@supabase/supabase-js'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+// TODO: Should use SUPABASE_SERVICE_ROLE_KEY instead of anon key for server-side operations
 const supabaseServiceRoleKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
 if (!supabaseUrl || !supabaseServiceRoleKey) {

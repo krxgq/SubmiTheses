@@ -29,6 +29,14 @@
       "czech": "Čeština"
     }
   },
+  "access": {
+    "restricted": {
+      "title": "Přístup omezen",
+      "message": "Nemáte oprávnění k přístupu na tuto stránku.",
+      "goBack": "Zpět",
+      "goHome": "Přejít na nástěnku"
+    }
+  },
   "auth": {
     "login": {
       "title": "Přihlášení",
@@ -64,5 +72,66 @@
     },
     "loading": "Prosím čekejte...",
     "error": "Něco se pokazilo. Zkuste to znovu."
+  },
+  "common": {
+    "unknown": "Neznámý",
+    "edit": "Upravit"
+  },
+  "users": {
+    "title": "Uživatelé",
+    "table": {
+      "name": "Jméno",
+      "email": "Email",
+      "role": "Role",
+      "year": "Ročník",
+      "actions": "Akce"
+    },
+    "roles": {
+      "admin": "Administrátor",
+      "teacher": "Učitel",
+      "student": "Student"
+    },
+    "form": {
+      "fullName": "Celé jméno",
+      "email": "Email",
+      "role": "Role",
+      "year": "Ročník",
+      "save": "Uložit změny",
+      "cancel": "Zrušit"
+    }
+  },
+  "projects": {
+    "supervisor": "Vedoucí",
+    "opponent": "Oponent",
+    "student": "Student",
+    "students": "Studenti",
+    "lastUpdated": "Naposledy aktualizováno",
+    "noDescription": "Popis není k dispozici",
+    "noStudent": "Nepřiřazen žádný student",
+    "noProjectsFound": "Nebyly nalezeny žádné projekty",
+    "myProjects": "Moje Projekty",
+    "allProjects": "Všechny Projekty",
+    "asSupervisor": "Jako Vedoucí",
+    "asOpponent": "Jako Oponent",
+    "sections": {
+      "myProjects": "Moje Projekty",
+      "supervisor": "Jako Vedoucí",
+      "opponent": "Jako Oponent",
+      "other": "Ostatní Projekty"
+    },
+    "status": {
+      "draft": "Koncept",
+      "submitted": "Odesláno",
+      "locked": "Uzamčeno",
+      "public": "Veřejné"
+    },
+    "uploadFile": "Nahrát soubor",
+    "uploadFiles": "Nahrát soubory",
+    "chooseFiles": "Vyberte soubory k nahrání",
+    "uploadError": "Nepodařilo se nahrát soubory. Zkuste to znovu.",
+    "uploading": "Nahrávání...",
+    "exportPdf": "Exportovat jako PDF",
+    "noFilesSelected": "Vyberte prosím alespoň jeden soubor",
+    "category": "Kategorie"
   }
 }

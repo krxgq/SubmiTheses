@@ -1,9 +1,18 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import routes from './routes/api';
-import { swaggerUi, openApiSpec, swaggerUiOptions } from './config/docs';
 
 const app: Express = express();
 
+// CORS configuration - allow frontend to access API
+const corsOptions = {
+  origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -13,14 +22,6 @@ app.get('/', (req: Request, res: Response) => {
 
 app.get('/health', (req: Request, res: Response) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
-
-// API Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerUiOptions));
-
-// Serve the OpenAPI spec as JSON
-app.get('/api-docs.json', (req: Request, res: Response) => {
-  res.json(openApiSpec);
 });
 
 app.use('/api', routes);

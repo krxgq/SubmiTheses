@@ -19,8 +19,8 @@ router.get('/:id/attachments', authenticated, canAccessProject, validate(project
 // Get a specific attachment metadata
 router.get('/:id/attachments/:attachmentId', authenticated, canAccessProject, validate(attachmentIdSchema), getAttachmentById);
 
-// Upload a new attachment
-router.post('/:id/attachments', authenticated, canModifyProject, validate(projectIdSchema), upload.single('file'), uploadAttachment);
+// Upload new attachments (supports multiple files)
+router.post('/:id/attachments', authenticated, canModifyProject, validate(projectIdSchema), upload.array('files', 10), uploadAttachment);
 
 // Download an attachment
 router.get('/:id/attachments/:attachmentId/download', authenticated, canAccessProject, validate(attachmentIdSchema), downloadAttachment);
@@ -28,4 +28,4 @@ router.get('/:id/attachments/:attachmentId/download', authenticated, canAccessPr
 // Delete an attachment
 router.delete('/:id/attachments/:attachmentId', authenticated, canModifyProject, validate(attachmentIdSchema), deleteAttachment);
 
-export default router;
+export default router

@@ -1,85 +1,112 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from '../lib/prisma';
+import type { UserWithYear, UserRole, UpdateUserRequest } from '@sumbi/shared-types';
 
-const prisma = new PrismaClient();
-
+/**
+ * User Service - handles operations on public.users table
+ * Note: Prisma model is named 'public_users' (mapped to 'users' table in DB)
+ * Uses shared types from @sumbi/shared-types package
+ */
 export class UserService {
+  /**
+   * Get all users with their year information
+   * Ordered by creation date (newest first)
+   */
   static async getAllUsers() {
-    return await prisma.users.findMany({
-      select: {
-        id: true,
-        email: true,
-        created_at: true,
-        updated_at: true,
-        last_sign_in_at: true,
-        raw_user_meta_data: true,
-        email_confirmed_at: true,
+    return await prisma.public_users.findMany({
+      include: {
+        years: true, // Include related year data
+      },
+      orderBy: {
+        created_at: 'desc',
       },
     });
   }
 
+  /**
+   * Get user by ID with year information
+   */
   static async getUserById(id: string) {
-    return await prisma.users.findUnique({
+    return await prisma.public_users.findUnique({
       where: { id: String(id) },
-      select: {
-        id: true,
-        email: true,
-        created_at: true,
-        updated_at: true,
-        last_sign_in_at: true,
-        raw_user_meta_data: true,
-        raw_app_meta_data: true,
-        email_confirmed_at: true,
+      include: {
+        years: true,
       },
     });
   }
 
-  static async updateUser(id: string, data: any) {
-    // Get existing user to merge metadata
-    const existingUser = await prisma.users.findUnique({
-      where: { id: String(id) },
-      select: {
-        raw_user_meta_data: true,
-        raw_app_meta_data: true,
+  /**
+   * Get users filtered by role
+   */
+  static async getUsersByRole(role: 'admin' | 'teacher' | 'student') {
+    return await prisma.public_users.findMany({
+      where: { role },
+      orderBy: {
+        created_at: 'desc',
       },
+    });
+  }
+
+  /**
+   * Get all teachers (users with teacher or admin role)
+   */
+  static async getTeachers() {
+    return await prisma.public_users.findMany({
+      where: {
+        role: {
+          in: ['teacher', 'admin'],
+        },
+      },
+      orderBy: {
+        full_name: 'asc',
+      },
+    });
+  }
+
+  /**
+   * Update user profile (name, year, etc.)
+   */
+  static async updateUser(id: string, data: UpdateUserRequest): Promise<UserWithYear | null> {
+    const existingUser = await prisma.public_users.findUnique({
+      where: { id: String(id) },
     });
 
     if (!existingUser) {
       return null;
     }
 
-    // Merge metadata instead of replacing
-    const mergedUserMetadata = {
-      ...(existingUser.raw_user_meta_data as object || {}),
-      ...(data.raw_user_meta_data || {}),
-    };
-
-    const mergedAppMetadata = {
-      ...(existingUser.raw_app_meta_data as object || {}),
-      ...(data.raw_app_meta_data || {}),
-    };
-
-    return await prisma.users.update({
+    return await prisma.public_users.update({
       where: { id: String(id) },
       data: {
+        full_name: data.full_name,
+        avatar_url: data.avatar_url,
+        year_id: data.year_id,
         email: data.email,
-        raw_user_meta_data: mergedUserMetadata,
-        raw_app_meta_data: mergedAppMetadata,
       },
-      select: {
-        id: true,
-        email: true,
-        created_at: true,
-        updated_at: true,
-        last_sign_in_at: true,
-        raw_user_meta_data: true,
-        email_confirmed_at: true,
+      include: {
+        years: true,
       },
     });
   }
 
+  /**
+   * Update user role (admin only - handled by middleware)
+   */
+  static async updateUserRole(id: string, role: 'admin' | 'teacher' | 'student') {
+    return await prisma.public_users.update({
+      where: { id: String(id) },
+      data: { role },
+      include: {
+        years: true,
+      },
+    });
+  }
+
+  /**
+   * Delete user (admin only - handled by middleware)
+   */
   static async deleteUser(id: string) {
     try {
-      const deleted = await prisma.users.delete({
+      const deleted = await prisma.public_users.delete({
         where: { id: String(id) },
       });
       return !!deleted;

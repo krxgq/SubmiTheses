@@ -30,26 +30,48 @@ export async function getAttachmentById(req: Request, res: Response) {
 
 export async function uploadAttachment(req: Request, res: Response) {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
+    // Handle multiple file uploads
+    const files = req.files as Express.Multer.File[];
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
     }
 
     const projectId = BigInt(req.params.id);
+    const uploadedAttachments = [];
 
-    const attachment = await AttachmentService.createAttachment({
-      project_id: projectId,
-      storage_path: req.file.path,
-      filename: req.file.originalname,
-      description: req.body.description,
-    });
+    // Create attachment records for all uploaded files
+    for (const file of files) {
+      try {
+        const upload = await AttachmentService.uploadAttachment(file, projectId);
+        if (!upload.success) {
+          // Clean up this file if upload failed
+          deleteFile(file.path);
+          return res.status(500).json({ error: `Failed to upload file: ${file.originalname}` });
+        }
 
-    return res.status(201).json(attachment);
-  } catch (error) {
-    // Clean up uploaded file if database operation fails
-    if (req.file) {
-      deleteFile(req.file.path);
+        const attachment = await AttachmentService.createAttachment({
+          project_id: projectId,
+          storage_path: file.path,
+          filename: file.originalname,
+          description: req.body.description || null,
+        });
+        uploadedAttachments.push(attachment);
+      } catch (error) {
+        // Clean up this file if database operation fails
+        deleteFile(file.path);
+        throw error;
+      }
     }
-    return res.status(500).json({ error: 'Failed to upload attachment' });
+
+    return res.status(201).json(uploadedAttachments);
+  } catch (error) {
+    // Clean up all uploaded files if any operation fails
+    if (req.files) {
+      const files = req.files as Express.Multer.File[];
+      files.forEach(file => deleteFile(file.path));
+    }
+    return res.status(500).json({ error: 'Failed to upload attachments' });
   }
 }
 

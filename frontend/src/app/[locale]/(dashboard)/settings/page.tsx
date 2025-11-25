@@ -1,18 +1,14 @@
-import { getDictionary } from '@/lib/dictionaries';
-import type { Locale } from '@/lib/i18n-config';
+import { setRequestLocale } from "next-intl/server";
+import ProfileSettingsPage from "./ProfileSettingsPage";
 
-interface ProjectsPageProps {
-  params: Promise<{ locale: Locale }>;
+interface SettingsPageProps {
+  params: Promise<{ locale: string }>;
 }
 
-export default async function ProjectsPage({ params }: ProjectsPageProps) {
+// Server component that fetches initial data
+export default async function SettingsPage({ params }: SettingsPageProps) {
   const { locale } = await params;
-  const dict = await getDictionary(locale);
+  setRequestLocale(locale);
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Projects</h1>
-      <p className="text-secondary">Projects page content coming soon...</p>
-    </div>
-  );
+  return <ProfileSettingsPage />;
 }

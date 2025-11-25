@@ -2,16 +2,10 @@
 import { TabItem, Tabs } from "flowbite-react"
 import { useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
-import { getDictionary } from '@/lib/dictionaries'
 
-interface AuthPageClientProps {
-    dict: Awaited<ReturnType<typeof getDictionary>>
-    locale: string
-}
-
-export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
+export default function AuthPageClient() {
     const router = useRouter()
     const { login, register, isLoading: authLoading } = useAuthContext()
     const [showPassword, setShowPassword] = useState(false)
@@ -129,7 +123,7 @@ export default function AuthPageClient({ dict, locale }: AuthPageClientProps) {
             if (result.success) {
                 setSuccessMessage('Successfully logged in!')
                 setTimeout(() => {
-                    router.push(`/${locale}/projects`)
+                    router.push('/projects')
                 }, 1500)
             } else {
                 setAuthError(result.error || 'An error occurred during login')

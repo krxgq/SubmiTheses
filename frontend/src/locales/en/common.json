@@ -29,6 +29,14 @@
       "czech": "Čeština"
     }
   },
+  "access": {
+    "restricted": {
+      "title": "Access Restricted",
+      "message": "You don't have permission to access this page.",
+      "goBack": "Go Back",
+      "goHome": "Go to Dashboard"
+    }
+  },
   "auth": {
     "login": {
       "title": "Login",
@@ -64,5 +72,66 @@
     },
     "loading": "Please wait...",
     "error": "Something went wrong. Please try again."
+  },
+  "common": {
+    "unknown": "Unknown",
+    "edit": "Edit"
+  },
+  "users": {
+    "title": "Users",
+    "table": {
+      "name": "Name",
+      "email": "Email",
+      "role": "Role",
+      "year": "Year",
+      "actions": "Actions"
+    },
+    "roles": {
+      "admin": "Admin",
+      "teacher": "Teacher",
+      "student": "Student"
+    },
+    "form": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "role": "Role",
+      "year": "Year",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    }
+  },
+  "projects": {
+    "supervisor": "Supervisor",
+    "opponent": "Opponent",
+    "student": "Student",
+    "students": "Students",
+    "lastUpdated": "Last updated",
+    "noDescription": "No description available",
+    "noStudent": "No student assigned",
+    "noProjectsFound": "No projects found",
+    "myProjects": "My Projects",
+    "allProjects": "All Projects",
+    "asSupervisor": "As Supervisor",
+    "asOpponent": "As Opponent",
+    "sections": {
+      "myProjects": "My Projects",
+      "supervisor": "As Supervisor",
+      "opponent": "As Opponent",
+      "other": "Other Projects"
+    },
+    "status": {
+      "draft": "Draft",
+      "submitted": "Submitted",
+      "locked": "Locked",
+      "public": "Public"
+    },
+    "uploadFile": "Upload File",
+    "uploadFiles": "Upload Files",
+    "chooseFiles": "Choose files to upload",
+    "uploadError": "Failed to upload files. Please try again.",
+    "uploading": "Uploading...",
+    "exportPdf": "Export as PDF",
+    "noFilesSelected": "Please select at least one file",
+    "category": "Category"
   }
 }

@@ -1,21 +1,26 @@
-import { getDictionary } from '@/lib/dictionaries'
-import type { Locale } from '@/lib/i18n-config'
 import AuthPageClient from './AuthPageClient'
 import { authService } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+import { redirect } from '@/lib/navigation'
+import { setRequestLocale, getLocale } from 'next-intl/server'
 
-interface AuthPageProps {
-    params: { locale: string }
-}
+// Auth page - redirects to projects if user is already logged in
+export default async function AuthPage({
+    params
+}: {
+    params: Promise<{ locale: string }>
+}) {
+    const { locale } = await params;
 
-export default async function AuthPage({ params }: AuthPageProps) {
-    const { locale } = params
-    const dict = getDictionary(locale as Locale)
+    // Set locale for next-intl (needed for translations in child components)
+    setRequestLocale(locale);
 
     const user = await authService.getCurrentUser()
     if (user) {
-        redirect(`/${locale}/projects`)
+        console.log('User is already logged in, redirecting to projects page')
+        // Use next-intl's redirect with explicit locale parameter (official pattern)
+        const currentLocale = await getLocale();
+        redirect({href: '/projects', locale: currentLocale})
     }
 
-    return <AuthPageClient dict={await dict} locale={locale} />
+    return <AuthPageClient />
 }

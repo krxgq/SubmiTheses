@@ -1,18 +1,16 @@
-import { getDictionary } from '@/lib/dictionaries';
-import type { Locale } from '@/lib/i18n-config';
+import { usersApi } from "@/lib/api/users";
+import { UsersTable } from "./UsersTable";
+import type { UserWithYear } from "@sumbi/shared-types";
 
-interface ProjectsPageProps {
-  params: Promise<{ locale: Locale }>;
-}
+export default async function UsersPage() {
+  let users: UserWithYear[] = [];
+  try {
+    users = await usersApi.getAll();
+    console.log("[UsersPage] Fetched users:", users);
+    console.log("[UsersPage] Users count:", users?.length || 0);
+  } catch (error) {
+    console.error("[UsersPage] Error fetching users:", error);
+  }
 
-export default async function ProjectsPage({ params }: ProjectsPageProps) {
-  const { locale } = await params;
-  const dict = await getDictionary(locale);
-
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Projects</h1>
-      <p className="text-secondary">Projects page content coming soon...</p>
-    </div>
-  );
+  return <UsersTable users={users} />;
 }

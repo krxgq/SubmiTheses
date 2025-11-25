@@ -1,0 +1,7 @@
+# pnpm workspace configuration
+# Defines which directories are part of the monorepo
+
+packages:
+  - 'frontend'
+  - 'backend'
+  - 'packages/*'

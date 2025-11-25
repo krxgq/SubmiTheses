@@ -6,10 +6,7 @@ import {
   createProject,
   updateProject,
   deleteProject,
-  getProjectStudents,
-  addStudentToProject,
-  removeStudentFromProject,
-  updateProjectStudents
+  assignStudentToProject
 } from '../controllers/projects.controller'
 import { validate } from '../middleware/validate'
 import {
@@ -17,8 +14,6 @@ import {
   updateProjectSchema,
   projectIdSchema,
   addStudentToProjectSchema,
-  removeStudentFromProjectSchema,
-  updateProjectStudentsSchema,
 } from '../validation/schemas'
 
 const router = Router()
@@ -34,13 +29,7 @@ router.put('/:id', authenticated, canModifyProject, validate(updateProjectSchema
 
 router.delete('/:id', authenticated, isAdmin, validate(projectIdSchema), deleteProject);
 
-// Student-Project relationship routes
-router.get('/:id/students', authenticated, canAccessProject, validate(projectIdSchema), getProjectStudents);
-
-router.post('/:id/students', authenticated, canModifyProject, validate(addStudentToProjectSchema), addStudentToProject);
-
-router.delete('/:id/students/:studentId', authenticated, canModifyProject, validate(removeStudentFromProjectSchema), removeStudentFromProject);
-
-router.put('/:id/students', authenticated, canModifyProject, validate(updateProjectStudentsSchema), updateProjectStudents);
+// Student assignment route (replaces old student management routes)
+router.put('/:id/student', authenticated, canModifyProject, validate(addStudentToProjectSchema), assignStudentToProject);
 
 export default router

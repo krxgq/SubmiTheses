@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
+import fs from "fs";
 
 export class AttachmentService {
   static async getAttachmentsByProjectId(projectId: bigint) {
@@ -15,7 +14,7 @@ export class AttachmentService {
         },
       },
       orderBy: {
-        uploaded_at: 'desc',
+        uploaded_at: "desc",
       },
     });
   }
@@ -57,6 +56,30 @@ export class AttachmentService {
         },
       },
     });
+  }
+
+  /**
+   * Upload attachment to local storage (temporary solution)
+   * TODO: Replace with cloud storage (Supabase Storage) in the future
+   */
+  static async uploadAttachment(file: Express.Multer.File, projectId: bigint) {
+    // Verify file exists on disk (Multer should have saved it)
+    if (!fs.existsSync(file.path)) {
+      console.error(`File not found on disk: ${file.path}`);
+      return {
+        success: false,
+        error: "File was not saved to disk by upload middleware",
+      };
+    }
+
+    console.log(`File has been uploaded successfully: ${file.path}`);
+    return {
+      success: true,
+      path: file.path,
+      filename: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype,
+    };
   }
 
   static async deleteAttachment(id: bigint) {

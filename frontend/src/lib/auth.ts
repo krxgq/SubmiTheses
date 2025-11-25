@@ -1,65 +1,73 @@
-import { supabase } from './supabase'
-import type { User, Session, AuthError } from '@supabase/supabase-js'
+import { supabase } from "./supabase";
+import type { User, Session, AuthError } from "@supabase/supabase-js";
 
 export interface AuthUser {
-  id: string
-  email: string
-  username?: string
-  created_at: string
+  id: string;
+  email: string;
+  full_name?: string;
+  avatar_url?: string;
+  role?: string;
+  year_id?: number;
+  created_at: string;
 }
 
 export interface LoginCredentials {
-  email: string
-  password: string
-  rememberMe?: boolean
+  email: string;
+  password: string;
+  rememberMe?: boolean;
 }
 
 export interface RegisterCredentials {
-  email: string
-  password: string
-  username: string
-  firstName?: string
-  lastName?: string
-  subscribeNewsletter?: boolean
+  email: string;
+  password: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  subscribeNewsletter?: boolean;
 }
 
 export interface AuthResponse<T = AuthUser> {
-  data: T | null
-  error: string | null
+  data: T | null;
+  error: string | null;
 }
 
 class AuthService {
-  async login({ email, password, rememberMe }: LoginCredentials): Promise<AuthResponse> {
+  async login({
+    email,
+    password,
+    rememberMe,
+  }: LoginCredentials): Promise<AuthResponse> {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      });
 
       if (error) {
-        return { data: null, error: this.getErrorMessage(error) }
+        return { data: null, error: this.getErrorMessage(error) };
       }
 
       if (data.user && data.session) {
-        // Store session token in localStorage for API compatibility
-        localStorage.setItem('auth-token', data.session.access_token)
-        localStorage.setItem('refresh-token', data.session.refresh_token)
-
+        // Session is automatically stored in cookies by Supabase
         if (rememberMe) {
-          localStorage.setItem('remember-me', 'true')
+          localStorage.setItem("remember-me", "true");
         }
 
-        const authUser = this.mapSupabaseUser(data.user)
-        return { data: authUser, error: null }
+        const authUser = await this.mapSupabaseUser(data.user);
+        return { data: authUser, error: null };
       }
 
-      return { data: null, error: 'Login failed' }
+      return { data: null, error: "Login failed" };
     } catch (err) {
-      return { data: null, error: 'Network error occurred' }
+      return { data: null, error: "Network error occurred" };
     }
   }
 
-  async register({ email, password, username }: RegisterCredentials): Promise<AuthResponse> {
+  async register({
+    email,
+    password,
+    username,
+  }: RegisterCredentials): Promise<AuthResponse> {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -69,10 +77,10 @@ class AuthService {
             username: username,
           },
         },
-      })
+      });
 
       if (error) {
-        return { data: null, error: this.getErrorMessage(error) }
+        return { data: null, error: this.getErrorMessage(error) };
       }
 
       if (data.user) {
@@ -80,58 +88,64 @@ class AuthService {
         if (!data.session) {
           return {
             data: null,
-            error: 'Please check your email and click the confirmation link to complete registration.',
-          }
+            error:
+              "Please check your email and click the confirmation link to complete registration.",
+          };
         }
 
-        // Auto-login after successful registration
-        if (data.session) {
-          localStorage.setItem('auth-token', data.session.access_token)
-          localStorage.setItem('refresh-token', data.session.refresh_token)
-        }
-
-        const authUser = this.mapSupabaseUser(data.user)
-        return { data: authUser, error: null }
+        // Session is automatically stored in cookies by Supabase
+        const authUser = await this.mapSupabaseUser(data.user);
+        return { data: authUser, error: null };
       }
 
-      return { data: null, error: 'Registration failed' }
+      return { data: null, error: "Registration failed" };
     } catch (err) {
-      return { data: null, error: 'Network error occurred' }
+      return { data: null, error: "Network error occurred" };
     }
   }
 
   async logout(): Promise<AuthResponse<null>> {
     try {
-      const { error } = await supabase.auth.signOut()
+      const { error } = await supabase.auth.signOut();
 
-      // Clear stored tokens
-      localStorage.removeItem('auth-token')
-      localStorage.removeItem('refresh-token')
-      localStorage.removeItem('remember-me')
+      // Clear only non-session local storage
+      localStorage.removeItem("remember-me");
+
+      // Clear role cookie (will be removed on next server request)
+      // The cookie is httpOnly so we can't delete it from client-side
+      // It will be cleared by middleware on next page load
 
       if (error) {
-        return { data: null, error: this.getErrorMessage(error) }
+        return { data: null, error: this.getErrorMessage(error) };
       }
 
-      return { data: null, error: null }
+      return { data: null, error: null };
     } catch (err) {
-      return { data: null, error: 'Logout failed' }
+      return { data: null, error: "Logout failed" };
     }
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
+      // Use getUser() for secure authentication validation
+      // This validates against Supabase Auth server instead of just reading cookies
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+        error,
+      } = await supabase.auth.getUser();
 
-      if (user) {
-        return this.mapSupabaseUser(user)
+      console.log("AuthService - getUser result:", { user: user ? "User exists" : "No user", error });
+
+      if (error || !user) {
+        return null;
       }
 
-      return null
+      const res = await this.mapSupabaseUser(user);
+      console.log("AuthService - getCurrentUser mapped:", res);
+      return res;
     } catch (err) {
-      return null
+      console.error("AuthService - getCurrentUser error:", err);
+      return null;
     }
   }
 
@@ -139,82 +153,86 @@ class AuthService {
     try {
       const {
         data: { session },
-      } = await supabase.auth.getSession()
-      return session
+      } = await supabase.auth.getSession();
+      return session;
     } catch (err) {
-      return null
+      return null;
     }
   }
 
   async refreshSession(): Promise<AuthResponse<AuthUser>> {
     try {
-      const { data, error } = await supabase.auth.refreshSession()
+      const { data, error } = await supabase.auth.refreshSession();
 
       if (error) {
-        return { data: null, error: this.getErrorMessage(error) }
+        return { data: null, error: this.getErrorMessage(error) };
       }
 
       if (data.session && data.user) {
-        // Update stored tokens
-        localStorage.setItem('auth-token', data.session.access_token)
-        localStorage.setItem('refresh-token', data.session.refresh_token)
-
-        const authUser = this.mapSupabaseUser(data.user)
-        return { data: authUser, error: null }
+        // Session is automatically updated in cookies by Supabase
+        const authUser = await this.mapSupabaseUser(data.user);
+        return { data: authUser, error: null };
       }
 
-      return { data: null, error: 'Session refresh failed' }
+      return { data: null, error: "Session refresh failed" };
     } catch (err) {
-      return { data: null, error: 'Network error occurred' }
+      return { data: null, error: "Network error occurred" };
     }
   }
 
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
-    return supabase.auth.onAuthStateChange((_event, session) => {
+    return supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        const authUser = this.mapSupabaseUser(session.user)
-
-        // Update stored tokens when session changes
-        localStorage.setItem('auth-token', session.access_token)
-        localStorage.setItem('refresh-token', session.refresh_token)
-
-        callback(authUser)
+        // Session is automatically managed in cookies by Supabase
+        const authUser = await this.mapSupabaseUser(session.user);
+        callback(authUser);
       } else {
-        // Clear tokens when signed out
-        localStorage.removeItem('auth-token')
-        localStorage.removeItem('refresh-token')
-        callback(null)
+        callback(null);
       }
-    })
+    });
   }
 
-  private mapSupabaseUser(user: User): AuthUser {
+  private async mapSupabaseUser(user: User): Promise<AuthUser> {
+    // Fetch full user profile from public.users table
+    const { data: userProfile, error } = await supabase
+      .from('users')
+      .select('full_name, avatar_url, role, email, year_id')
+      .eq('id', user.id)
+      .single();
+
+    if (error) {
+      console.error('Failed to fetch user profile:', error);
+    }
+
     return {
       id: user.id,
-      email: user.email || '',
-      username: user.user_metadata?.username || user.email?.split('@')[0] || '',
+      email: user.email || "",
+      full_name: userProfile?.full_name,
+      avatar_url: userProfile?.avatar_url,
+      role: userProfile?.role,
+      year_id: userProfile?.year_id,
       created_at: user.created_at,
-    }
+    };
   }
 
   private getErrorMessage(error: AuthError): string {
     switch (error.message) {
-      case 'Invalid login credentials':
-        return 'Invalid email or password. Please try again.'
-      case 'Email not confirmed':
-        return 'Please confirm your email address before signing in.'
-      case 'User already registered':
-        return 'An account with this email already exists.'
-      case 'Password should be at least 6 characters':
-        return 'Password must be at least 6 characters long.'
-      case 'Unable to validate email address: invalid format':
-        return 'Please enter a valid email address.'
-      case 'Signup is disabled':
-        return 'Account registration is currently disabled.'
+      case "Invalid login credentials":
+        return "Invalid email or password. Please try again.";
+      case "Email not confirmed":
+        return "Please confirm your email address before signing in.";
+      case "User already registered":
+        return "An account with this email already exists.";
+      case "Password should be at least 6 characters":
+        return "Password must be at least 6 characters long.";
+      case "Unable to validate email address: invalid format":
+        return "Please enter a valid email address.";
+      case "Signup is disabled":
+        return "Account registration is currently disabled.";
       default:
-        return error.message || 'An unexpected error occurred.'
+        return error.message || "An unexpected error occurred.";
     }
   }
 }
 
-export const authService = new AuthService()
+export const authService = new AuthService();
