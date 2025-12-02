@@ -5,7 +5,7 @@ interface SettingsPageProps {
   params: Promise<{ locale: string }>;
 }
 
-// Server component that fetches initial data
+// User settings page - access protected by middleware (all authenticated users)
 export default async function SettingsPage({ params }: SettingsPageProps) {
   const { locale } = await params;
   setRequestLocale(locale);

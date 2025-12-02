@@ -1,8 +1,7 @@
 import { projectsApi } from '@/lib/api/projects';
+import { ApiError } from '@/lib/api/client';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { isAccessDeniedError } from '@/lib/api/errors';
-import { AccessDenied } from '@/components/auth/AccessDenied';
 import ProjectHeader from '@/components/dashboard/projects/ProjectHeader';
 import ProjectOverview from '@/components/dashboard/projects/ProjectOverview';
 import QuickStats from '@/components/dashboard/projects/QuickStats';
@@ -17,6 +16,7 @@ interface ProjectPageProps {
 /**
  * Project detail page - displays comprehensive project information
  * Server Component that fetches project data and composes reusable components
+ * Access control: All authenticated users can access (backend validates specific project access)
  */
 export default async function ProjectPage({ params }: ProjectPageProps) {
   const { locale, projectid } = await params;
@@ -27,9 +27,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   try {
     project = await projectsApi.getProjectById(projectid);
   } catch (error) {
-    if (isAccessDeniedError(error)) {
-      return <AccessDenied requiredRoles={['admin', 'teacher', 'student']} />;
+    // Distinguish between 403 (access denied) and 404 (not found)
+    if (error instanceof ApiError && error.statusCode === 403) {
+      // 403 Forbidden - return null, layout will show AccessDenied component
+      return null;
     }
+
+    // 404 or other errors - show Next.js not found page
     notFound();
   }
 

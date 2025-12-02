@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/users.service";
 import type { UserWithYear, UserRole } from "@sumbi/shared-types";
+import { supabase } from "../lib/supabase";
 
 /**
  * Get all users with year information
@@ -98,6 +99,9 @@ export async function updateUserRole(req: Request, res: Response) {
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
+
+    // Invalidate user's session to force re-login with new role
+    await supabase.auth.admin.signOut(id);
 
     return res.status(200).json(updatedUser);
   } catch (error) {

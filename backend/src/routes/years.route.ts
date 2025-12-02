@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticated, isAdmin } from '../middleware/auth';
+import { authenticated } from '../middleware/auth';
+import { requireAdmin } from '../middleware/authorization.middleware';
 import {
   getAllYears,
   getYearById,
@@ -23,12 +24,12 @@ router.get('/', authenticated, getAllYears);
 router.get('/:id', authenticated, validate(yearIdSchema), getYearById);
 
 // Create a new year
-router.post('/', authenticated, isAdmin, validate(createYearSchema), createYear);
+router.post('/', authenticated, requireAdmin, validate(createYearSchema), createYear);
 
 // Update a year
-router.put('/:id', authenticated, isAdmin, validate(updateYearSchema), updateYear);
+router.put('/:id', authenticated, requireAdmin, validate(updateYearSchema), updateYear);
 
 // Delete a year
-router.delete('/:id', authenticated, isAdmin, validate(yearIdSchema), deleteYear);
+router.delete('/:id', authenticated, requireAdmin, validate(yearIdSchema), deleteYear);
 
 export default router;

@@ -9,6 +9,7 @@ interface UserEditPageProps {
   params: Promise<{ userId: string; locale: string }>;
 }
 
+// Page component - access protected by middleware (admin only)
 export default async function UserEditPage({ params }: UserEditPageProps) {
   const { userId, locale } = await params;
   const t = await getTranslations();

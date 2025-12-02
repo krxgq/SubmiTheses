@@ -113,6 +113,7 @@
     "allProjects": "All Projects",
     "asSupervisor": "As Supervisor",
     "asOpponent": "As Opponent",
+    "createNewProject": "Create New Project",
     "sections": {
       "myProjects": "My Projects",
       "supervisor": "As Supervisor",

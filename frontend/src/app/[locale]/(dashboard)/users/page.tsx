@@ -2,6 +2,7 @@ import { usersApi } from "@/lib/api/users";
 import { UsersTable } from "./UsersTable";
 import type { UserWithYear } from "@sumbi/shared-types";
 
+// Protect page - only admin can view users list (enforced by middleware)
 export default async function UsersPage() {
   let users: UserWithYear[] = [];
   try {

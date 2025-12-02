@@ -4,15 +4,6 @@ import { LockKeyhole } from 'lucide-react'
 import { Button } from 'flowbite-react'
 import { BackButton } from './BackButton'
 
-/**
- * Access Denied Component
- *
- * Displays an access denied message when user doesn't have permission
- * for the current route. Can be shown inline instead of redirecting.
- *
- * @param requiredRoles - Optional list of roles required for access
- * @param currentRole - Optional current user role
- */
 export function AccessDenied({
   requiredRoles,
   currentRole,
@@ -27,36 +18,39 @@ export function AccessDenied({
       <div className="max-w-md w-full text-center space-y-6">
         {/* Lock Icon */}
         <div className="flex justify-center">
-          <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-6">
-            <LockKeyhole className="h-16 w-16 text-red-600 dark:text-red-400" />
+          <div className="rounded-full bg-background-tertiary p-6 shadow-lg">
+            <LockKeyhole className="h-16 w-16 text-accent-danger" />
           </div>
         </div>
 
         {/* Heading */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-primary mb-2">
             {t('access.restricted.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-secondary">
             {t('access.restricted.message')}
           </p>
         </div>
 
         {/* Debug info in development */}
         {process.env.NODE_ENV === 'development' && (requiredRoles || currentRole) && (
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3 text-left">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="bg-background-elevated border border-subtle rounded-lg p-4 text-left shadow-sm">
+            <h3 className="text-sm font-medium text-primary mb-2">
+              Debug Information:
+            </h3>
+            <div className="space-y-1">
               {currentRole && (
-                <span className="block">
-                  Your role: <code className="text-xs font-mono">{currentRole}</code>
-                </span>
+                <p className="text-sm text-secondary">
+                  Your role: <code className="text-xs font-mono bg-background-tertiary px-1 py-0.5 rounded text-primary">{currentRole}</code>
+                </p>
               )}
               {requiredRoles && (
-                <span className="block">
-                  Required: <code className="text-xs font-mono">{requiredRoles.join(', ')}</code>
-                </span>
+                <p className="text-sm text-secondary">
+                  Required: <code className="text-xs font-mono bg-background-tertiary px-1 py-0.5 rounded text-accent-danger">{requiredRoles.join(', ')}</code>
+                </p>
               )}
-            </p>
+            </div>
           </div>
         )}
 
@@ -65,7 +59,10 @@ export function AccessDenied({
           <BackButton label={t('access.restricted.goBack')} />
 
           <Link href="/projects">
-            <Button color="blue">
+            <Button 
+              color="blue"
+              className="bg-interactive-primary hover:bg-interactive-primary-hover text-text-inverse border-none"
+            >
               {t('access.restricted.goHome')}
             </Button>
           </Link>

@@ -1,11 +1,5 @@
-import type { UserRole } from '@sumbi/shared-types';
+import type { UserRole } from "@sumbi/shared-types";
 
-/**
- * Route access rule configuration for role-based access control.
- *
- * Defines which routes require authentication and which roles can access them.
- * Supports dynamic route parameters and ownership checks.
- */
 export type RouteAccessRule = {
   /** Route pattern with optional dynamic segments (e.g., '/users/:userId/edit') */
   pattern: string;
@@ -29,60 +23,50 @@ export type RouteAccessRule = {
  * Pattern syntax:
  * - Static segments: '/settings_admin'
  * - Dynamic segments: '/users/:userId'
- * - Nested paths: '/projects/:projectId/edit'
  */
 export const protectedRoutes: RouteAccessRule[] = [
   // ===== Admin-Only Routes =====
   {
-    pattern: '/settings_admin',
-    allowedRoles: ['admin'],
+    pattern: "/settings_admin",
+    allowedRoles: ["admin"],
   },
   {
-    pattern: '/users/:userId/edit',
-    allowedRoles: ['admin'],
+    pattern: "/users/:userId/edit",
+    allowedRoles: ["admin"],
+  },
+  {
+    pattern: "/users",
+    allowedRoles: ["admin"],
   },
 
   // ===== Teacher or Admin Routes =====
+
   {
-    pattern: '/reviews',
-    allowedRoles: ['admin', 'teacher'],
+    pattern: "/projects/:projectId/grade",
+    allowedRoles: ["admin", "teacher"],
   },
   {
-    pattern: '/grades',
-    allowedRoles: ['admin', 'teacher'],
-  },
-  {
-    pattern: '/projects/:projectId/grade',
-    allowedRoles: ['admin', 'teacher'],
-  },
-  {
-    pattern: '/projects/:projectId/review',
-    allowedRoles: ['admin', 'teacher'],
+    pattern: "/projects/:projectId/review",
+    allowedRoles: ["admin", "teacher"],
   },
 
-  // ===== Self-Access Routes (with ownership check) =====
-  {
-    pattern: '/users/:userId',
-    allowedRoles: ['admin', 'teacher', 'student'],
-    checkOwnership: true,
-    ownershipParam: 'userId',
-  },
 
   // ===== Authenticated User Routes =====
   {
-    pattern: '/projects',
-    allowedRoles: ['admin', 'teacher', 'student'],
+    pattern: "/projects",
+    allowedRoles: ["admin", "teacher", "student"],
   },
   {
-    pattern: '/settings',
-    allowedRoles: ['admin', 'teacher', 'student'],
+    pattern: "/settings",
+    allowedRoles: ["admin", "teacher", "student"],
   },
+
+  // ===== Special Routes =====
   {
-    pattern: '/attachments',
-    allowedRoles: ['admin', 'teacher', 'student'],
-  },
-  {
-    pattern: '/links',
-    allowedRoles: ['admin', 'teacher', 'student'],
+    pattern: "/access-denied",
+    allowedRoles: ["admin", "teacher", "student"],
+    // This route is accessible to all authenticated users
+    // It's where unauthorized users get rewritten to
+    // Without this, we'd have an infinite rewrite loop
   },
 ];

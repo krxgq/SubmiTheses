@@ -1,5 +1,10 @@
 import { Router } from 'express'
-import { authenticated, isAdmin, canAccessProject, canModifyProject } from '../middleware/auth'
+import { authenticated } from '../middleware/auth'
+import {
+  requireAdmin,
+  requireProjectAccess,
+  requireProjectModify
+} from '../middleware/authorization.middleware'
 import {
   getAllProjects,
   getProjectById,
@@ -23,13 +28,13 @@ router.get('/', authenticated, getAllProjects);
 
 router.post('/', authenticated, validate(createProjectSchema), createProject);
 
-router.get('/:id', authenticated, canAccessProject, validate(projectIdSchema), getProjectById);
+router.get('/:id', authenticated, requireProjectAccess, validate(projectIdSchema), getProjectById);
 
-router.put('/:id', authenticated, canModifyProject, validate(updateProjectSchema), updateProject);
+router.put('/:id', authenticated, requireProjectModify, validate(updateProjectSchema), updateProject);
 
-router.delete('/:id', authenticated, isAdmin, validate(projectIdSchema), deleteProject);
+router.delete('/:id', authenticated, requireAdmin, validate(projectIdSchema), deleteProject);
 
 // Student assignment route (replaces old student management routes)
-router.put('/:id/student', authenticated, canModifyProject, validate(addStudentToProjectSchema), assignStudentToProject);
+router.put('/:id/student', authenticated, requireProjectModify, validate(addStudentToProjectSchema), assignStudentToProject);
 
 export default router

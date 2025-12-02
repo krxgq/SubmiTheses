@@ -1,5 +1,9 @@
 import { Router } from 'express'
-import { authenticated, isAdmin, canAccessUser } from '../middleware/auth'
+import { authenticated } from '../middleware/auth'
+import {
+  requireAdmin,
+  requireUserAccess
+} from '../middleware/authorization.middleware'
 import {
   getAllUsers,
   getUserById,
@@ -21,8 +25,8 @@ const userIdSchema = z.object({
   }),
 })
 
-// Get all users (admin/teacher only)
-router.get('/', authenticated, getAllUsers)
+// Get all users (ADMIN ONLY - matches frontend restriction)
+router.get('/', authenticated, requireAdmin, getAllUsers)
 
 // Get users by role query parameter (?role=teacher)
 router.get('/by-role', authenticated, getUsersByRole)
@@ -30,16 +34,16 @@ router.get('/by-role', authenticated, getUsersByRole)
 // Get all teachers
 router.get('/teachers', authenticated, getTeachers)
 
-// Get user by ID (admin or the user themselves)
-router.get('/:id', authenticated, canAccessUser, validate(userIdSchema), getUserById)
+// Get user by ID (admin/teacher or the user themselves)
+router.get('/:id', authenticated, requireUserAccess, validate(userIdSchema), getUserById)
 
-// Update user profile (self or admin)
-router.put('/:id', authenticated, canAccessUser, validate(updateUserSchema), updateUser)
+// Update user profile (self, admin, or teacher)
+router.put('/:id', authenticated, requireUserAccess, validate(updateUserSchema), updateUser)
 
 // Update user role (admin only)
-router.patch('/:id/role', authenticated, isAdmin, validate(userIdSchema), updateUserRole)
+router.patch('/:id/role', authenticated, requireAdmin, validate(userIdSchema), updateUserRole)
 
 // Delete user (admin only)
-router.delete('/:id', authenticated, isAdmin, validate(userIdSchema), deleteUser)
+router.delete('/:id', authenticated, requireAdmin, validate(userIdSchema), deleteUser)
 
 export default router

@@ -1,6 +1,10 @@
-export const i18n = {
-  defaultLocale: 'en',
-  locales: ['en', 'cz'],
-} as const
+import { routing } from './navigation';
 
-export type Locale = (typeof i18n)['locales'][number]
+// Re-export from navigation.ts for backwards compatibility
+// navigation.ts is the single source of truth for locale configuration
+export const i18n = {
+  defaultLocale: routing.defaultLocale,
+  locales: routing.locales,
+} as const;
+
+export type Locale = (typeof routing.locales)[number];

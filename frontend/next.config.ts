@@ -5,7 +5,10 @@ import createNextIntlPlugin from 'next-intl/plugin';
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Tell Next.js that this is the actual project root for middleware
+  experimental: {
+    serverComponentsExternalPackages: []
+  }
 };
 
 // Wrap the config with next-intl plugin

@@ -14,6 +14,7 @@ import { protectedRoutes, type RouteAccessRule } from './route-config';
  * matchRoute('/en/users/123/edit', 'en')
  * // Returns: { pattern: '/users/:userId/edit', allowedRoles: ['admin'] }
  */
+
 export function matchRoute(
   pathname: string,
   locale: string
@@ -21,7 +22,6 @@ export function matchRoute(
   // Strip locale prefix: /en/users/123 -> /users/123
   const pathWithoutLocale = pathname.replace(new RegExp(`^/${locale}`), '');
 
-  // Find first matching route pattern
   for (const route of protectedRoutes) {
     if (isPatternMatch(pathWithoutLocale, route.pattern)) {
       return route;

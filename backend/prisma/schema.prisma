@@ -63,27 +63,51 @@ model grades {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model projects {
-  id                                  BigInt             @id @default(autoincrement())
-  title                               String             @db.VarChar
-  supervisor_id                       String             @db.Uuid
-  opponent_id                         String             @db.Uuid
-  student_id                          String?            @db.Uuid
-  subject                             String             @db.VarChar
-  description                         String?            @db.VarChar
-  main_documentation                  String?            @db.VarChar
-  status                              status?            @default(draft)
-  updated_at                          DateTime           @default(now()) @db.Timestamptz(6)
+  id                                  BigInt                  @id @default(autoincrement())
+  title                               String                  @db.VarChar
+  supervisor_id                       String                  @db.Uuid
+  opponent_id                         String                  @db.Uuid
+  student_id                          String?                 @db.Uuid
+  subject                             String                  @db.VarChar
+  description                         String?                 @db.VarChar
+  main_documentation                  String?                 @db.VarChar
+  status                              status?                 @default(draft)
+  year_id                             BigInt?
+  updated_at                          DateTime                @default(now()) @db.Timestamptz(6)
   attachments                         attachments[]
   external_links                      external_links[]
   grades                              grades[]
-  users_projects_opponent_idTousers   public_users       @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onUpdate: NoAction, map: "fk_projects_opponent")
-  users_projects_supervisor_idTousers public_users       @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onUpdate: NoAction, map: "fk_projects_supervisor")
-  users_projects_student_idTousers    public_users?      @relation("projects_student_idTousers", fields: [student_id], references: [id], onUpdate: NoAction, onDelete: SetNull, map: "fk_projects_student")
+  project_description                 project_descriptions?
+  users_projects_opponent_idTousers   public_users            @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onUpdate: NoAction, map: "fk_projects_opponent")
+  users_projects_supervisor_idTousers public_users            @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onUpdate: NoAction, map: "fk_projects_supervisor")
+  users_projects_student_idTousers    public_users?           @relation("projects_student_idTousers", fields: [student_id], references: [id], onUpdate: NoAction, onDelete: SetNull, map: "fk_projects_student")
+  years                               years?                  @relation(fields: [year_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "fk_projects_year")
   reviews                             reviews[]
 
   @@index([opponent_id], map: "idx_projects_opponent")
   @@index([supervisor_id], map: "idx_projects_supervisor")
   @@index([student_id], map: "idx_projects_student")
+  @@index([year_id], map: "idx_projects_year")
+  @@schema("public")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model project_descriptions {
+  id                BigInt   @id @default(autoincrement())
+  project_id        BigInt   @unique
+  topic             String?  @db.Text
+  project_goal      String?  @db.Text
+  specification     Json?    @db.JsonB
+  schedule          Json?    @db.JsonB
+  needed_output     String[]
+  grading_criteria  String[]
+  grading_notes     String?  @db.Text
+  created_at        DateTime @default(now()) @db.Timestamptz(6)
+  updated_at        DateTime @default(now()) @db.Timestamptz(6)
+
+  project           projects @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_project_descriptions_project")
+
+  @@index([project_id], map: "idx_project_descriptions_project_id")
   @@schema("public")
 }
 
@@ -182,6 +206,7 @@ model years {
   grades          grades[]
   scale_sets      scale_sets[]
   users           public_users[]
+  projects        projects[]
 
   @@schema("public")
 }

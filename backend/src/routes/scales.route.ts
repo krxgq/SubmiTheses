@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticated, isAdmin } from '../middleware/auth';
+import { authenticated } from '../middleware/auth';
+import { requireAdmin } from '../middleware/authorization.middleware';
 import {
   getAllScales,
   getScaleById,
@@ -23,12 +24,12 @@ router.get('/', authenticated, getAllScales);
 router.get('/:id', authenticated, validate(scaleIdSchema), getScaleById);
 
 // Create a new scale
-router.post('/', authenticated, isAdmin, validate(createScaleSchema), createScale);
+router.post('/', authenticated, requireAdmin, validate(createScaleSchema), createScale);
 
 // Update a scale
-router.put('/:id', authenticated, isAdmin, validate(updateScaleSchema), updateScale);
+router.put('/:id', authenticated, requireAdmin, validate(updateScaleSchema), updateScale);
 
 // Delete a scale
-router.delete('/:id', authenticated, isAdmin, validate(scaleIdSchema), deleteScale);
+router.delete('/:id', authenticated, requireAdmin, validate(scaleIdSchema), deleteScale);
 
 export default router;

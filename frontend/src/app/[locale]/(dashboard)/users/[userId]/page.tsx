@@ -1,9 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { usersApi } from "@/lib/api/users";
 import { projectsApi } from "@/lib/api/projects";
+import { ApiError } from "@/lib/api/client";
 import { checkRole } from "@/lib/auth/require-role";
-import { isAccessDeniedError } from "@/lib/api/errors";
-import { AccessDenied } from "@/components/auth/AccessDenied";
+import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Edit, Mail, User, Calendar, Briefcase } from "lucide-react";
 import type { ProjectWithRelations } from "@sumbi/shared-types";
@@ -12,11 +12,13 @@ interface UserDetailPageProps {
   params: Promise<{ userId: string }>;
 }
 
+// Page component - access protected by middleware (admin/teacher only)
 export default async function UserDetailPage({ params }: UserDetailPageProps) {
   const { userId } = await params;
   const t = await getTranslations();
 
-  const { role } = await checkRole(['admin', 'teacher', 'student']);
+  // Get role for conditional rendering (e.g., showing edit button)
+  const { role } = await checkRole();
   const isAdmin = role === "admin";
 
   let user;
@@ -28,20 +30,14 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
   } catch (error) {
     console.error("[UserDetailPage] Error:", error);
 
-    if (isAccessDeniedError(error)) {
-      return <AccessDenied requiredRoles={['admin', 'teacher', 'student']} currentRole={role} />;
+    // Distinguish between 403 (access denied) and 404 (not found)
+    if (error instanceof ApiError && error.statusCode === 403) {
+      // 403 Forbidden - return null, layout will show AccessDenied component
+      return null;
     }
 
-    return (
-      <div className="w-full">
-        <h1 className="text-2xl font-bold text-text-primary mb-6">
-          User Not Found
-        </h1>
-        <p className="text-text-secondary">
-          The user you're looking for doesn't exist.
-        </p>
-      </div>
-    );
+    // 404 or other errors - show Next.js not found page
+    notFound();
   }
 
   const userProjects = {

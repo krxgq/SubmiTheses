@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Button } from "flowbite-react";
-import { LayoutList, LayoutGrid } from "lucide-react";
+import { LayoutList, LayoutGrid, Plus } from "lucide-react";
 import type { ProjectWithRelations, UserRole } from "@sumbi/shared-types";
 import { GridItem } from "@/components/dashboard/projects/GridItem";
 import { ListItem } from "@/components/dashboard/projects/ListItem";
 import { useTranslations } from "next-intl";
+import { useRouter } from "@/lib/navigation";
+import { Button } from "flowbite-react";
 
 type ViewMode = "list" | "grid";
 
@@ -78,6 +79,7 @@ export function ProjectsPageClient({
   userId,
 }: ProjectsPageClientProps) {
   const t = useTranslations();
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
   // Filter projects into categories (same for all roles)
@@ -131,37 +133,62 @@ export function ProjectsPageClient({
 
   return (
     <div className="w-full">
-      {/* View mode toggle */}
-      <div className="flex justify-end items-center mb-8">
-        <div className="inline-flex">
-          <Button
-            color="gray"
-            onClick={() => setViewMode("list")}
-            aria-label="List view"
-            aria-pressed={viewMode === "list"}
-            className={
-              "rounded-l-md border border-r-0 " +
-              (viewMode === "list"
-                ? "bg-background-tertiary text-text-primary"
-                : "bg-background text-text-secondary")
-            }
+      {/* Header section with create button and view toggle */}
+      <div className="flex justify-between items-center mb-8">
+        {/* Create project button - only for teachers and admins */}
+        {(userRole === "teacher" || userRole === "admin") && (
+          <button
+            onClick={() => router.push("/projects/create")}
+            className="
+              flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
+              bg-primary text-text-inverse
+              hover:bg-primary-hover
+              active:bg-primary-active
+              transition-all duration-200 ease-in-out
+              shadow-sm hover:shadow-md
+              focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+            "
           >
-            <LayoutList className="w-5 h-5" />
-          </Button>
-          <Button
-            color="gray"
-            onClick={() => setViewMode("grid")}
-            aria-label="Grid view"
-            aria-pressed={viewMode === "grid"}
-            className={
-              "rounded-r-md border " +
-              (viewMode === "grid"
-                ? "bg-background-tertiary text-text-primary"
-                : "bg-background text-text-secondary")
-            }
-          >
-            <LayoutGrid className="w-5 h-5" />
-          </Button>
+            <Plus className="w-5 h-5" />
+            <span>{t("projects.createNewProject")}</span>
+          </button>
+        )}
+
+        {/* Spacer for when button is not shown */}
+        {userRole === "student" && <div />}
+
+        {/* View mode toggle */}
+        <div className="flex items-center">
+          <div className="inline-flex">
+            <Button
+              color="gray"
+              onClick={() => setViewMode("list")}
+              aria-label="List view"
+              aria-pressed={viewMode === "list"}
+              className={
+                "rounded-l-md border border-l-0 " +
+                (viewMode === "list"
+                  ? "bg-background-tertiary text-text-primary"
+                  : "bg-background text-text-secondary")
+              }
+            >
+              <LayoutList className="w-5 h-5" />
+            </Button>
+            <Button
+              color="gray"
+              onClick={() => setViewMode("grid")}
+              aria-label="Grid view"
+              aria-pressed={viewMode === "grid"}
+              className={
+                "rounded-r-md border " +
+                (viewMode === "grid"
+                  ? "bg-background-tertiary text-text-primary"
+                  : "bg-background text-text-secondary")
+              }
+            >
+              <LayoutGrid className="w-5 h-5" />
+            </Button>
+          </div>
         </div>
       </div>
 

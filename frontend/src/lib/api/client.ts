@@ -3,7 +3,7 @@
  * Frontend makes direct requests to backend with Supabase JWT tokens.
  */
 export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 /**
  * Custom error class for API errors
@@ -87,11 +87,31 @@ export async function apiRequest<T>(
 
   console.log('[API] Response status:', response.status, response.statusText);
 
-  // Handle errors
+  // Handle errors - throw ApiError with status code for proper error handling
   if (!response.ok) {
-    const error = await response.text();
-    console.log('[API] Error response:', error);
-    throw new Error(error || `HTTP ${response.status}`);
+    const errorText = await response.text();
+    console.log('[API] Error response:', response.status, errorText);
+
+    let errorData;
+    try {
+      errorData = JSON.parse(errorText);
+    } catch {
+      errorData = { error: errorText };
+    }
+
+    // Handle stale token - force page reload to get fresh session
+    if (errorData.code === 'TOKEN_STALE' && typeof window !== 'undefined') {
+      console.log('[API] Token stale - reloading page for fresh session');
+      window.location.reload();
+      // Wait forever, page is reloading
+      await new Promise(() => {});
+    }
+
+    throw new ApiError(
+      errorData.error || `HTTP ${response.status}`,
+      response.status,
+      errorData
+    );
   }
 
   if (response.status === 204) {

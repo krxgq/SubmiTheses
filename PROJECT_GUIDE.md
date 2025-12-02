@@ -1,396 +1,317 @@
-# SumbiTheses Project Guide
+# SumbiTheses - Thesis Management System
 
-## Project Overview
+A comprehensive web-based platform for managing graduation theses and projects in educational institutions.
 
-SumbiTheses is a thesis management system designed for educational institutions. It allows administrators, teachers, and students to manage thesis projects, including assignments, reviews, grading, and document management.
+## Overview
+
+SumbiTheses enables schools to digitally manage the complete thesis lifecycle—from assignment and writing to review, grading, and publication. The system supports multiple user roles (students, supervisors, opponents, administrators) with fine-grained access control.
+
+## Key Features
+
+- 📝 **Project Management**: Create, assign, and track thesis projects
+- 👥 **Role-Based Access**: Distinct interfaces for students, teachers, and administrators
+- 📎 **Document Handling**: Upload and manage thesis documents and attachments
+- ⭐ **Review System**: Supervisors and opponents can submit reviews and grades
+- 🔒 **Locking Mechanism**: Automatic and manual project locking after deadlines
+- 🌐 **Public Gallery**: Showcase selected excellent projects publicly
+- 🌍 **Internationalization**: Full support for Czech and English languages
+- 🔐 **Security**: Row-level security with JWT-based authentication
 
 ## Architecture
 
-This is a **monorepo** structure with the following main components:
+This is a **monorepo** with a clear separation between frontend, backend, and shared code:
 
 ```
 SumbiTheses/
-├── backend/          # Node.js Express API server
-├── frontend/         # Next.js React application
+├── backend/              # Express.js API server
+│   ├── prisma/          # Database schema and migrations
+│   ├── src/
+│   │   ├── controllers/ # HTTP request handlers
+│   │   ├── services/    # Business logic layer
+│   │   ├── routes/      # API route definitions
+│   │   ├── middleware/  # Auth, validation, error handling
+│   │   └── types/       # Backend-specific types
+│   └── openapi.yaml     # Auto-generated API documentation
+│
+├── frontend/            # Next.js 15 application
+│   ├── src/
+│   │   ├── app/        # App Router pages
+│   │   ├── components/ # React components
+│   │   ├── lib/        # Client utilities (auth, API client, i18n)
+│   │   └── locales/    # Translation files (en, cz)
+│   └── middleware.ts   # Auth & route protection
+│
 ├── packages/
-│   └── shared-types/ # Shared TypeScript types between frontend and backend
-└── docs/            # Documentation files
+│   └── shared-types/   # Shared TypeScript types (API contract)
+│
+└── docs/               # Project documentation
 ```
 
 ## Technology Stack
 
 ### Backend
-- **Runtime**: Node.js
-- **Framework**: Express.js
-- **Language**: TypeScript
-- **Database**: PostgreSQL (via Supabase)
-- **ORM**: Prisma Client
-- **Validation**: Zod
-- **API Documentation**: OpenAPI 3.1 (generated from Prisma schema)
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Runtime** | Node.js + TypeScript | Server execution |
+| **Framework** | Express.js | HTTP API server |
+| **Database** | PostgreSQL (Supabase) | Data persistence |
+| **ORM** | Prisma | Type-safe database access |
+| **Authentication** | Supabase Auth | User authentication & JWT |
+| **Validation** | Zod | Request validation schemas |
+| **API Docs** | OpenAPI 3.1 | Auto-generated documentation |
 
 ### Frontend
-- **Framework**: Next.js 15+ (App Router)
-- **Language**: TypeScript
-- **UI Library**: React
-- **Styling**: Tailwind CSS (likely)
-- **i18n**: next-intl (internationalization - supports CZ/EN)
-- **API Client**: Generated from OpenAPI spec
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Framework** | Next.js 15 (App Router) | React meta-framework |
+| **Language** | TypeScript | Type safety |
+| **Styling** | Tailwind CSS | Utility-first CSS |
+| **UI Components** | Flowbite React | Component library |
+| **Icons** | Lucide React | Icon library |
+| **i18n** | next-intl | Internationalization (CZ/EN) |
+| **API Client** | Custom (OpenAPI-generated) | Type-safe API calls |
 
-### Database
-- **Provider**: Supabase (PostgreSQL)
-- **Auth**: Supabase Auth (with Row Level Security)
-- **Storage**: Supabase Storage (for thesis attachments)
+### Infrastructure
+| Component | Technology | Purpose |
+|-----------|-----------|---------|
+| **Hosting** | Supabase | PostgreSQL + Auth + Storage |
+| **Row-Level Security** | PostgreSQL RLS | Fine-grained access control |
+| **File Storage** | Supabase Storage | Document and attachment storage |
 
-### Shared Package
-- **`@sumbi/shared-types`**: Shared TypeScript type definitions used by both frontend and backend
-
-## Type System & Conventions
-
-### CRITICAL: Type Usage Rules
-
-#### ✅ DO: Use Shared Types from `@sumbi/shared-types`
-
-**In Controllers and API Layer:**
-```typescript
-// ✅ CORRECT
-import type {
-  Project,
-  ProjectWithRelations,
-  CreateProjectRequest,
-  UpdateProjectRequest,
-  User
-} from '@sumbi/shared-types';
-
-export async function createProject(req: Request, res: Response) {
-  // Controller logic
-}
-```
-
-**In Services:**
-```typescript
-// ✅ CORRECT
-import type { ProjectWithRelations, User } from '@sumbi/shared-types';
-import { PrismaClient } from '@prisma/client';
-
-export class ProjectService {
-  static async getProjectById(id: bigint): Promise<ProjectWithRelations | null> {
-    const project = await prisma.projects.findUnique({
-      where: { id: Number(id) },
-      include: { /* relations */ }
-    });
-    return project as any; // Type assertion acceptable here
-  }
-}
-```
-
-#### ❌ DON'T: Use Prisma Types in Controllers
-
-```typescript
-// ❌ WRONG - Don't use Prisma types in controllers
-import { projects, Prisma } from '@prisma/client';
-
-type Project = projects; // ❌ Wrong
-type CreateProject = Prisma.projectsCreateInput; // ❌ Wrong
-```
-
-#### ❌ DON'T: Use OpenAPI Generated Types Directly in Backend
-
-```typescript
-// ❌ WRONG - OpenAPI types are for documentation only
-import type { components } from '../types/api';
-
-type Project = components['schemas']['Project']; // ❌ Wrong
-```
-
-### Type System Layers
-
-1. **Database Layer (Prisma Schema)**
-   - Location: `backend/prisma/schema.prisma`
-   - Purpose: Database schema definition
-   - Used by: Prisma Client internally
-
-2. **Shared Types Layer** ⭐ **USE THIS**
-   - Location: `packages/shared-types/src/`
-   - Purpose: API contract between frontend and backend
-   - Used by: Controllers, Services, Frontend components
-   - Files:
-     - `user.ts` - User-related types
-     - `project.ts` - Project-related types
-     - `index.ts` - Exports all types
-
-3. **OpenAPI Documentation Layer**
-   - Location: `backend/openapi.yaml`
-   - Purpose: Auto-generated API documentation
-   - Generated by: `npm run generate-types` (uses `openapi-typescript`)
-   - Used by: API documentation tools, NOT for application types
-
-### Why This Architecture?
-
-**Separation of Concerns:**
-- **Prisma** handles database operations and type safety at the DB layer
-- **Shared Types** define the API contract and business logic types
-- **OpenAPI** provides documentation for API consumers
-
-**Benefits:**
-- Frontend and backend share the same type definitions
-- Database implementation details don't leak to the API layer
-- Easy to change database/ORM without breaking frontend
-- Clear API contracts that are version-controlled
-- Type-safe communication between layers
-
-## Database Schema Key Entities
+## Database Schema
 
 ### Core Tables
-- **`public_users`** - User accounts (students, teachers, admins)
-- **`projects`** - Thesis projects
-- **`project_students`** - Many-to-many relationship between projects and students
-- **`reviews`** - Review comments from supervisors/opponents
-- **`grades`** - Grading records with scale references
-- **`years`** - Academic year configurations
-- **`scales`** - Grading scale definitions
-- **`scale_sets`** - Sets of scales for different roles (supervisor/opponent)
-- **`attachments`** - File attachments for projects
-- **`external_links`** - External resource links
 
-### Important Field Types
-- **IDs**:
-  - `BigInt` for numeric IDs (projects, grades, etc.)
-  - `String (UUID)` for user IDs (Supabase Auth)
-- **Timestamps**: `DateTime` (stored as timestamptz in PostgreSQL)
-- **Enums**:
-  - `user_roles`: 'admin' | 'teacher' | 'student'
-  - `project_role`: 'supervisor' | 'opponent'
-  - `status`: 'draft' | 'submitted' | 'locked' | 'public'
+**Users & Authentication**
+- `public.users` - Application user profiles (synced with `auth.users`)
+- Role-based access: `admin`, `teacher`, `student`
 
-## Code Style & Patterns
+**Projects & Assignments**
+- `projects` - Thesis project records
+- `project_descriptions` - Structured project details (topic, goals, specifications, schedule)
+- `years` - Academic year configurations with deadlines
 
-### Controller Pattern
-```typescript
-/**
- * JSDoc comment describing what this endpoint does
- */
-export async function controllerFunction(req: Request, res: Response) {
-  try {
-    // 1. Extract and validate parameters
-    const id = req.params.id;
+**Reviews & Grading**
+- `reviews` - Feedback from supervisors and opponents
+- `grades` - Numerical grades with scale references
+- `scales` - Grading scale definitions (customizable per year/role)
+- `scale_sets` - Collections of scales for supervisors vs opponents
 
-    // 2. Call service layer
-    const result = await Service.method(id);
+**Resources**
+- `attachments` - File attachments linked to projects
+- `external_links` - External resource URLs
 
-    // 3. Handle null/not found cases
-    if (!result) {
-      return res.status(404).json({ error: 'Not found' });
-    }
+### Security Model
 
-    // 4. Return success response
-    return res.status(200).json(result);
-  } catch (error) {
-    // 5. Handle errors
-    return res.status(500).json({ error: 'Error message' });
-  }
-}
+All tables use **PostgreSQL Row Level Security (RLS)**:
+- Students can view/edit only their assigned projects
+- Teachers can manage projects they supervise or oppose
+- Admins have full system access
+- Public projects are accessible without authentication
+
+## API Structure
+
+The backend exposes a RESTful API with the following endpoint groups:
+
+```
+/api
+├── /users              # User management
+├── /projects           # Project CRUD operations
+├── /projects/:id/descriptions  # Structured project details
+├── /attachments        # File upload/download
+├── /external-links     # External resource management
+├── /reviews            # Review submission
+├── /grades             # Grading operations
+├── /scales             # Grading scale management
+├── /years              # Academic year configuration
+└── /roles              # Role management
 ```
 
-### Service Pattern
-```typescript
-export class EntityService {
-  /**
-   * JSDoc comment describing what this method does
-   */
-  static async methodName(params): Promise<ReturnType> {
-    // Use Prisma for database operations
-    const result = await prisma.table.operation({
-      // Prisma query
-    });
+**Authentication**: All endpoints (except public projects) require JWT authentication via Supabase Auth.
 
-    // Cast to shared type
-    return result as ReturnType;
-  }
-}
-```
+## Type System
 
-### Naming Conventions
-- **Files**: `kebab-case.ts` (e.g., `projects.controller.ts`)
-- **Classes**: `PascalCase` (e.g., `ProjectService`)
-- **Functions**: `camelCase` (e.g., `getProjectById`)
-- **Constants**: `SCREAMING_SNAKE_CASE` (e.g., `MAX_FILE_SIZE`)
-- **Types/Interfaces**: `PascalCase` (e.g., `Project`, `CreateProjectRequest`)
+The project uses a **three-layer type system**:
 
-## Building and Running
+### 1. Database Layer (Prisma)
+- **Location**: `backend/prisma/schema.prisma`
+- **Purpose**: Source of truth for database structure
+- **Generated**: Prisma Client types (internal use only)
 
-### Backend
-```bash
-cd backend
+### 2. Shared Types Layer ⭐ (API Contract)
+- **Location**: `packages/shared-types/`
+- **Purpose**: Contract between frontend and backend
+- **Usage**: Both frontend and backend import from `@sumbi/shared-types`
+- **Files**:
+  - `user.ts` - User, role types
+  - `project.ts` - Project, description, request types
+  - `index.ts` - Centralized exports
 
-# Install dependencies
-npm install
+### 3. OpenAPI Documentation Layer
+- **Location**: `backend/openapi.yaml`
+- **Purpose**: Auto-generated API documentation
+- **Generated**: TypeScript types for documentation tools
 
-# Generate Prisma client and OpenAPI types
-npm run generate-types
+This separation ensures:
+- ✅ Type-safe communication between frontend and backend
+- ✅ Database implementation details don't leak to API
+- ✅ Easy to change database without breaking contracts
+- ✅ Single source of truth for API types
 
-# Run development server
-npm run dev
+## Project Workflows
 
-# Build for production
-npm run build
+### Student Workflow
+1. View assigned thesis project
+2. Upload thesis document (PDF + secondary format)
+3. Add attachments and external links
+4. Submit project when ready
+5. View reviews and grades after deadline
 
-# Run tests (if available)
-npm test
-```
+### Teacher Workflow (Supervisor/Opponent)
+1. View assigned projects (as supervisor or opponent)
+2. Review submitted theses
+3. Submit review comments
+4. Provide grades using assigned scales
+5. Mark projects for public showcase (if exceptional)
 
-### Frontend
-```bash
-cd frontend
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Start production server
-npm start
-```
-
-### Shared Types
-```bash
-cd packages/shared-types
-
-# Build the package
-npm run build
-
-# This makes types available to frontend and backend
-```
-
-## Important Commands
-
-### Prisma
-```bash
-# Generate Prisma Client
-npx prisma generate
-
-# Create migration
-npx prisma migrate dev --name migration_name
-
-# Reset database (dangerous!)
-npx prisma migrate reset
-
-# Open Prisma Studio (database GUI)
-npx prisma studio
-```
-
-### OpenAPI
-```bash
-# Generate TypeScript types from openapi.yaml
-npm run generate-types
-```
-
-## Environment Variables
-
-### Backend (.env)
-```bash
-DATABASE_URL=         # Supabase PostgreSQL connection string
-SUPABASE_URL=         # Supabase project URL
-SUPABASE_ANON_KEY=    # Supabase anonymous key
-SUPABASE_SERVICE_KEY= # Supabase service role key (backend only)
-PORT=3001             # Backend server port
-NODE_ENV=development  # Environment
-```
-
-### Frontend (.env.local)
-```bash
-NEXT_PUBLIC_SUPABASE_URL=      # Supabase project URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY= # Supabase anonymous key
-NEXT_PUBLIC_API_URL=           # Backend API URL
-```
-
-## Authentication & Authorization
-
-- **Authentication**: Handled by Supabase Auth
-- **Session Management**: JWT tokens from Supabase
-- **Authorization**: Role-based access control (RBAC)
-  - `admin`: Full system access
-  - `teacher`: Can supervise/review theses
-  - `student`: Can view assigned theses
-- **Row Level Security (RLS)**: Enabled on Supabase tables
+### Administrator Workflow
+1. Manage academic years and deadlines
+2. Create and assign projects to students
+3. Assign supervisors and opponents
+4. Configure grading scales per year/role
+5. Lock/unlock projects manually
+6. View statistics and reports
 
 ## Internationalization (i18n)
 
-- **Library**: next-intl
-- **Languages**: Czech (cz), English (en)
-- **Translation Files**: `frontend/src/locales/{locale}/common.json`
-- **Usage**: Server and client components support translations
+The system supports **Czech** and **English** with:
+- Translation files: `frontend/src/locales/{en,cz}/common.json`
+- URL-based locale: `/{locale}/...` (e.g., `/en/projects`, `/cz/projects`)
+- Server and client component support
+- Automatic locale detection and persistence
 
-## Key Workflows
+## Authentication Flow
 
-### Creating a New Feature
+1. **Login**: User authenticates via Supabase Auth (email/password)
+2. **JWT Token**: Supabase returns JWT access token
+3. **Role Extraction**: Backend extracts role from JWT `app_metadata.role`
+4. **Middleware**: Next.js middleware validates session on every request
+5. **RLS**: Database enforces row-level security based on user ID and role
+6. **Token Refresh**: Stale tokens (>30 min) are automatically refreshed
 
-1. **Define Types** in `packages/shared-types/src/`
-2. **Update Prisma Schema** if database changes needed
-3. **Create Migration**: `npx prisma migrate dev`
-4. **Create Service** in `backend/src/services/`
-5. **Create Controller** in `backend/src/controllers/`
-6. **Add Routes** in `backend/src/routes/`
-7. **Create Frontend Components** in `frontend/src/components/`
-8. **Add i18n Translations** in locale files
+## Database Migrations
 
-### When Types Don't Match
+The project uses **Supabase migrations** (stored in `backend/prisma/migrations/`) to track schema changes:
 
-If you see type errors:
+- Each migration is timestamped and named
+- Migrations are applied in order
+- Includes forward changes (SQL to apply)
+- Provides version control for database schema
+- Enables reproducible deployments across environments
 
-1. ✅ **Check**: Are you using `@sumbi/shared-types` in controllers?
-2. ✅ **Check**: Have you rebuilt the shared-types package?
-3. ✅ **Check**: Are field names correct (e.g., `main_documentation` not `main_document`)?
-4. ✅ **Check**: Are ID types correct (BigInt vs UUID string)?
-5. ❌ **Don't**: Import Prisma types directly in controllers
-6. ❌ **Don't**: Use OpenAPI generated types in backend code
+**Recent migrations**:
+- `add_jwt_claims_sync` - Sync roles to JWT tokens
+- `add_structured_project_description` - Add structured description fields
+- `replace_jsonb_with_project_descriptions_table` - Normalize description structure
 
-## Common Issues & Solutions
+## Environment Configuration
 
-### Issue: Types not found from `@sumbi/shared-types`
-**Solution**:
+### Backend (`.env`)
 ```bash
-cd packages/shared-types
-npm run build
+DATABASE_URL=          # Supabase PostgreSQL connection
+DIRECT_URL=            # Direct connection (for migrations)
+SUPABASE_URL=          # Supabase project URL
+SUPABASE_ANON_KEY=     # Public anonymous key
+SUPABASE_SERVICE_KEY=  # Service role key (backend only)
+PORT=3001              # API server port
+NODE_ENV=development   # Environment mode
 ```
 
-### Issue: Prisma Client out of sync
-**Solution**:
+### Frontend (`.env.local`)
 ```bash
-npx prisma generate
+NEXT_PUBLIC_SUPABASE_URL=      # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY= # Public anonymous key
+NEXT_PUBLIC_API_URL=           # Backend API URL (http://localhost:3001)
 ```
 
-### Issue: OpenAPI types outdated
-**Solution**:
-```bash
-npm run generate-types
-```
+## Getting Started
 
-### Issue: BigInt serialization errors
-**Solution**: Already handled in controllers with:
-```typescript
-BigInt.prototype.toJSON = function () {
-  return Number(this);
-};
-```
+### Prerequisites
+- Node.js 18+ and npm/pnpm
+- PostgreSQL database (or Supabase account)
+- Git
 
-## Additional Resources
+### Installation
 
-- **Prisma Docs**: https://www.prisma.io/docs
-- **Supabase Docs**: https://supabase.com/docs
-- **Next.js Docs**: https://nextjs.org/docs
-- **Express Docs**: https://expressjs.com/
-- **OpenAPI Spec**: https://swagger.io/specification/
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/SumbiTheses.git
+   cd SumbiTheses
+   ```
 
-## Notes for AI/Development
+2. **Install dependencies**:
+   ```bash
+   # Install all workspaces
+   npm install
 
-- Always use shared types from `@sumbi/shared-types` in API layers
-- Prisma types are internal to the service layer only
-- Use `as any` type assertions when returning Prisma results as shared types (acceptable pattern)
-- Student IDs are UUID strings, not BigInts
-- Project IDs are BigInts (but converted to numbers for Prisma)
-- Add JSDoc comments to all public functions
-- Follow the existing controller/service pattern consistently
+   # Or for each package:
+   cd backend && npm install
+   cd ../frontend && npm install
+   cd ../packages/shared-types && npm install
+   ```
+
+3. **Configure environment**:
+   - Copy `.env.example` to `.env` in backend/
+   - Copy `.env.local.example` to `.env.local` in frontend/
+   - Fill in Supabase credentials
+
+4. **Setup database**:
+   ```bash
+   cd backend
+   npx prisma generate          # Generate Prisma Client
+   npx prisma migrate deploy    # Apply migrations
+   ```
+
+5. **Build shared types**:
+   ```bash
+   cd packages/shared-types
+   npm run build
+   ```
+
+6. **Run development servers**:
+   ```bash
+   # Terminal 1 - Backend
+   cd backend && npm run dev
+
+   # Terminal 2 - Frontend
+   cd frontend && npm run dev
+   ```
+
+7. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+   - API Docs: http://localhost:3001/api-docs (if configured)
+
+## Project Status
+
+This is an active development project for managing graduation theses. Current status:
+
+✅ **Completed**:
+- User authentication and role-based access
+- Project CRUD operations
+- Review and grading system
+- File attachment management
+- Internationalization (CZ/EN)
+- Structured project descriptions
+- Row-level security policies
+
+🚧 **In Progress**:
+- Public project showcase
+- Advanced reporting and statistics
+- Email notifications
+- Project templates
+
+## Contributing
+
+This is an educational project. Contributions, suggestions, and feedback are welcome!
+

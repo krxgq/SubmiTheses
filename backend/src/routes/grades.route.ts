@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticated, canAccessProject, canModifyProject } from '../middleware/auth';
+import { authenticated } from '../middleware/auth';
+import { requireAdminOrTeacher } from '../middleware/authorization.middleware';
 import {
   getProjectGrades,
   getGradeById,
@@ -17,19 +18,19 @@ import {
 
 const router = Router();
 
-// Get all grades for a project
-router.get('/:id/grades', authenticated, canAccessProject, validate(projectIdSchema), getProjectGrades);
+// Get all grades for a project (ADMIN/TEACHER ONLY)
+router.get('/:id/grades', authenticated, requireAdminOrTeacher, validate(projectIdSchema), getProjectGrades);
 
-// Get a specific grade
-router.get('/:id/grades/:gradeId', authenticated, canAccessProject, validate(gradeIdSchema), getGradeById);
+// Get a specific grade (ADMIN/TEACHER ONLY)  
+router.get('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(gradeIdSchema), getGradeById);
 
-// Create a new grade
-router.post('/:id/grades', authenticated, canModifyProject, validate(createGradeSchema), createGrade);
+// Create a new grade (ADMIN/TEACHER ONLY)
+router.post('/:id/grades', authenticated, requireAdminOrTeacher, validate(createGradeSchema), createGrade);
 
-// Update a grade
-router.put('/:id/grades/:gradeId', authenticated, canModifyProject, validate(updateGradeSchema), updateGrade);
+// Update a grade (ADMIN/TEACHER ONLY)
+router.put('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(updateGradeSchema), updateGrade);
 
-// Delete a grade
-router.delete('/:id/grades/:gradeId', authenticated, canModifyProject, validate(gradeIdSchema), deleteGrade);
+// Delete a grade (ADMIN/TEACHER ONLY)
+router.delete('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(gradeIdSchema), deleteGrade);
 
 export default router;

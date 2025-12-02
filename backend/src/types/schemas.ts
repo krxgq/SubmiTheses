@@ -234,7 +234,7 @@ export const UpdateUserSchema = z.object({
 export interface AuthUser {
   id: string;
   email: string;
-  role: string;
+  role: 'admin' | 'teacher' | 'student'; // Match UserRole type
   school_id?: bigint;
   aud: string;
   exp: number;

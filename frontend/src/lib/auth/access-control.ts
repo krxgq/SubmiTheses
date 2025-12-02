@@ -1,5 +1,5 @@
-import type { UserRole } from '@sumbi/shared-types';
-import type { RouteAccessRule } from './route-config';
+import type { UserRole } from "@sumbi/shared-types";
+import type { RouteAccessRule } from "./route-config";
 
 /**
  * Validates if a user has access to a route based on their role and ownership.
@@ -37,7 +37,7 @@ export function checkRouteAccess(
   userRole: UserRole | undefined,
   routeConfig: RouteAccessRule,
   userId: string,
-  pathParams: Record<string, string>
+  pathParams: Record<string, string>,
 ): boolean {
   // 1. Check if user has required role
   if (!userRole || !routeConfig.allowedRoles.includes(userRole)) {
@@ -54,7 +54,7 @@ export function checkRouteAccess(
 
   // Admin and teacher bypass ownership checks
   // (they can access any user's resources)
-  if (userRole === 'admin' || userRole === 'teacher') {
+  if (userRole === "admin" || userRole === "teacher") {
     return true;
   }
 

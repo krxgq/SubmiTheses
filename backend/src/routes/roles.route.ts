@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticated, isAdmin } from '../middleware/auth';
+import { authenticated } from '../middleware/auth';
+import { requireAdmin } from '../middleware/authorization.middleware';
 import {
   getAllRoles,
   getRoleById,
@@ -23,12 +24,12 @@ router.get('/', authenticated, getAllRoles);
 router.get('/:id', authenticated, validate(roleIdSchema), getRoleById);
 
 // Create a new role
-router.post('/', authenticated, isAdmin, validate(createRoleSchema), createRole);
+router.post('/', authenticated, requireAdmin, validate(createRoleSchema), createRole);
 
 // Update a role
-router.put('/:id', authenticated, isAdmin, validate(updateRoleSchema), updateRole);
+router.put('/:id', authenticated, requireAdmin, validate(updateRoleSchema), updateRole);
 
 // Delete a role
-router.delete('/:id', authenticated, isAdmin, validate(roleIdSchema), deleteRole);
+router.delete('/:id', authenticated, requireAdmin, validate(roleIdSchema), deleteRole);
 
 export default router;

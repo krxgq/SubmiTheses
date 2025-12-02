@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { authenticated, canAccessProject, canModifyProject } from '../middleware/auth';
+import { authenticated } from '../middleware/auth';
+import { requireProjectAccess, requireProjectModify } from '../middleware/authorization.middleware';
 import {
   getProjectExternalLinks,
   getExternalLinkById,
@@ -18,18 +19,18 @@ import {
 const router = Router();
 
 // Get all external links for a project
-router.get('/:id/links', authenticated, canAccessProject, validate(projectIdSchema), getProjectExternalLinks);
+router.get('/:id/links', authenticated, requireProjectAccess, validate(projectIdSchema), getProjectExternalLinks);
 
 // Get a specific external link
-router.get('/:id/links/:linkId', authenticated, canAccessProject, validate(externalLinkIdSchema), getExternalLinkById);
+router.get('/:id/links/:linkId', authenticated, requireProjectAccess, validate(externalLinkIdSchema), getExternalLinkById);
 
 // Create a new external link
-router.post('/:id/links', authenticated, canModifyProject, validate(createExternalLinkSchema), createExternalLink);
+router.post('/:id/links', authenticated, requireProjectModify, validate(createExternalLinkSchema), createExternalLink);
 
 // Update an external link
-router.put('/:id/links/:linkId', authenticated, canModifyProject, validate(updateExternalLinkSchema), updateExternalLink);
+router.put('/:id/links/:linkId', authenticated, requireProjectModify, validate(updateExternalLinkSchema), updateExternalLink);
 
 // Delete an external link
-router.delete('/:id/links/:linkId', authenticated, canModifyProject, validate(externalLinkIdSchema), deleteExternalLink);
+router.delete('/:id/links/:linkId', authenticated, requireProjectModify, validate(externalLinkIdSchema), deleteExternalLink);
 
 export default router;

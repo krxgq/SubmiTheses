@@ -4,3 +4,4 @@ node_modules/
 .claude/
 
 /src/generated/prisma
+dist/

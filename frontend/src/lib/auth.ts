@@ -154,6 +154,8 @@ class AuthService {
       const {
         data: { session },
       } = await supabase.auth.getSession();
+      if (!session) {
+      }
       return session;
     } catch (err) {
       return null;
@@ -193,10 +195,11 @@ class AuthService {
   }
 
   private async mapSupabaseUser(user: User): Promise<AuthUser> {
-    // Fetch full user profile from public.users table
+    // Role will come from JWT app_metadata (set by database trigger)
+    // Still fetch other profile data from public.users table
     const { data: userProfile, error } = await supabase
       .from('users')
-      .select('full_name, avatar_url, role, email, year_id')
+      .select('full_name, avatar_url, email, year_id')
       .eq('id', user.id)
       .single();
 
@@ -204,12 +207,25 @@ class AuthService {
       console.error('Failed to fetch user profile:', error);
     }
 
+    // Get role from current session JWT
+    let role = 'student'; // default
+    try {
+      const session = await supabase.auth.getSession();
+      const accessToken = session.data.session?.access_token;
+      if (accessToken) {
+        const payload = JSON.parse(atob(accessToken.split('.')[1]));
+        role = payload.app_metadata?.role || payload.user_metadata?.role || 'student';
+      }
+    } catch (e) {
+      console.warn('Could not extract role from JWT:', e);
+    }
+
     return {
       id: user.id,
       email: user.email || "",
       full_name: userProfile?.full_name,
       avatar_url: userProfile?.avatar_url,
-      role: userProfile?.role,
+      role: role,
       year_id: userProfile?.year_id,
       created_at: user.created_at,
     };

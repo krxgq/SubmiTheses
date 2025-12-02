@@ -1,49 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "@/lib/navigation";
-import {
-  Home,
-  Folder,
-  Star,
-  Paperclip,
-  ExternalLink,
-  GraduationCap,
-  Users,
-  Settings,
-  Menu,
-  X,
-} from "lucide-react";
+import { Folder, Users, Settings, Menu, X } from "lucide-react";
 import {
   Sidebar,
   SidebarItems,
   SidebarItemGroup,
   SidebarItem,
 } from "flowbite-react";
+import type { UserRole } from "@sumbi/shared-types";
 
-export default function AppSidebar() {
+interface NavItem {
+  id: string;
+  label: string;
+  icon: any;
+  path: string;
+  allowedRoles: UserRole[];
+}
+
+const allNavItems: NavItem[] = [
+  { id: "projects", label: "Projects", icon: Folder, path: "/projects", allowedRoles: ["admin", "teacher", "student"] },
+  { id: "users", label: "Users", icon: Users, path: "/users", allowedRoles: ["admin"] },
+  { id: "settings", label: "Settings", icon: Settings, path: "/settings", allowedRoles: ["admin", "teacher", "student"] },
+];
+
+interface AppSidebarProps {
+  userRole: UserRole;
+}
+
+export default function AppSidebar({ userRole }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
-    { id: "projects", label: "Projects", icon: Folder, path: "/projects" },
-    { id: "reviews", label: "Reviews", icon: Star, path: "/reviews" },
-    {
-      id: "attachments",
-      label: "Attachments",
-      icon: Paperclip,
-      path: "/attachments",
-    },
-    {
-      id: "links",
-      label: "External Links",
-      icon: ExternalLink,
-      path: "/links",
-    },
-    { id: "users", label: "Users", icon: Users, path: "/users" },
-    { id: "settings", label: "Settings", icon: Settings, path: "/settings" },
-  ];
+  const navItems = allNavItems.filter(item => item.allowedRoles.includes(userRole));
 
   const isActiveItem = (itemPath: string) => {
     return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
@@ -51,7 +42,8 @@ export default function AppSidebar() {
 
   const handleNavigation = (itemPath: string) => {
     router.push(itemPath);
-    setIsOpen(false); // Close mobile menu
+    router.refresh();
+    setIsOpen(false);
   };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
