@@ -10,6 +10,20 @@ export async function getAllYears(req: Request, res: Response) {
   }
 }
 
+export async function getCurrentYear(req: Request, res: Response) {
+  try {
+    const year = await YearService.getCurrentYear();
+    
+    if (!year) {
+      return res.status(404).json({ error: 'No academic year found' });
+    }
+    
+    return res.status(200).json(year);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch current year' });
+  }
+}
+
 export async function getYearById(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.id);

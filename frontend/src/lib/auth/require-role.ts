@@ -1,6 +1,5 @@
 import type { UserRole } from "@sumbi/shared-types";
-import { createClient } from '@/lib/supabase-server';
-import { extractRoleFromToken } from './jwt-utils';
+import { validateSession } from './session-validator';
 
 interface AuthResult {
   authorized: boolean;
@@ -11,18 +10,17 @@ interface AuthResult {
 /**
  * Check if user has required role
  * Returns authorization status instead of redirecting
- * Extracts role from JWT token (no cookies, no database queries)
+ * Uses backend session validation (NO Supabase)
  *
  * @param allowedRoles - Optional array of roles to check. If not provided, just returns current role.
  */
 export async function checkRole(allowedRoles?: UserRole[]): Promise<AuthResult> {
-  // Server-side only - get Supabase client
-  const supabase = await createClient();
-  const { data: { session }, error } = await supabase.auth.getSession();
+  // Validate session using backend API
+  const user = await validateSession();
 
-  if (error || !session) {
+  if (!user) {
     if (process.env.NODE_ENV === 'development') {
-      console.log("[Auth] No authenticated session:", error?.message);
+      console.log("[Auth] No authenticated session");
     }
     return {
       authorized: false,
@@ -31,11 +29,11 @@ export async function checkRole(allowedRoles?: UserRole[]): Promise<AuthResult> 
     };
   }
 
-  // Extract role from JWT token (centralized utility)
-  const role = extractRoleFromToken(session.access_token);
+  // Get role from user object
+  const role = (user.role as UserRole) || 'student';
 
   if (process.env.NODE_ENV === 'development') {
-    console.log("[Auth] User role from JWT:", role);
+    console.log("[Auth] User role from backend:", role);
   }
 
   // Check authorization if roles specified
@@ -43,7 +41,7 @@ export async function checkRole(allowedRoles?: UserRole[]): Promise<AuthResult> 
     const authorized = allowedRoles.includes(role);
     return {
       authorized,
-      userId: session.user.id,
+      userId: user.id,
       role,
     };
   }
@@ -51,7 +49,7 @@ export async function checkRole(allowedRoles?: UserRole[]): Promise<AuthResult> 
   // No roles specified - just return current role
   return {
     authorized: true,
-    userId: session.user.id,
+    userId: user.id,
     role,
   };
 }

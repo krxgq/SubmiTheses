@@ -93,7 +93,10 @@ const config: Config = {
       },
     },
   },
-  plugins: [require('flowbite-react/plugin')],
+  plugins: [
+    require('flowbite-react/plugin'),
+    require('@tailwindcss/typography'),
+  ],
 }
 
 export default config

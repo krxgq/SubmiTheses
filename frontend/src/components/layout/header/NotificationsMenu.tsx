@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Bell, X } from 'lucide-react';
+import { Bell, X, ChevronDown } from 'lucide-react';
 
 interface Notification {
   id: number;
@@ -12,7 +12,11 @@ interface Notification {
   type: string;
 }
 
-export function NotificationsMenu() {
+interface NotificationsMenuProps {
+  inSidebar?: boolean;
+}
+
+export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -82,6 +86,109 @@ export function NotificationsMenu() {
     );
   };
 
+  // Sidebar style button
+  if (inSidebar) {
+    return (
+      <div className="relative w-full" ref={menuRef}>
+        <button
+          onClick={() => setShowMenu(!showMenu)}
+          className="w-full flex items-center justify-between px-3 py-2 text-sm text-primary hover:bg-background-hover rounded-lg transition-colors"
+        >
+          <div className="flex items-center">
+            <Bell className="w-4 h-4" />
+            <span className="ml-3">Notifications</span>
+            {unreadCount > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 bg-accent-danger text-text-inverse text-xs rounded-full">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          <ChevronDown className="w-4 h-4" />
+        </button>
+
+        {showMenu && (
+          <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl max-h-96 overflow-hidden z-50">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-primary">
+                Notifications
+              </h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-xs text-interactive-primary hover:text-interactive-primary-hover"
+                >
+                  Mark all as read
+                </button>
+              )}
+            </div>
+
+            <div className="max-h-64 overflow-y-auto">
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <div
+                    key={notification.id}
+                    className={`px-4 py-3 border-b transition-colors hover:bg-background-hover ${
+                      notification.unread ? 'bg-background-hover' : ''
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2">
+                          <p className="text-sm font-medium truncate text-primary">
+                            {notification.title}
+                          </p>
+                          {notification.unread && (
+                            <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
+                          )}
+                        </div>
+                        <p className="text-xs mt-1 text-secondary">
+                          {notification.message}
+                        </p>
+                        <p className="text-xs mt-1 text-tertiary">
+                          {notification.time}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-1 ml-2">
+                        {notification.unread && (
+                          <button
+                            onClick={() => markAsRead(notification.id)}
+                            className="p-1 text-tertiary hover:text-primary transition-colors"
+                            title="Mark as read"
+                          >
+                            <div className="w-3 h-3 rounded-full border-border border-current"></div>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => clearNotification(notification.id)}
+                          className="p-1 text-tertiary hover:text-primary transition-colors"
+                          title="Clear notification"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-8 text-center text-secondary">
+                  <Bell className="w-8 h-8 mx-auto mb-2 text-tertiary" />
+                  <p className="text-sm">No notifications</p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-4 py-3 bg-background-secondary border-t border-border">
+              <button className="w-full text-center text-sm text-primary hover:text-primary transition-colors">
+                View all notifications
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Original header style button (for backwards compatibility)
   return (
     <div className="relative" ref={menuRef}>
       <button

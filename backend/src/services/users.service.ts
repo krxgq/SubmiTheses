@@ -65,7 +65,7 @@ export class UserService {
   /**
    * Update user profile (name, year, etc.)
    */
-  static async updateUser(id: string, data: UpdateUserRequest): Promise<UserWithYear | null> {
+  static async updateUser(id: string, data: UpdateUserRequest) {
     const existingUser = await prisma.public_users.findUnique({
       where: { id: String(id) },
     });

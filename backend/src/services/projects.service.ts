@@ -30,7 +30,7 @@ function transformPrismaProject(prismaProject: any): ProjectWithRelations {
 
 export class ProjectService {
   /**
-   * Create a new project with an optional student assignment
+   * Create a new project with optional student assignment and project description
    */
   static async createProject(data: CreateProjectRequest): Promise<ProjectWithRelations> {
    const project = await prisma.projects.create({
@@ -39,40 +39,51 @@ export class ProjectService {
         supervisor_id: data.supervisor_id,
         opponent_id: data.opponent_id,
         student_id: data.student_id,
-        subject: data.subject,
+        subject: '', // Empty string as default
+        subject_id: data.subject_id, // Foreign key to subjects table
         description: data.description,
         main_documentation: data.main_documentation,
         status: data.status,
         year_id: data.year_id,
+
+        // Nested create for project_description if provided
+        ...(data.project_description && {
+          project_description: {
+            create: {
+              topic: data.project_description.topic,
+              project_goal: data.project_description.project_goal,
+              specification: data.project_description.specification,
+              needed_output: data.project_description.needed_output,
+              schedule: data.project_description.schedule as any || [],
+              grading_criteria: [],
+              grading_notes: undefined,
+            }
+          }
+        })
       },
       include: {
         users_projects_student_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
-        }
+        },
+        project_description: true,
       }
     });
     return transformPrismaProject(project);
@@ -88,30 +99,23 @@ export class ProjectService {
         users_projects_student_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
           }
-        }
+        },
+        project_description: true,
+        subjects: true,
       }
     });
     return project ? transformPrismaProject(project) : null;
@@ -126,28 +130,22 @@ export class ProjectService {
         users_projects_student_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }
@@ -166,7 +164,7 @@ export class ProjectService {
         supervisor_id: data.supervisor_id,
         opponent_id: data.opponent_id,
         student_id: data.student_id,
-        subject: data.subject,
+        subject_id: data.subject_id, // Foreign key to subjects table
         description: data.description,
         main_documentation: data.main_documentation,
         status: data.status,
@@ -176,28 +174,22 @@ export class ProjectService {
         users_projects_student_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }
@@ -228,28 +220,22 @@ export class ProjectService {
         users_projects_student_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
-            full_name: true,
-            avatar_url: true,
             email: true,
-            role: true,
+            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }

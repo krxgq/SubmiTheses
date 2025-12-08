@@ -1,5 +1,6 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import routes from './routes/api';
 
 const app: Express = express();
@@ -7,12 +8,13 @@ const app: Express = express();
 // CORS configuration - allow frontend to access API
 const corsOptions = {
   origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001'],
-  credentials: true,
+  credentials: true, // CRITICAL: Allows cookies to be sent from frontend
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
+app.use(cookieParser()); // Parse cookies from Cookie header
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

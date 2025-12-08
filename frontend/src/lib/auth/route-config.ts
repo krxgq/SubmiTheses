@@ -42,6 +42,10 @@ export const protectedRoutes: RouteAccessRule[] = [
   // ===== Teacher or Admin Routes =====
 
   {
+    pattern: "/projects/create",
+    allowedRoles: ["admin", "teacher"],
+  },
+  {
     pattern: "/projects/:projectId/grade",
     allowedRoles: ["admin", "teacher"],
   },
@@ -54,6 +58,10 @@ export const protectedRoutes: RouteAccessRule[] = [
   // ===== Authenticated User Routes =====
   {
     pattern: "/projects",
+    allowedRoles: ["admin", "teacher", "student"],
+  },
+  {
+    pattern: "/notifications",
     allowedRoles: ["admin", "teacher", "student"],
   },
   {

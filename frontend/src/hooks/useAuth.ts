@@ -36,8 +36,8 @@ export function useAuth(): UseAuthReturn {
 
     initializeAuth()
 
-    // Subscribe to auth state changes
-    const { data: { subscription } } = authService.onAuthStateChange((authUser) => {
+    // Subscribe to auth state changes (cross-tab)
+    const unsubscribe = authService.onAuthStateChange((authUser) => {
       if (mounted) {
         setUser(authUser)
         setIsLoading(false)
@@ -46,7 +46,7 @@ export function useAuth(): UseAuthReturn {
 
     return () => {
       mounted = false
-      subscription?.unsubscribe()
+      unsubscribe()
     }
   }, [])
 
@@ -60,7 +60,11 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: result.error }
       }
 
-      // User state will be updated through auth state change listener
+      // Immediately set user state after successful login
+      if (result.data) {
+        setUser(result.data)
+      }
+      setIsLoading(false)
       return { success: true }
     } catch (error) {
       setIsLoading(false)
@@ -78,7 +82,11 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: result.error }
       }
 
-      // User state will be updated through auth state change listener
+      // Immediately set user state after successful registration
+      if (result.data) {
+        setUser(result.data)
+      }
+      setIsLoading(false)
       return { success: true }
     } catch (error) {
       setIsLoading(false)
@@ -90,20 +98,23 @@ export function useAuth(): UseAuthReturn {
     setIsLoading(true)
     try {
       await authService.logout()
-      // User state will be updated through auth state change listener
-    } catch (error) {
+      // Immediately clear user state (don't wait for broadcast)
+      setUser(null)
       setIsLoading(false)
+    } catch (error) {
+      console.error('[useAuth] Logout error:', error)
       // Even if logout fails, clear the local state
       setUser(null)
+      setIsLoading(false)
     }
   }
 
   const refreshSession = async () => {
     try {
-      const result = await authService.refreshSession()
-      if (result.data) {
-        setUser(result.data)
-      }
+      await authService.refreshSession()
+      // Re-fetch current user after refresh
+      const currentUser = await authService.getCurrentUser()
+      setUser(currentUser)
     } catch (error) {
       // If refresh fails, logout user
       setUser(null)

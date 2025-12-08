@@ -38,8 +38,13 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
 
     setIsUploading(true);
     try {
-      // Upload files to the API
-      const data = await attachmentsApi.upload(project.id, uploadedFiles);
+      // Upload files to the API (one at a time)
+      for (const file of uploadedFiles) {
+        await attachmentsApi.uploadAttachment({
+          file,
+          projectId: String(project.id),
+        });
+      }
 
       // Success - close modal and reset
       setShowUploadModal(false);

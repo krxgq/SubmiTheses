@@ -3,6 +3,9 @@ import { authService } from '@/lib/auth'
 import { redirect } from '@/lib/navigation'
 import { setRequestLocale, getLocale } from 'next-intl/server'
 
+// Force dynamic rendering since we check user session
+export const dynamic = 'force-dynamic';
+
 // Auth page - redirects to projects if user is already logged in
 export default async function AuthPage({
     params

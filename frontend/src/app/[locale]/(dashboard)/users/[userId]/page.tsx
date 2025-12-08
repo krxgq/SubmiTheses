@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { usersApi } from "@/lib/api/users";
-import { projectsApi } from "@/lib/api/projects";
+import { usersApiServer } from "@/lib/api/users";
+import { projectsApiServer } from "@/lib/api/projects";
 import { ApiError } from "@/lib/api/client";
 import { checkRole } from "@/lib/auth/require-role";
 import { notFound } from "next/navigation";
@@ -25,8 +25,8 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
   let projects: ProjectWithRelations[] = [];
 
   try {
-    user = await usersApi.getById(userId);
-    projects = await projectsApi.getAllProjects();
+    user = await usersApiServer.getById(userId);
+    projects = await projectsApiServer.getAllProjects();
   } catch (error) {
     console.error("[UserDetailPage] Error:", error);
 

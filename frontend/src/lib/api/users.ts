@@ -87,3 +87,6 @@ export const usersApi = {
     });
   },
 }
+
+// Alias for server-side usage (maintains compatibility)
+export const usersApiServer = usersApi;

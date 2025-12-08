@@ -30,13 +30,13 @@ export default function Breadcrumbs() {
 
         if (isUUID) {
           try {
-            const { apiRequestBrowser } = await import("@/lib/api/client-browser");
+            const { apiRequest } = await import("@/lib/api/client");
 
             if (parentSegment === "users") {
-              const user = await apiRequestBrowser<any>(`/users/${segment}`);
+              const user = await apiRequest<any>(`/users/${segment}`);
               names[segment] = user.full_name || user.email;
             } else if (parentSegment === "projects") {
-              const project = await apiRequestBrowser<any>(`/projects/${segment}`);
+              const project = await apiRequest<any>(`/projects/${segment}`);
               names[segment] = project.title;
             }
           } catch (error) {

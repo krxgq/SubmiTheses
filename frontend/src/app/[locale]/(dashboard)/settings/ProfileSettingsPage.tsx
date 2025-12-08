@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Button } from "flowbite-react";
 import { Input } from "@/components/ui/Input";
 import { authService } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/Avatar";
 import type { AuthUser } from "@/lib/auth";
 

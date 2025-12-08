@@ -1,0 +1,5 @@
+
+> sumbitheses-backend@1.0.0 dev /home/krxg/Desktop/SumbiTheses/backend
+> npx tsx src/server.ts
+
+Server is running on port 5000

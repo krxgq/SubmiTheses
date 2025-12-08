@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./lib/navigation";
-import { createClient } from "./lib/supabase-server";
 import { matchRoute, extractParams } from "./lib/auth/route-matcher";
 import { checkRouteAccess } from "./lib/auth/access-control";
-import { extractRoleFromToken, isTokenStale } from "./lib/auth/jwt-utils";
+import { validateSession } from "./lib/auth/session-validator";
 import type { UserRole } from "@sumbi/shared-types";
+
+/**
+ * Next.js Middleware - Route Protection & Session Validation
+ *
+ * NO Supabase - validates session via backend API
+ */
 
 // Create next-intl middleware with routing configuration
 const handleI18nRouting = createMiddleware(routing);
@@ -17,22 +21,17 @@ export async function middleware(request: NextRequest) {
   // Step 1: Handle i18n routing first
   const response = handleI18nRouting(request);
 
-  // Step 2: Update Supabase session
-  const supabase = await createClient();
-
-  // Step 3: Auth check with role from JWT
+  // Step 2: Validate session via backend API
   if (response.status !== 307 && response.status !== 308) {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-
     // Extract locale from pathname
     const localeMatch = pathname.match(/^\/(en|cz)(\/|$)/);
     const locale = localeMatch ? localeMatch[1] : "en";
 
+    // Validate session using backend API
+    const user = await validateSession();
+
     // Not logged in - redirect to auth page (except if already on auth page)
-    if ((error || !user) && !pathname.includes("/auth")) {
+    if (!user && !pathname.includes("/auth")) {
       return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
     }
 
@@ -41,47 +40,18 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL(`/${locale}/projects`, request.url));
     }
 
-    // Extract role from JWT token for authenticated users
+    // Route protection for authenticated users
     if (user) {
-      let userRole: UserRole = 'student'; 
+      // Get role from user object (returned by backend)
+      const userRole: UserRole = (user.role as UserRole) || 'student';
 
-      try {
-        // Get session to access JWT token
-        const session = await supabase.auth.getSession();
-        const accessToken = session.data.session?.access_token;
-
-        if (accessToken) {
-          // Extract role using centralized utility
-          userRole = extractRoleFromToken(accessToken);
-
-          // Check if token needs refresh (stale after 30 minutes)
-          if (isTokenStale(accessToken, 30)) {
-            console.log('[Middleware] Token is stale, refreshing session...');
-            const { data: refreshResult, error: refreshError } = await supabase.auth.refreshSession();
-
-            if (refreshError) {
-              console.log('[Middleware] Session refresh failed, redirecting to auth');
-              return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
-            }
-
-            if (refreshResult.session?.access_token) {
-              // Get updated role from fresh token using utility
-              userRole = extractRoleFromToken(refreshResult.session.access_token);
-              console.log('[Middleware] Session refreshed, updated role:', userRole);
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('[Middleware] Could not extract role from JWT:', e);
-      }
-      
-      // Step 4: Route protection logic
+      // Step 3: Route protection logic
       const routeConfig = matchRoute(pathname, locale);
-      
+
       if (routeConfig) {
         const pathParams = extractParams(pathname.replace(new RegExp(`^/${locale}`), ''), routeConfig.pattern);
         const hasAccess = checkRouteAccess(userRole, routeConfig, user.id, pathParams);
-        
+
         if (!hasAccess) {
           console.log('[Middleware] Access denied, rewriting to access-denied page');
 

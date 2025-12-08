@@ -1,19 +1,23 @@
 import { Router } from 'express'
+import authRoutes from './auth.route'
 import userRoutes from './users.route'
 import projectRoutes from './projects.route'
 import reviewRoutes from './reviews.route'
 import externalLinksRoutes from './external-links.route'
 import gradesRoutes from './grades.route'
-import rolesRoutes from './roles.route'
 import scalesRoutes from './scales.route'
 import yearsRoutes from './years.route'
 import attachmentsRoutes from './attachments.route'
+import subjectsRoutes from './subjects.route'
 
 const apiRouter = Router()
 
+// Auth routes (no auth required for login/register)
+apiRouter.use('/auth', authRoutes)
+
 apiRouter.use('/users', userRoutes)
 apiRouter.use('/projects', projectRoutes)
-apiRouter.use('/roles', rolesRoutes)
+apiRouter.use('/subjects', subjectsRoutes)
 apiRouter.use('/scales', scalesRoutes)
 apiRouter.use('/years', yearsRoutes)
 

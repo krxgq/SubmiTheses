@@ -4,6 +4,9 @@ export const yearsApi = {
   getAll: (): Promise<any[]> =>
     apiRequest('/years'),
 
+  getCurrent: (): Promise<any> =>
+    apiRequest('/years/current'),
+
   getById: (id: string): Promise<any> =>
     apiRequest(`/years/${id}`),
 

@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { usersApi } from "@/lib/api/users";
+import { usersApiServer } from "@/lib/api/users";
 import { redirect } from "@/lib/navigation";
 import { revalidatePath } from "next/cache";
 import { UserEditForm } from "./UserEditForm";
@@ -9,14 +9,14 @@ interface UserEditPageProps {
   params: Promise<{ userId: string; locale: string }>;
 }
 
-// Page component - access protected by middleware (admin only)
+// Server Component - access protected by middleware (admin only)
 export default async function UserEditPage({ params }: UserEditPageProps) {
   const { userId, locale } = await params;
   const t = await getTranslations();
 
-  let user: Awaited<ReturnType<typeof usersApi.getById>>;
+  let user: Awaited<ReturnType<typeof usersApiServer.getById>>;
   try {
-    user = await usersApi.getById(userId);
+    user = await usersApiServer.getById(userId);
   } catch (error) {
     console.error("[UserEditPage] Error:", error);
     return (
@@ -40,14 +40,14 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
     'use server';
 
     try {
-      await usersApi.updateProfile(userId, {
+      await usersApiServer.updateProfile(userId, {
         full_name: formData.full_name,
         email: formData.email,
         year_id: formData.year_id,
       });
 
       if (formData.role !== user.role) {
-        await usersApi.updateRole(userId, formData.role);
+        await usersApiServer.updateRole(userId, formData.role);
       }
 
       revalidatePath(`/users/${userId}`);

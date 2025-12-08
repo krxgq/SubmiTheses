@@ -1,5 +1,27 @@
 import { z } from 'zod';
 
+// Auth schemas
+export const loginSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+  }),
+});
+
+export const registerSchema = z.object({
+  body: z.object({
+    email: z.string().email('Invalid email address'),
+    password: z.string().min(6, 'Password must be at least 6 characters'),
+    username: z.string().min(3, 'Username must be at least 3 characters').max(50),
+  }),
+});
+
+export const refreshSchema = z.object({
+  body: z.object({
+    refresh_token: z.string().min(1, 'Refresh token is required'),
+  }),
+});
+
 // User schemas
 export const updateUserSchema = z.object({
   body: z.object({
@@ -15,9 +37,37 @@ export const updateUserSchema = z.object({
 // Project schemas
 export const createProjectSchema = z.object({
   body: z.object({
+    // Basic project fields
     title: z.string().min(1).max(255),
+    subject_id: z.coerce.bigint(), // Changed from subject string to subject_id bigint
     description: z.string().optional(),
+    supervisor_id: z.string().uuid(),
+    opponent_id: z.string().uuid().nullable().optional(), // Make opponent optional
+    student_id: z.string().uuid().optional(),
     year_id: z.coerce.bigint(),
+    status: z.enum(['draft', 'submitted', 'locked', 'public']).optional(),
+
+    // Nested project description (optional but recommended)
+    project_description: z.object({
+      topic: z.string().min(1),
+      project_goal: z.string().min(10),
+      specification: z.string().min(20),
+      needed_output: z.array(z.string().min(3)).min(1),
+      schedule: z.array(z.object({
+        month: z.string(),
+        tasks: z.string()
+      })).optional(),
+      grading_criteria: z.array(z.string()).optional(),
+      grading_notes: z.string().optional(),
+    }).optional(),
+  }).refine(data => {
+    // If opponent is provided, must be different from supervisor
+    if (data.opponent_id && data.supervisor_id === data.opponent_id) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "Supervisor and opponent must be different people"
   }),
 });
 
@@ -25,6 +75,7 @@ export const updateProjectSchema = z.object({
   body: z.object({
     title: z.string().min(1).max(255).optional(),
     description: z.string().optional(),
+    subject_id: z.coerce.bigint().optional(), // Allow updating subject_id
     year_id: z.coerce.bigint().optional(),
   }),
   params: z.object({
@@ -33,6 +84,33 @@ export const updateProjectSchema = z.object({
 });
 
 export const projectIdSchema = z.object({
+  params: z.object({
+    id: z.coerce.bigint(),
+  }),
+});
+
+// Subject schemas
+export const createSubjectSchema = z.object({
+  body: z.object({
+    name_cs: z.string().min(1).max(255),
+    name_en: z.string().min(1).max(255),
+    description: z.string().optional(),
+  }),
+});
+
+export const updateSubjectSchema = z.object({
+  body: z.object({
+    name_cs: z.string().min(1).max(255).optional(),
+    name_en: z.string().min(1).max(255).optional(),
+    description: z.string().optional(),
+    is_active: z.boolean().optional(),
+  }),
+  params: z.object({
+    id: z.coerce.bigint(),
+  }),
+});
+
+export const subjectIdSchema = z.object({
   params: z.object({
     id: z.coerce.bigint(),
   }),

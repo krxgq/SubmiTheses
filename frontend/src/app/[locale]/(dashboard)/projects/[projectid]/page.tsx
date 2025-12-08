@@ -1,4 +1,4 @@
-import { projectsApi } from '@/lib/api/projects';
+import { projectsApiServer } from '@/lib/api/projects';
 import { ApiError } from '@/lib/api/client';
 import { setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -25,7 +25,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   let project;
   try {
-    project = await projectsApi.getProjectById(projectid);
+    project = await projectsApiServer.getProjectById(projectid);
   } catch (error) {
     // Distinguish between 403 (access denied) and 404 (not found)
     if (error instanceof ApiError && error.statusCode === 403) {
@@ -69,7 +69,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             <QuickStats project={project} />
 
             {/* Action buttons */}
-            <ProjectActions />
+            <ProjectActions project={project} />
 
             {/* Recent activity timeline */}
             <RecentActivity />

@@ -7,6 +7,10 @@ import { AuthUser } from "../types";
  * Authentication middleware - verifies JWT token and attaches user to request
  * This middleware only handles AUTHENTICATION (verifying identity).
  * For AUTHORIZATION (checking permissions), use middleware from authorization.middleware.ts
+ * 
+ * Supports two authentication methods:
+ * 1. Bearer token in Authorization header (for client-side requests)
+ * 2. httpOnly cookie sb-access-token (for server-side requests from Next.js)
  */
 export async function authenticated(
   req: Request,
@@ -15,24 +19,26 @@ export async function authenticated(
 ) {
   try {
     console.log('[Auth] Request:', req.method, req.originalUrl);
+    
+    // Try to get token from Authorization header first
     const authHeader = req.headers.authorization;
-    console.log('[Auth] Auth header:', authHeader ? 'present' : 'missing');
+    let token: string | undefined;
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      console.log('[Auth] No Bearer token');
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
+      console.log('[Auth] Token from Authorization header');
+    } 
+    // Fallback to cookie (for server-side requests from Next.js)
+    else if (req.cookies['sb-access-token']) {
+      token = req.cookies['sb-access-token'];
+      console.log('[Auth] Token from cookie');
+    }
+
+    if (!token) {
+      console.log('[Auth] No token found in header or cookie');
       return res.status(401).json({
         error: "No token provided",
         code: "NO_TOKEN"
-      });
-    }
-
-    const token = authHeader.substring(7);
-
-    if (!token) {
-      console.log('[Auth] Empty token');
-      return res.status(401).json({
-        error: "Invalid token",
-        code: "INVALID_TOKEN"
       });
     }
 

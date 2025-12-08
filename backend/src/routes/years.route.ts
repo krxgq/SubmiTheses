@@ -3,6 +3,7 @@ import { authenticated } from '../middleware/auth';
 import { requireAdmin } from '../middleware/authorization.middleware';
 import {
   getAllYears,
+  getCurrentYear,
   getYearById,
   createYear,
   updateYear,
@@ -19,6 +20,9 @@ const router = Router();
 
 // Get all years
 router.get('/', authenticated, getAllYears);
+
+// Get current academic year
+router.get('/current', authenticated, getCurrentYear);
 
 // Get a specific year
 router.get('/:id', authenticated, validate(yearIdSchema), getYearById);

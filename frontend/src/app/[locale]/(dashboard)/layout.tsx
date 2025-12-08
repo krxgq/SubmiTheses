@@ -1,6 +1,5 @@
 import { headers } from 'next/headers';
 import AppSidebar from '@/components/layout/sidebar/Sidebar';
-import Header from '@/components/layout/header/Header';
 import Breadcrumbs from '@/components/layout/Breadcrumbs';
 import { AccessDenied } from '@/components/auth/AccessDenied';
 
@@ -27,7 +26,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
       <div className="flex h-screen bg-background">
         <AppSidebar userRole={currentRole as any} />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header />
           <Breadcrumbs />
           <main className="flex-1 overflow-y-auto p-6">
             <AccessDenied
@@ -44,7 +42,6 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     <div className="flex h-screen bg-background">
       <AppSidebar userRole={currentRole as any} />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
         <Breadcrumbs />
         <main className="flex-1 overflow-y-auto p-6">
           {children}

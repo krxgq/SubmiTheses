@@ -1,10 +1,10 @@
 import { getTranslations } from "next-intl/server";
-import { projectsApi } from "@/lib/api/projects";
+import { projectsApiServer } from "@/lib/api/projects";
 import { ProjectsPageClient } from "./ProjectsPage";
 import { checkRole } from "@/lib/auth/require-role";
 import type { ProjectWithRelations } from "@sumbi/shared-types";
 
-// Page component - access protected by middleware (all authenticated users)
+// Server Component - fetches data server-side for better performance
 export default async function ProjectsPage() {
   const t = await getTranslations();
 
@@ -14,7 +14,8 @@ export default async function ProjectsPage() {
 
   let projects: ProjectWithRelations[] = [];
   try {
-    projects = await projectsApi.getAllProjects();
+    // Use server-side API client
+    projects = await projectsApiServer.getAllProjects();
   } catch (error) {
     console.error('[ProjectsPage] Error fetching projects:', error);
     // Gracefully handle error - show empty projects list

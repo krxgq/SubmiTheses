@@ -1,6 +1,7 @@
 /**
  * API base URL pointing directly to the backend server.
- * Frontend makes direct requests to backend with Supabase JWT tokens.
+ * Frontend makes direct requests to backend.
+ * Authentication handled via httpOnly cookies set by backend.
  */
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
@@ -20,91 +21,65 @@ export class ApiError extends Error {
 }
 
 /**
- * Get access token from Supabase user
- * Works in both server and client contexts
- * Uses getUser() for secure authentication validation
- */
-async function getAccessToken(): Promise<string | null> {
-  if (typeof window === 'undefined') {
-    // Server-side: use require-role pattern
-    try {
-      const { createClient } = await import('@/lib/supabase-server');
-      const supabase = await createClient();
-      const { data: { user }, error } = await supabase.auth.getUser();
-
-      if (error || !user) {
-        console.log('[API] Server - No authenticated user:', error?.message);
-        return null;
-      }
-
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('[API] Server - Got user:', !!user, 'Has token:', !!session?.access_token);
-      return session?.access_token || null;
-    } catch (error) {
-      console.error('[API] Server auth error:', error);
-      return null;
-    }
-  } else {
-    // Client-side: use browser Supabase client
-    const { supabase } = await import('@/lib/supabase');
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      console.log('[API] Client - No authenticated user:', error?.message);
-      return null;
-    }
-
-    const { data: { session } } = await supabase.auth.getSession();
-    console.log('[API] Client - Got user:', !!user, 'Has token:', !!session?.access_token);
-    return session?.access_token || null;
-  }
-}
-
-/**
  * Make authenticated API request to backend
- * Gets Supabase JWT token and sends to backend for validation
- * Works in both Server and Client Components
+ * Uses httpOnly cookies for authentication
+ * Works in both Server and Client Components by forwarding cookies appropriately
  */
 export async function apiRequest<T>(
   endpoint: string,
   options?: RequestInit,
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const isServer = typeof window === 'undefined';
 
-  // Get access token from Supabase session
-  const token = await getAccessToken();
-  console.log('[API] Making request to:', url, 'Has token:', !!token);
+  // Build headers
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...options?.headers as Record<string, string>,
+  };
 
-  // Make request with Supabase JWT token
+  // On server-side (Next.js Server Components), forward cookies manually
+  if (isServer) {
+    try {
+      // Dynamically import cookies to avoid issues in client components
+      const { cookies } = await import('next/headers');
+      const cookieStore = await cookies();
+      const accessToken = cookieStore.get('sb-access-token');
+      const refreshToken = cookieStore.get('sb-refresh-token');
+
+      // Build Cookie header to forward to backend
+      const cookieHeader = [
+        accessToken && `sb-access-token=${accessToken.value}`,
+        refreshToken && `sb-refresh-token=${refreshToken.value}`,
+      ]
+        .filter(Boolean)
+        .join('; ');
+
+      if (cookieHeader) {
+        headers['Cookie'] = cookieHeader;
+      }
+    } catch (err) {
+      console.error('[apiRequest] Failed to read cookies on server:', err);
+    }
+  }
+
+  // Make request
   const response = await fetch(url, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options?.headers,
-    },
+    headers,
+    credentials: isServer ? 'omit' : 'include', // Client: use credentials, Server: cookies in header
+    cache: isServer ? 'no-store' : options?.cache, // Server components: no cache
   });
-
-  console.log('[API] Response status:', response.status, response.statusText);
 
   // Handle errors - throw ApiError with status code for proper error handling
   if (!response.ok) {
     const errorText = await response.text();
-    console.log('[API] Error response:', response.status, errorText);
 
     let errorData;
     try {
       errorData = JSON.parse(errorText);
     } catch {
       errorData = { error: errorText };
-    }
-
-    // Handle stale token - force page reload to get fresh session
-    if (errorData.code === 'TOKEN_STALE' && typeof window !== 'undefined') {
-      console.log('[API] Token stale - reloading page for fresh session');
-      window.location.reload();
-      // Wait forever, page is reloading
-      await new Promise(() => {});
     }
 
     throw new ApiError(

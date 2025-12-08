@@ -1,17 +1,15 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, useTransition } from 'react';
-import { Globe } from 'lucide-react';
-import { usePathname } from '@/lib/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import type { Locale } from '@/lib/i18n-config';
+import { useState, useRef, useEffect } from "react";
+import { Globe, ChevronDown } from "lucide-react";
+import { usePathname } from "@/lib/navigation";
+import { useLocale } from "next-intl";
+import type { Locale } from "@/lib/i18n-config";
 
 export function LanguageSwitcher() {
   const pathname = usePathname();
   const locale = useLocale() as Locale;
-  const t = useTranslations('header');
   const [showMenu, setShowMenu] = useState(false);
-  const [isPending, startTransition] = useTransition();
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,59 +19,48 @@ export function LanguageSwitcher() {
       }
     };
 
-    if (showMenu) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showMenu]);
-
-  const changeLanguage = (newLocale: Locale) => {
+  const switchLanguage = (newLocale: string) => {
     setShowMenu(false);
-    startTransition(() => {
-      const url = new URL(window.location.href);
-      url.pathname = `/${newLocale}${pathname}`;
-      window.location.href = url.href;
-    });
+    const url = new URL(window.location.href);
+    url.pathname = `/${newLocale}${pathname}`;
+    window.location.href = url.href;
   };
 
   return (
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setShowMenu(!showMenu)}
-        className="flex items-center p-2 text-secondary hover:text-primary transition-colors rounded-lg hover:bg-background-hover"
-        title={t('language.select')}
+        className="w-full flex items-center justify-between px-3 py-2 text-sm text-primary hover:bg-background-hover rounded-lg transition-colors"
       >
-        <Globe className="w-5 h-5" />
-        <span className="ml-1 text-xs uppercase">{locale}</span>
+        <div className="flex items-center">
+          <Globe className="w-4 h-4" />
+          <span className="ml-3 uppercase">{locale}</span>
+        </div>
+        <ChevronDown className="w-4 h-4" />
       </button>
 
       {showMenu && (
-        <div className="absolute right-0 mt-2 w-32 bg-background-elevated border-border rounded-lg shadow-lg z-50">
-          <div className="py-1">
-            <button
-              onClick={() => changeLanguage('en')}
-              className={`w-full px-3 py-2 text-left text-sm hover:bg-background-hover transition-colors ${
-                locale === 'en'
-                  ? 'text-primary font-medium'
-                  : 'text-primary'
-              }`}
-            >
-              {t('language.english')}
-            </button>
-            <button
-              onClick={() => changeLanguage('cz')}
-              className={`w-full px-3 py-2 text-left text-sm hover:bg-background-hover transition-colors ${
-                locale === 'cz'
-                  ? 'text-primary font-medium'
-                  : 'text-primary'
-              }`}
-            >
-              {t('language.czech')}
-            </button>
-          </div>
+        <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl overflow-hidden z-50">
+          <button
+            onClick={() => switchLanguage('en')}
+            className={`w-full px-3 py-2 text-left text-sm hover:bg-background-hover transition-colors ${
+              locale === "en" ? "text-primary font-medium" : "text-text-primary"
+            }`}
+          >
+            English
+          </button>
+          <button
+            onClick={() => switchLanguage('cz')}
+            className={`w-full px-3 py-2 text-left text-sm hover:bg-background-hover transition-colors ${
+              locale === "cz" ? "text-primary font-medium" : "text-text-primary"
+            }`}
+          >
+            Čeština
+          </button>
         </div>
       )}
     </div>

@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase-server";
+import { validateSession } from "@/lib/auth/session-validator";
 import { setRequestLocale } from 'next-intl/server';
 import { routing } from '@/lib/navigation';
+
+// Force dynamic rendering since we validate session
+export const dynamic = 'force-dynamic';
 
 // Root page redirects to auth or projects based on session
 export default async function RootPage({
@@ -14,14 +17,12 @@ export default async function RootPage({
     // Set locale for next-intl (needed for translations in other components)
     setRequestLocale(locale);
 
-    // Use server-side Supabase client to properly read cookies in Server Component
-    // Use getUser() for secure authentication validation instead of getSession()
-    const supabase = await createClient();
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // Validate session using backend API (NO Supabase)
+    const user = await validateSession();
 
     // Redirect with locale prefix - using Next.js redirect directly
     // No need for custom redirect since we already have locale from params
-    if (user && !error) {
+    if (user) {
         redirect(`/${locale}/projects`);
     } else {
         redirect(`/${locale}/auth`);
