@@ -2,6 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
+import { Link } from '@/lib/navigation';
+import { Button } from 'flowbite-react';
+import { Plus } from 'lucide-react';
 import { UserActionsMenu } from '@/components/dashboard/users/UserActionsMenu';
 import { FilterMenu, UserFilters } from '@/components/dashboard/users/FilterMenu';
 import type { UserWithYear } from '@sumbi/shared-types';
@@ -33,7 +36,15 @@ export function UsersTable({ users }: UsersTableProps) {
         <h1 className="text-2xl font-bold text-text-primary">
           {t('title')}
         </h1>
-        <FilterMenu onFilterChange={handleFilterChange} />
+        <div className="flex items-center gap-3">
+          <Link href="/users/create">
+            <Button size="sm">
+              <Plus className="w-4 h-4 mr-2" />
+              Create User
+            </Button>
+          </Link>
+          <FilterMenu onFilterChange={handleFilterChange} />
+        </div>
       </div>
 
       {filteredUsers.length > 0 ? (
@@ -65,7 +76,7 @@ export function UsersTable({ users }: UsersTableProps) {
                     className="hover:bg-background-hover transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-text-primary">
-                      {user.full_name || 'N/A'}
+                      {[user.first_name, user.last_name].filter(Boolean).join(' ') || 'N/A'}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
                       {user.email}
@@ -74,7 +85,7 @@ export function UsersTable({ users }: UsersTableProps) {
                       {t(`roles.${user.role}`)}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
-                      {user.year?.id || user.year_id || 'N/A'}
+                      {user.years?.name || user.year_id || 'N/A'}
                     </td>
                     <td className="px-6 py-4 relative">
                       <UserActionsMenu userId={user.id} />

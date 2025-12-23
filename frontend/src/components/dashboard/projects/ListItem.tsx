@@ -1,4 +1,5 @@
 import type { ProjectWithRelations } from "@sumbi/shared-types";
+import { formatUserName } from "@/lib/formatters";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 
@@ -55,7 +56,7 @@ function StudentListCard({ project }: CardProps) {
         <div className="flex-[2] min-w-0 hidden md:block">
           <p className="text-sm text-text-secondary truncate">
             <span className="font-medium">{t('projects.supervisor')}:</span>{' '}
-            {project.supervisor?.full_name || t('common.unknown')}
+            {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || t('common.unknown')}
           </p>
         </div>
 
@@ -63,14 +64,14 @@ function StudentListCard({ project }: CardProps) {
         <div className="flex-[2] min-w-0 hidden lg:block">
           <p className="text-sm text-text-secondary truncate">
             <span className="font-medium">{t('projects.opponent')}:</span>{' '}
-            {project.opponent?.full_name || t('common.unknown')}
+            {formatUserName(project.opponent?.first_name, project.opponent?.last_name) || t('common.unknown')}
           </p>
         </div>
 
         {/* Last Updated - 15% */}
         <div className="flex-[1.5] min-w-0 text-right">
           <p className="text-xs text-text-tertiary">
-            {formatDate(project.updated_at)}
+            {formatDate(project.updated_at.toISOString())}
           </p>
         </div>
       </div>
@@ -96,7 +97,7 @@ function TeacherListCard({ project }: CardProps) {
         <div className="flex-[2] min-w-0 hidden sm:block">
           <p className="text-sm text-text-secondary truncate">
             <span className="font-medium">{t('projects.student')}:</span>{' '}
-            {project.student?.full_name || project.student?.email || t('projects.noStudent')}
+            {formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email || t('projects.noStudent')}
           </p>
         </div>
 
@@ -104,7 +105,6 @@ function TeacherListCard({ project }: CardProps) {
         <div className="flex-[1.8] min-w-0 hidden md:block">
           <p className="text-sm text-text-secondary truncate">
             <span className="font-medium">{t('projects.supervisor')}:</span>{' '}
-            {project.supervisor?.full_name || t('common.unknown')}
           </p>
         </div>
 
@@ -112,14 +112,13 @@ function TeacherListCard({ project }: CardProps) {
         <div className="flex-[1.8] min-w-0 hidden lg:block">
           <p className="text-sm text-text-secondary truncate">
             <span className="font-medium">{t('projects.opponent')}:</span>{' '}
-            {project.opponent?.full_name || t('common.unknown')}
           </p>
         </div>
 
         {/* Last Updated - 15% */}
         <div className="flex-[1.5] min-w-0 text-right">
           <p className="text-xs text-text-tertiary">
-            {formatDate(project.updated_at)}
+            {formatDate(project.updated_at.toISOString())}
           </p>
         </div>
       </div>
@@ -157,7 +156,7 @@ function AdminListCard({ project }: CardProps) {
           <div className="flex-[1.8] min-w-0 hidden sm:block">
             <p className="text-xs text-text-tertiary font-semibold">{t('projects.student')}</p>
             <p className="text-sm text-text-secondary truncate">
-              {project.student?.full_name || project.student?.email || (
+              {formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email || (
                 <span className="italic text-text-tertiary">{t('projects.noStudent')}</span>
               )}
             </p>
@@ -167,7 +166,7 @@ function AdminListCard({ project }: CardProps) {
           <div className="flex-[1.8] min-w-0 hidden md:block">
             <p className="text-xs text-text-tertiary font-semibold">{t('projects.supervisor')}</p>
             <p className="text-sm text-text-secondary truncate">
-              {project.supervisor?.full_name || t('common.unknown')}
+              {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || t('common.unknown')}
             </p>
           </div>
 
@@ -175,14 +174,14 @@ function AdminListCard({ project }: CardProps) {
           <div className="flex-[1.8] min-w-0 hidden lg:block">
             <p className="text-xs text-text-tertiary font-semibold">{t('projects.opponent')}</p>
             <p className="text-sm text-text-secondary truncate">
-              {project.opponent?.full_name || t('common.unknown')}
+              {formatUserName(project.opponent?.first_name, project.opponent?.last_name) || t('common.unknown')}
             </p>
           </div>
 
           {/* Last Updated - 12% */}
           <div className="flex-[1.2] min-w-0 text-right">
             <p className="text-xs text-text-tertiary">
-              {formatDate(project.updated_at)}
+              {formatDate(project.updated_at.toISOString())}
             </p>
           </div>
         </div>

@@ -22,8 +22,18 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Backend API is running!' });
 });
 
-app.get('/health', (req: Request, res: Response) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+app.get('/health', async (req: Request, res: Response) => {
+  const { cache } = await import('./lib/cache');
+  
+  const health = {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    redis: {
+      connected: cache.isConnected(),
+    },
+  };
+  
+  res.json(health);
 });
 
 app.use('/api', routes);

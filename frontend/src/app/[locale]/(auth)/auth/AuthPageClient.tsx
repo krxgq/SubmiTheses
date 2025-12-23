@@ -6,6 +6,9 @@ import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
 
 export default function AuthPageClient() {
+    // Feature flag: set to true to enable public registration
+    const REGISTRATION_ENABLED = false
+
     const router = useRouter()
     const { login, register, isLoading: authLoading } = useAuthContext()
     const [showPassword, setShowPassword] = useState(false)
@@ -17,7 +20,6 @@ export default function AuthPageClient() {
     const [loginForm, setLoginForm] = useState({ email: '', password: '', rememberMe: false })
     const [registerForm, setRegisterForm] = useState({
         email: '',
-        username: '',
         password: '',
         confirmPassword: '',
         firstName: '',
@@ -72,12 +74,6 @@ export default function AuthPageClient() {
             errors.email = 'Email is invalid'
         }
 
-        if (!registerForm.username) {
-            errors.username = 'Username is required'
-        } else if (registerForm.username.length < 3) {
-            errors.username = 'Username must be at least 3 characters'
-        }
-
         if (!registerForm.firstName) {
             errors.firstName = 'First name is required'
         }
@@ -121,10 +117,8 @@ export default function AuthPageClient() {
                 rememberMe: loginForm.rememberMe
             })
             if (result.success) {
-                setSuccessMessage('Successfully logged in!')
-                setTimeout(() => {
-                    router.push('/projects')
-                }, 1500)
+                // Redirect immediately - no artificial delay
+                router.push('/projects')
             } else {
                 setAuthError(result.error || 'An error occurred during login')
             }
@@ -148,16 +142,14 @@ export default function AuthPageClient() {
             const result = await register({
                 email: registerForm.email,
                 password: registerForm.password,
-                username: registerForm.username,
                 firstName: registerForm.firstName,
                 lastName: registerForm.lastName,
                 subscribeNewsletter: registerForm.subscribeNewsletter
             })
             if (result.success) {
-                setSuccessMessage('Account created successfully! Please check your email to verify your account.')
-                setTimeout(() => {
-                    setActiveTab('login')
-                }, 2000)
+                setSuccessMessage('Account created successfully!')
+                // Auto-redirect to dashboard
+                router.push('/projects')
             } else {
                 setAuthError(result.error || 'An error occurred during registration')
             }
@@ -286,6 +278,8 @@ export default function AuthPageClient() {
                             </form>
                         </TabItem>
 
+                        {/* Public registration disabled - can be re-enabled via REGISTRATION_ENABLED flag */}
+                        {REGISTRATION_ENABLED && (
                         <TabItem title="Sign Up" active={activeTab === 'register'}>
                             <form onSubmit={handleRegister} className="space-y-4 mt-4">
                                 <div className="grid grid-cols-2 gap-4">
@@ -322,26 +316,6 @@ export default function AuthPageClient() {
                                             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.lastName}</p>
                                         )}
                                     </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Username
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            value={registerForm.username}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, username: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${registerErrors.username ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Choose a username"
-                                        />
-                                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-                                    </div>
-                                    {registerErrors.username && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.username}</p>
-                                    )}
                                 </div>
 
                                 <div>
@@ -481,6 +455,7 @@ export default function AuthPageClient() {
                                 </button>
                             </form>
                         </TabItem>
+                        )}
                     </Tabs>
                     </div>
                 </div>

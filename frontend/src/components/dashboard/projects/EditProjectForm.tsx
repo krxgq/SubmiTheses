@@ -31,7 +31,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
     project_goal: project.project_description?.project_goal || "",
     specification: project.project_description?.specification || "",
     needed_output: project.project_description?.needed_output || [""],
-    schedule: (project.project_description?.schedule as ProjectScheduleEntry[]) || [],
+    schedule: (project.project_description?.schedule as unknown as ProjectScheduleEntry[]) || [],
     supervisor_id: project.supervisor_id,
     opponent_id: project.opponent_id,
   });
@@ -66,7 +66,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
         },
       };
 
-      await projectsApi.updateProject(project.id, payload);
+      await projectsApi.updateProject(Number(project.id), payload);
       toast.success("Project updated successfully!");
       router.push(`/projects/${project.id}`);
     } catch (error: any) {

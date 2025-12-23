@@ -1,4 +1,5 @@
 'use client';
+import { formatUserName } from "@/lib/formatters";
 
 import { Share2, Printer, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown } from 'lucide-react';
 import { Button } from 'flowbite-react';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 import UploadField from './UploadField';
 import { UserSelect } from '@/components/ui/UserSelect';
 import { projectsApi } from '@/lib/api/projects';
+import { downloadProjectPDF } from '@/lib/downloadPDF';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -177,24 +179,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const handleExportPDF = async () => {
     setIsExportingPDF(true);
     try {
-      const response = await fetch(`/api/projects/${project.id}/export-pdf`);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('PDF export failed:', errorData);
-        throw new Error(errorData.error || 'Failed to export PDF');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `zadani-${project.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
+      await downloadProjectPDF(project);
       toast.success('PDF exported successfully');
     } catch (error: any) {
       console.error('PDF export error:', error);
@@ -411,7 +396,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
             <div className="p-6">
               <p className="text-text-primary mb-2">
-                Are you sure you want to remove <strong>{project.student?.full_name || project.student?.email}</strong> from this project?
+                Are you sure you want to remove <strong>{formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email}</strong> from this project?
               </p>
               <p className="text-text-secondary text-sm">
                 The student will no longer be assigned to this project.

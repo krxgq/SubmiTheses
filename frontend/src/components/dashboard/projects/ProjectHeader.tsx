@@ -5,8 +5,10 @@ import { ChevronRight } from 'lucide-react';
 import { Button } from 'flowbite-react';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import UploadField from '@/components/dashboard/projects/UploadField';
 import { attachmentsApi } from '@/lib/api/attachments';
+import { downloadProjectPDF } from '@/lib/downloadPDF';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 
 interface ProjectHeaderProps {
@@ -19,6 +21,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   const handleUploadClick = () => {
     setShowUploadModal(true);
@@ -64,6 +67,19 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
     setUploadError('');
   };
 
+  const handleExportPDF = async () => {
+    setIsExportingPDF(true);
+    try {
+      await downloadProjectPDF(project);
+      toast.success('PDF exported successfully');
+    } catch (error: any) {
+      console.error('PDF export error:', error);
+      toast.error(error.message || 'Failed to export PDF');
+    } finally {
+      setIsExportingPDF(false);
+    }
+  };
+
   // Status badge styling based on status - using CSS variables
   const statusStyles: Record<'draft' | 'submitted' | 'locked' | 'public', string> = {
     'draft': 'bg-interactive-secondary text-text-accent',
@@ -85,7 +101,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
             {project.status && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[project.status]}`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[project.status as keyof typeof statusStyles]}`}>
                 {t(`status.${project.status}`)}
               </span>
             )}
@@ -103,11 +119,19 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
 
         {/* Action buttons (Export PDF, Upload File) */}
         <div className="flex items-center gap-2">
-          <button className="px-4 py-2 text-sm font-medium text-text-primary bg-background-elevated border border-border rounded-lg hover:bg-background-hover flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            {t('exportPdf')}
+          <button
+            onClick={handleExportPDF}
+            disabled={isExportingPDF}
+            className="px-4 py-2 text-sm font-medium text-text-primary bg-background-elevated border border-border rounded-lg hover:bg-background-hover flex items-center gap-2 disabled:opacity-50"
+          >
+            {isExportingPDF ? (
+              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            )}
+            {isExportingPDF ? 'Exporting...' : t('exportPdf')}
           </button>
           <button
             onClick={handleUploadClick}

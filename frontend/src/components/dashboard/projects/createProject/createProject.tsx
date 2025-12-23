@@ -1,4 +1,5 @@
 "use client";
+import { formatUserName } from "@/lib/formatters";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -395,7 +396,7 @@ export default function CreateProjectModule() {
                     Supervisor <span className="text-red-500">*</span>
                   </label>
                   <div className="border rounded-lg bg-background-secondary p-3 text-text-primary">
-                    {user?.full_name || user?.email || 'You'}
+                    {formatUserName(user?.first_name, user?.last_name) || user?.email || 'You'}
                   </div>
                   <p className="text-xs text-text-secondary">You are automatically assigned as the supervisor</p>
                 </div>

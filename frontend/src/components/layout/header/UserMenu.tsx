@@ -1,4 +1,5 @@
 'use client';
+import { formatUserName } from "@/lib/formatters";
 
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Settings, LogOut } from 'lucide-react';
@@ -53,10 +54,10 @@ export function UserMenu() {
         onClick={() => setShowMenu(!showMenu)}
         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-background-hover transition-colors"
       >
-        <Avatar src={user?.avatar_url} name={user?.full_name} />
+        <Avatar src={user?.avatar_url} name={formatUserName(user?.first_name, user?.last_name)} />
         <div className="hidden md:block text-left">
           <p className="text-sm font-medium text-primary">
-            {user?.full_name || 'User'}
+            {formatUserName(user?.first_name, user?.last_name) || 'User'}
           </p>
           <p className="text-xs text-secondary">
             {user?.email || 'user@example.com'}

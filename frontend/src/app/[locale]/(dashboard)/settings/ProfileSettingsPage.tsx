@@ -5,14 +5,16 @@ import { Button } from "flowbite-react";
 import { Input } from "@/components/ui/Input";
 import { authService } from "@/lib/auth";
 import { Avatar } from "@/components/ui/Avatar";
+import { formatUserName } from "@/lib/formatters";
 import type { AuthUser } from "@/lib/auth";
 
 export default function SettingsPageClient() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Form states
-  const [fullName, setFullName] = useState("");
+  // Form states - split name fields
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -43,7 +45,8 @@ export default function SettingsPageClient() {
     const currentUser = await authService.getCurrentUser();
     if (currentUser) {
       setUser(currentUser);
-      setFullName(currentUser.full_name || "");
+      setFirstName(currentUser.first_name || "");
+      setLastName(currentUser.last_name || "");
       setEmail(currentUser.email);
     }
     setLoading(false);
@@ -57,17 +60,17 @@ export default function SettingsPageClient() {
     setProfileMessage(null);
   };
 
-  // Update email via Supabase Auth
+  // Update email (requires backend implementation)
   const handleUpdateEmail = async (e: React.FormEvent) => {
-    //TODO: implement email change confirmation flow
+    //TODO: implement email change confirmation flow with backend API
     e.preventDefault();
     setUpdatingEmail(true);
     setEmailMessage(null);
   };
 
-  // Update password via Supabase Auth
+  // Update password (requires backend implementation)
   const handleUpdatePassword = async (e: React.FormEvent) => {
-    //TODO: implement password update flow with re-authentication if needed
+    //TODO: implement password update flow with backend API
     e.preventDefault();
     setUpdatingPassword(true);
     setPasswordMessage(null);
@@ -98,7 +101,7 @@ export default function SettingsPageClient() {
       {/* Profile Section */}
       <div className="bg-background-elevated rounded-lg border border-border p-6 mb-6">
         <div className="flex items-center gap-4 mb-6">
-          <Avatar src={user.avatar_url} name={user.full_name} size="xl" />
+          <Avatar src={user.avatar_url} name={formatUserName(user.first_name, user.last_name)} size="xl" />
           <div>
             <h2 className="text-xl font-semibold text-text-primary">
               Profile Information
@@ -108,21 +111,31 @@ export default function SettingsPageClient() {
         </div>
 
         <form onSubmit={handleUpdateProfile} className="space-y-4">
-          <Input
-            id="fullName"
-            label="Full Name"
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-          />
+          <div className="grid grid-cols-2 gap-4">
+            <Input
+              id="firstName"
+              label="First Name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+            <Input
+              id="lastName"
+              label="Last Name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+          </div>
 
           {profileMessage && (
             <div
               className={`p-3 rounded-lg border ${
                 profileMessage.type === "success"
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200"
-                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                  ? "bg-background-tertiary border-success text-success"
+                  : "bg-background-tertiary border-danger text-danger"
               }`}
             >
               <p className="text-sm">{profileMessage.text}</p>
@@ -155,8 +168,8 @@ export default function SettingsPageClient() {
             <div
               className={`p-3 rounded-lg border ${
                 emailMessage.type === "success"
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200"
-                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                  ? "bg-background-tertiary border-success text-success"
+                  : "bg-background-tertiary border-danger text-danger"
               }`}
             >
               <p className="text-sm">{emailMessage.text}</p>
@@ -207,8 +220,8 @@ export default function SettingsPageClient() {
             <div
               className={`p-3 rounded-lg border ${
                 passwordMessage.type === "success"
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200"
-                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200"
+                  ? "bg-background-tertiary border-success text-success"
+                  : "bg-background-tertiary border-danger text-danger"
               }`}
             >
               <p className="text-sm">{passwordMessage.text}</p>
@@ -220,6 +233,7 @@ export default function SettingsPageClient() {
           </Button>
         </form>
       </div>
+
     </div>
   );
 }

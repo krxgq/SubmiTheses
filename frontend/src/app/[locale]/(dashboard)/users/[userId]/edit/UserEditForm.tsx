@@ -7,7 +7,8 @@ import type { UserWithYear, UserRole } from '@sumbi/shared-types';
 interface UserEditFormProps {
   user: UserWithYear;
   updateUser: (formData: {
-    full_name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     role: UserRole;
     year_id: number | null;
@@ -30,10 +31,11 @@ interface UserEditFormProps {
 export function UserEditForm({ user, updateUser, translations }: UserEditFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
-    full_name: user.full_name || '',
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
     email: user.email,
     role: user.role,
-    year_id: user.year_id,
+    year_id: user.year_id ? Number(user.year_id) : null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -60,17 +62,29 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-2">
-          {translations.fullName}
-        </label>
-        <input
-          type="text"
-          value={formData.full_name}
-          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-          className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          required
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-2">
+            First Name
+          </label>
+          <input
+            type="text"
+            value={formData.first_name}
+            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+            className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-text-primary mb-2">
+            Last Name
+          </label>
+          <input
+            type="text"
+            value={formData.last_name}
+            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+            className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </div>
 
       <div>

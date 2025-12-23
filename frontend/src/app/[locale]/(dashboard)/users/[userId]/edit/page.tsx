@@ -32,7 +32,8 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
   }
 
   async function updateUser(formData: {
-    full_name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     role: UserRole;
     year_id: number | null;
@@ -41,7 +42,8 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
 
     try {
       await usersApiServer.updateProfile(userId, {
-        full_name: formData.full_name,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
         email: formData.email,
         year_id: formData.year_id,
       });

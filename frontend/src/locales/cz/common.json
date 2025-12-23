@@ -52,8 +52,6 @@
       "title": "Registrace",
       "email": "Email",
       "emailPlaceholder": "Zadejte váš email",
-      "username": "Uživatelské jméno",
-      "usernamePlaceholder": "Zvolte uživatelské jméno",
       "password": "Heslo",
       "passwordPlaceholder": "Vytvořte heslo",
       "confirmPassword": "Potvrdit heslo",
@@ -66,8 +64,6 @@
       "emailInvalid": "Zadejte platný email",
       "passwordRequired": "Heslo je povinné",
       "passwordTooShort": "Heslo musí mít alespoň 8 znaků",
-      "usernameRequired": "Uživatelské jméno je povinné",
-      "usernameTooShort": "Uživatelské jméno musí mít alespoň 3 znaky",
       "passwordMismatch": "Hesla se neshodují"
     },
     "loading": "Prosím čekejte...",

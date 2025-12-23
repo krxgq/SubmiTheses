@@ -48,6 +48,7 @@ export class UserService {
 
   /**
    * Get all teachers (users with teacher or admin role)
+   * Ordered by last name, then first name
    */
   static async getTeachers() {
     return await prisma.public_users.findMany({
@@ -56,9 +57,10 @@ export class UserService {
           in: ['teacher', 'admin'],
         },
       },
-      orderBy: {
-        full_name: 'asc',
-      },
+      orderBy: [
+        { last_name: 'asc' },
+        { first_name: 'asc' },
+      ],
     });
   }
 
@@ -77,7 +79,8 @@ export class UserService {
     return await prisma.public_users.update({
       where: { id: String(id) },
       data: {
-        full_name: data.full_name,
+        first_name: data.first_name,
+        last_name: data.last_name,
         avatar_url: data.avatar_url,
         year_id: data.year_id,
         email: data.email,

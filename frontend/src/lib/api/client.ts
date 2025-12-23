@@ -67,8 +67,11 @@ export async function apiRequest<T>(
   const response = await fetch(url, {
     ...options,
     headers,
-    credentials: isServer ? 'omit' : 'include', // Client: use credentials, Server: cookies in header
-    cache: isServer ? 'no-store' : options?.cache, // Server components: no cache
+    credentials: isServer ? 'omit' : 'include',
+    // Add caching for server-side GET requests
+    ...(isServer && (!options?.method || options.method === 'GET') && !options?.cache
+      ? { next: { revalidate: 10 } } // Cache for 10 seconds on server
+      : {}),
   });
 
   // Handle errors - throw ApiError with status code for proper error handling

@@ -1,4 +1,5 @@
 import type { ProjectWithRelations } from '@sumbi/shared-types';
+import { formatUserName } from "@/lib/formatters";
 import { Avatar } from '@/components/ui/Avatar';
 import { FileText, Target, ListChecks, Calendar } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
@@ -110,10 +111,10 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
           {/* Supervisor */}
           {project.supervisor && (
             <div className="flex items-center gap-3">
-              <Avatar src={project.supervisor.avatar_url} name={project.supervisor.full_name} />
+              <Avatar src={project.supervisor.avatar_url} name={formatUserName(project.supervisor.first_name, project.supervisor.last_name)} />
               <div>
                 <div className="text-sm font-medium text-text-primary">
-                  {project.supervisor.full_name || project.supervisor.email}
+                  {formatUserName(project.supervisor.first_name, project.supervisor.last_name) || project.supervisor.email}
                 </div>
                 <div className="text-xs text-text-secondary">Supervisor</div>
               </div>
@@ -123,10 +124,10 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
           {/* Opponent */}
           {project.opponent && (
             <div className="flex items-center gap-3">
-              <Avatar src={project.opponent.avatar_url} name={project.opponent.full_name} />
+              <Avatar src={project.opponent.avatar_url} name={formatUserName(project.opponent.first_name, project.opponent.last_name)} />
               <div>
                 <div className="text-sm font-medium text-text-primary">
-                  {project.opponent.full_name || project.opponent.email}
+                  {formatUserName(project.opponent.first_name, project.opponent.last_name) || project.opponent.email}
                 </div>
                 <div className="text-xs text-text-secondary">Opponent</div>
               </div>
@@ -136,10 +137,10 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
           {/* Student */}
           {project.student && (
             <div className="flex items-center gap-3">
-              <Avatar src={project.student.avatar_url} name={project.student.full_name} />
+              <Avatar src={project.student.avatar_url} name={formatUserName(project.student.first_name, project.student.last_name)} />
               <div>
                 <div className="text-sm font-medium text-text-primary">
-                  {project.student.full_name || project.student.email}
+                  {formatUserName(project.student.first_name, project.student.last_name) || project.student.email}
                 </div>
                 <div className="text-xs text-text-secondary">Student</div>
               </div>

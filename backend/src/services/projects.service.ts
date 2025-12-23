@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import { cache } from '../lib/cache';
 import { CreateProjectSchema, UpdateProjectSchema } from '../types';
 import type {
   Project,
@@ -66,21 +67,21 @@ export class ProjectService {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         project_description: true,
@@ -92,7 +93,22 @@ export class ProjectService {
   /**
    * Get project by ID with relations including student
    */
+  /**
+   * Get a project by ID with relations
+   */
   static async getProjectById(id: bigint): Promise<ProjectWithRelations | null> {
+    const cacheKey = `project:${id}`;
+    
+    // Check cache first
+    const cached = await cache.get<ProjectWithRelations>(cacheKey);
+    if (cached) {
+      console.log(`[Cache HIT] Project ${id}`);
+      return cached;
+    }
+
+    console.log(`[Cache MISS] Project ${id} - fetching from DB`);
+    const startTime = Date.now();
+    
     const project = await prisma.projects.findUnique({
       where: { id: Number(id) },
       include: {
@@ -118,39 +134,72 @@ export class ProjectService {
         subjects: true,
       }
     });
-    return project ? transformPrismaProject(project) : null;
+
+    const queryTime = Date.now() - startTime;
+    console.log(`[DB Query] Project ${id} took ${queryTime}ms`);
+
+    const result = project ? transformPrismaProject(project) : null;
+    
+    // Cache for 30 seconds
+    if (result) {
+      const cacheStartTime = Date.now();
+      await cache.set(cacheKey, result, 30);
+      const cacheTime = Date.now() - cacheStartTime;
+      console.log(`[Redis Cache] Stored in ${cacheTime}ms`);
+    }
+    
+    return result;
   }
 
   /**
    * Get all projects with relations including student
+   * Uses Redis cache to avoid slow database queries (AWS network latency)
    */
   static async getAllProjects(): Promise<ProjectWithRelations[]> {
+    const cacheKey = 'projects:all';
+
+    // Try cache first (sub-millisecond lookup)
+    const cached = await cache.get<ProjectWithRelations[]>(cacheKey);
+    if (cached) {
+      console.log('[ProjectService] Cache HIT for all projects');
+      return cached;
+    }
+
+    console.log('[ProjectService] Cache MISS for all projects, querying database...');
+
+    // Cache miss - query database (2-4s due to AWS network latency)
     const projects = await prisma.projects.findMany({
       include: {
         users_projects_student_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }
     });
-    return projects.map(transformPrismaProject);
+
+    const transformed = projects.map(transformPrismaProject);
+
+    // Cache for 60 seconds (projects list doesn't change frequently)
+    await cache.set(cacheKey, transformed, 60);
+
+    return transformed;
   }
 
   /**
@@ -175,25 +224,29 @@ export class ProjectService {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
+            // Note: first_name, last_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }
     });
+    
+    // Invalidate cache for this project
+    await cache.delete(`project:${id}`);
+    
     return transformPrismaProject(project);
   }
 
@@ -204,6 +257,10 @@ export class ProjectService {
     const deletedProject = await prisma.projects.delete({
       where: { id: Number(id) },
     });
+    
+    // Invalidate cache for this project
+    await cache.delete(`project:${id}`);
+    
     return !!deletedProject;
   }
 
@@ -221,25 +278,26 @@ export class ProjectService {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_supervisor_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         },
         users_projects_opponent_idTousers: {
           select: {
             id: true,
             email: true,
-            // Note: full_name, avatar_url, role exist only on public_users (via users relation)
           }
         }
       }
     });
+    
+    // Invalidate cache for this project
+    await cache.delete(`project:${projectId}`);
+    
     return transformPrismaProject(project);
   }
 }

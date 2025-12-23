@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Label } from "flowbite-react";
 import { usersApi, type User } from "@/lib/api/users";
+import { formatUserName } from "@/lib/formatters";
 
 interface UserSelectProps {
   label: string;
@@ -65,7 +66,7 @@ export function UserSelect({
     const query = searchQuery.toLowerCase();
     const filtered = users.filter(
       (user) =>
-        user.full_name?.toLowerCase().includes(query) ||
+        formatUserName(user.first_name, user.last_name).toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query)
     );
     setFilteredUsers(filtered);
@@ -85,7 +86,7 @@ export function UserSelect({
 
   const selectedUser = users.find((u) => u.id === value);
   const displayValue = selectedUser
-    ? `${selectedUser.full_name || selectedUser.email} (${selectedUser.email})`
+    ? `${formatUserName(selectedUser.first_name, selectedUser.last_name) || selectedUser.email} (${selectedUser.email})`
     : "";
 
   const hasValue = value !== null;
@@ -159,7 +160,7 @@ export function UserSelect({
                 className="w-full px-4 py-3 text-left text-sm hover:bg-background-secondary transition-colors duration-150 flex flex-col"
               >
                 <span className="font-medium text-text-primary">
-                  {user.full_name || user.email}
+                  {formatUserName(user.first_name, user.last_name) || user.email}
                 </span>
                 <span className="text-xs text-text-secondary">{user.email}</span>
               </button>

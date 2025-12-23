@@ -76,6 +76,24 @@ export const projectsApi = {
       method: 'DELETE',
     });
   },
+
+  /**
+   * Export project as PDF
+   * @param id - Project ID
+   */
+  exportPDF: async (id: string | number): Promise<Blob> => {
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const response = await fetch(`${API_BASE_URL}/projects/${id}/export-pdf`, {
+      credentials: 'include',
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(errorData.error || 'Failed to export PDF');
+    }
+
+    return response.blob();
+  },
 }
 
 // Alias for server-side usage (maintains compatibility)

@@ -1,4 +1,5 @@
 "use client";
+import { formatUserName } from "@/lib/formatters";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "@/lib/navigation";
@@ -259,10 +260,10 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
               className="w-full flex items-center justify-between px-3 py-2 hover:bg-background-hover rounded-lg transition-colors"
             >
               <div className="flex items-center min-w-0">
-                <Avatar src={user?.avatar_url} name={user?.full_name} size="sm" />
+                <Avatar src={user?.avatar_url} name={formatUserName(user?.first_name, user?.last_name)} size="sm" />
                 <div className="ml-3 text-left min-w-0 flex-1">
                   <p className="text-sm font-medium text-primary truncate">
-                    {user?.full_name || 'User'}
+                    {formatUserName(user?.first_name, user?.last_name) || 'User'}
                   </p>
                   <p className="text-xs text-secondary truncate">
                     {user?.role || 'Role'}

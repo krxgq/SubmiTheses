@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../lib/supabase";
+import { JWTService } from "../services/jwt.service";
 import { AuthUser } from "../types";
 
 /**
- * Authentication middleware - verifies JWT token and attaches user to request
- * This middleware only handles AUTHENTICATION (verifying identity).
- * For AUTHORIZATION (checking permissions), use middleware from authorization.middleware.ts
+ * Authentication middleware - verifies custom JWT token
+ * 
+ * Migration-ready: Uses our own JWT service, not Supabase
  * 
  * Supports two authentication methods:
  * 1. Bearer token in Authorization header (for client-side requests)
@@ -42,23 +42,22 @@ export async function authenticated(
       });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET!) as any;
+    // ✅ Verify using our custom JWT service
+    const decoded = JWTService.verifyAccessToken(token);
     console.log('[Auth] Token decoded, user ID:', decoded.sub);
 
-    // Get role from JWT claims (now automatically synced from public.users by database trigger)
+    // Build AuthUser from our custom JWT payload
     const user: AuthUser = {
       id: decoded.sub,
       email: decoded.email,
-      role: decoded.app_metadata?.role || decoded.user_metadata?.role || 'student',
-      school_id: decoded.user_metadata?.school_id
-        ? BigInt(decoded.user_metadata.school_id)
-        : undefined,
-      aud: decoded.aud,
+      role: decoded.role, // Direct from our JWT
+      school_id: undefined, // Add if needed later
+      aud: 'authenticated',
       exp: decoded.exp,
       iat: decoded.iat,
       iss: decoded.iss,
       sub: decoded.sub,
-      user_metadata: decoded.user_metadata,
+      user_metadata: {},
     };
 
     console.log('[Auth] User authenticated:', user.id, user.role);

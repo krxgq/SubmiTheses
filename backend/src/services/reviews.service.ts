@@ -9,7 +9,8 @@ export class ReviewService {
           select: {
             id: true,
             email: true,
-            full_name: true,
+            first_name: true,
+            last_name: true,
           },
         },
       },
@@ -27,7 +28,8 @@ export class ReviewService {
           select: {
             id: true,
             email: true,
-            full_name: true,
+            first_name: true,
+            last_name: true,
           },
         },
         projects: {
@@ -57,7 +59,8 @@ export class ReviewService {
           select: {
             id: true,
             email: true,
-            full_name: true,
+            first_name: true,
+            last_name: true,
           },
         },
       },
@@ -75,7 +78,8 @@ export class ReviewService {
           select: {
             id: true,
             email: true,
-            full_name: true,
+            first_name: true,
+            last_name: true,
           },
         },
       },

@@ -1,7 +1,46 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/users.service";
+import { AuthService } from "../services/auth.service";
 import type { UserWithYear, UserRole } from "@sumbi/shared-types";
-import { supabase } from "../lib/supabase";
+
+/**
+ * Create new user (admin only)
+ * POST /api/users
+ */
+export async function createUser(req: Request, res: Response) {
+  try {
+    const { email, password, first_name, last_name, role, year_id } = req.body;
+
+    // Validation
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    // Create user using AuthService (reuses registration logic)
+    const result = await AuthService.register(
+      email,
+      password,
+      first_name,
+      last_name,
+      role || 'student'
+    );
+
+    // Update year_id if provided (AuthService doesn't handle this)
+    if (year_id !== undefined) {
+      const updatedUser = await UserService.updateUser(result.user.id, { year_id });
+      if (updatedUser) {
+        return res.status(201).json(updatedUser);
+      }
+    }
+
+    return res.status(201).json(result.user);
+  } catch (err: any) {
+    if (err.message.includes('already exists')) {
+      return res.status(409).json({ error: err.message });
+    }
+    return res.status(500).json({ error: 'Failed to create user' });
+  }
+}
 
 /**
  * Get all users with year information
@@ -100,8 +139,9 @@ export async function updateUserRole(req: Request, res: Response) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    // Invalidate user's session to force re-login with new role
-    await supabase.auth.admin.signOut(id);
+    // Note: JWT tokens remain valid until expiration (1 hour for access tokens)
+    // User will see new role after token refresh or re-login
+    // For immediate invalidation, implement token blacklist (Redis) or versioning
 
     return res.status(200).json(updatedUser);
   } catch (error) {

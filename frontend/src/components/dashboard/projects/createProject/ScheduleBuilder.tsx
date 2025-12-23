@@ -30,7 +30,7 @@ export function ScheduleBuilder({
   error,
 }: ScheduleBuilderProps) {
   const handleAddMonth = () => {
-    onChange([...value, { month: CZECH_MONTHS[0], tasks: "" }]);
+    onChange([...value, { date: CZECH_MONTHS[0], task: "" }]);
   };
 
   const handleRemoveMonth = (index: number) => {
@@ -38,15 +38,15 @@ export function ScheduleBuilder({
     onChange(newSchedule);
   };
 
-  const handleMonthChange = (index: number, month: string) => {
+  const handleMonthChange = (index: number, date: string) => {
     const newSchedule = [...value];
-    newSchedule[index] = { ...newSchedule[index], month };
+    newSchedule[index] = { ...newSchedule[index], date };
     onChange(newSchedule);
   };
 
-  const handleTasksChange = (index: number, tasks: string) => {
+  const handleTasksChange = (index: number, task: string) => {
     const newSchedule = [...value];
-    newSchedule[index] = { ...newSchedule[index], tasks };
+    newSchedule[index] = { ...newSchedule[index], task };
     onChange(newSchedule);
   };
 
@@ -105,7 +105,7 @@ export function ScheduleBuilder({
                 </label>
                 <select
                   id={`month-${index}`}
-                  value={entry.month}
+                  value={entry.date}
                   onChange={(e) => handleMonthChange(index, e.target.value)}
                   className="w-full px-3 py-2 bg-background-elevated border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-interactive-primary/20 focus:border-interactive-primary"
                 >
@@ -127,7 +127,7 @@ export function ScheduleBuilder({
                 </label>
                 <textarea
                   id={`tasks-${index}`}
-                  value={entry.tasks}
+                  value={entry.task}
                   onChange={(e) => handleTasksChange(index, e.target.value)}
                   rows={3}
                   placeholder="Describe what needs to be done in this month..."

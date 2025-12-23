@@ -5,6 +5,7 @@ import {
   requireUserAccess
 } from '../middleware/authorization.middleware'
 import {
+  createUser,
   getAllUsers,
   getUserById,
   getUsersByRole,
@@ -24,6 +25,9 @@ const userIdSchema = z.object({
     id: z.string().uuid(),
   }),
 })
+
+// Create user (admin only)
+router.post('/', authenticated, requireAdmin, createUser)
 
 // Get all users (ADMIN ONLY - matches frontend restriction)
 router.get('/', authenticated, requireAdmin, getAllUsers)

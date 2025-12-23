@@ -167,12 +167,12 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ project, options }) => {
         )}
 
         {/* Schedule */}
-        {description?.schedule && description.schedule.length > 0 && (
+        {description?.schedule && Array.isArray(description.schedule) && description.schedule.length > 0 && (
           <View>
             <Text style={styles.subheading}>Stručný časový harmonogram:</Text>
-            {(description.schedule as ProjectScheduleEntry[]).map((item, index) => (
+            {(description.schedule as unknown as ProjectScheduleEntry[]).map((item, index) => (
               <Text key={index} style={styles.scheduleItem}>
-                <Text style={styles.bold}>{item.month}:</Text> {item.tasks}
+                <Text style={styles.bold}>{item.date}:</Text> {item.task}
               </Text>
             ))}
           </View>

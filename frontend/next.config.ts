@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
   // Tell Next.js that this is the actual project root for middleware
   serverExternalPackages: [],
   
+  // Expose environment variables to Edge Runtime (middleware)
+  env: {
+    JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
+    JWT_ISSUER: process.env.JWT_ISSUER,
+  },
+  
   webpack: (config, { isServer }) => {
     if (isServer) {
       // Copy PDFKit font data files to the server output

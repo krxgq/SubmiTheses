@@ -3,7 +3,8 @@ import { apiRequest, API_BASE_URL } from './api/client';
 export interface AuthUser {
   id: string;
   email: string;
-  full_name?: string;
+  first_name?: string;
+  last_name?: string;
   avatar_url?: string;
   role?: string;
   year_id?: number;
@@ -19,7 +20,6 @@ export interface LoginCredentials {
 export interface RegisterCredentials {
   email: string;
   password: string;
-  username: string;
   firstName?: string;
   lastName?: string;
   subscribeNewsletter?: boolean;
@@ -72,14 +72,19 @@ class AuthService {
   async register({
     email,
     password,
-    username,
+    firstName,
+    lastName,
   }: RegisterCredentials): Promise<AuthResponse> {
     try {
-      const data = await apiRequest<{ user: AuthUser }>('/auth/register', {
+      const data = await apiRequest<{
+        user: AuthUser | null;
+        message?: string;
+      }>('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, username }),
+        body: JSON.stringify({ email, password, firstName, lastName }),
       });
 
+      // Registration successful with immediate login
       if (data.user) {
         broadcastAuthEvent('login', data.user);
         return { data: data.user, error: null };

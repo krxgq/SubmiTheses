@@ -74,7 +74,7 @@ export default function QuickStats({
         <div className="flex items-center justify-between">
           <span className="text-sm text-text-secondary">Last Updated</span>
           <span className="text-sm font-semibold text-text-primary">
-            {formatDate(project.updated_at)}
+            {formatDate(project.updated_at.toISOString())}
           </span>
         </div>
       </div>

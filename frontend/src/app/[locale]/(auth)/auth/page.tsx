@@ -1,29 +1,20 @@
 import AuthPageClient from './AuthPageClient'
-import { authService } from '@/lib/auth'
-import { redirect } from '@/lib/navigation'
-import { setRequestLocale, getLocale } from 'next-intl/server'
+import { setRequestLocale } from 'next-intl/server'
 
-// Force dynamic rendering since we check user session
+// Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-// Auth page - redirects to projects if user is already logged in
+// Auth page - middleware handles redirect if already logged in
+// No need to check session here, middleware does it faster
 export default async function AuthPage({
     params
 }: {
     params: Promise<{ locale: string }>
 }) {
     const { locale } = await params;
-
-    // Set locale for next-intl (needed for translations in child components)
     setRequestLocale(locale);
-
-    const user = await authService.getCurrentUser()
-    if (user) {
-        console.log('User is already logged in, redirecting to projects page')
-        // Use next-intl's redirect with explicit locale parameter (official pattern)
-        const currentLocale = await getLocale();
-        redirect({href: '/projects', locale: currentLocale})
-    }
-
+    
+    // Middleware redirects logged-in users to /projects
+    // If we reach here, user is not logged in
     return <AuthPageClient />
 }

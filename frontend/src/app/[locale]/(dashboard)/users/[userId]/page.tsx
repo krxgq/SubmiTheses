@@ -55,7 +55,7 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
     <div className="w-full">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">
-          {user.full_name || "User Details"}
+          {[user.first_name, user.last_name].filter(Boolean).join(' ') || "User Details"}
         </h1>
         {isAdmin && (
           <Link
@@ -78,9 +78,9 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
               <div className="flex items-start gap-3">
                 <User className="w-5 h-5 text-text-secondary mt-0.5" />
                 <div>
-                  <p className="text-xs text-text-secondary">Full Name</p>
+                  <p className="text-xs text-text-secondary">Name</p>
                   <p className="text-sm text-text-primary font-medium">
-                    {user.full_name || "N/A"}
+                    {[user.first_name, user.last_name].filter(Boolean).join(' ') || "N/A"}
                   </p>
                 </div>
               </div>
@@ -110,7 +110,7 @@ export default async function UserDetailPage({ params }: UserDetailPageProps) {
                 <div>
                   <p className="text-xs text-text-secondary">Year</p>
                   <p className="text-sm text-text-primary font-medium">
-                    {user.year?.id || user.year_id || "N/A"}
+                    {user.years?.name || user.year_id || "N/A"}
                   </p>
                 </div>
               </div>

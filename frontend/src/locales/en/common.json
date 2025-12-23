@@ -52,8 +52,6 @@
       "title": "Register",
       "email": "Email",
       "emailPlaceholder": "Enter your email",
-      "username": "Username",
-      "usernamePlaceholder": "Choose a username",
       "password": "Password",
       "passwordPlaceholder": "Create a password",
       "confirmPassword": "Confirm Password",
@@ -66,8 +64,6 @@
       "emailInvalid": "Please enter a valid email",
       "passwordRequired": "Password is required",
       "passwordTooShort": "Password must be at least 8 characters",
-      "usernameRequired": "Username is required",
-      "usernameTooShort": "Username must be at least 3 characters",
       "passwordMismatch": "Passwords do not match"
     },
     "loading": "Please wait...",

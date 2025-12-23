@@ -5,6 +5,7 @@ import { usePathname } from "@/lib/navigation";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
 import { useEffect, useState } from "react";
+import { formatUserName } from "@/lib/formatters";
 
 export default function Breadcrumbs() {
   const pathname = usePathname();
@@ -34,7 +35,7 @@ export default function Breadcrumbs() {
 
             if (parentSegment === "users") {
               const user = await apiRequest<any>(`/users/${segment}`);
-              names[segment] = user.full_name || user.email;
+              names[segment] = formatUserName(user.first_name, user.last_name) || user.email;
             } else if (parentSegment === "projects") {
               const project = await apiRequest<any>(`/projects/${segment}`);
               names[segment] = project.title;

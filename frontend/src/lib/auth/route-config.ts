@@ -35,6 +35,10 @@ export const protectedRoutes: RouteAccessRule[] = [
     allowedRoles: ["admin"],
   },
   {
+    pattern: "/users/create",
+    allowedRoles: ["admin"],
+  },
+  {
     pattern: "/users",
     allowedRoles: ["admin"],
   },

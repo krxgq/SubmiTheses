@@ -82,11 +82,13 @@ export function useAuth(): UseAuthReturn {
         return { success: false, error: result.error }
       }
 
-      // Immediately set user state after successful registration
+      // Immediately set user state after successful registration (with immediate login)
       if (result.data) {
         setUser(result.data)
       }
+
       setIsLoading(false)
+      // Success - either with user data or email confirmation required
       return { success: true }
     } catch (error) {
       setIsLoading(false)
