@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
-import type { UserRole } from '@sumbi/shared-types';
+import jwt from "jsonwebtoken";
+import type { UserRole } from "@sumbi/shared-types";
 
 /**
  * Custom JWT Service - Full control over token generation/validation
- * 
+ *
  * Migration-ready: No Supabase dependencies
  * Can be used with any PostgreSQL database
  */
@@ -27,7 +27,7 @@ export class JWTService {
   private static readonly ACCESS_TOKEN_SECRET = (() => {
     const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
-      throw new Error('JWT_ACCESS_SECRET environment variable is required');
+      throw new Error("JWT_ACCESS_SECRET environment variable is required");
     }
     return secret;
   })();
@@ -35,23 +35,29 @@ export class JWTService {
   private static readonly REFRESH_TOKEN_SECRET = (() => {
     const secret = process.env.JWT_REFRESH_SECRET;
     if (!secret) {
-      throw new Error('JWT_REFRESH_SECRET environment variable is required');
+      throw new Error("JWT_REFRESH_SECRET environment variable is required");
     }
     return secret;
   })();
 
-  private static readonly ISSUER = process.env.JWT_ISSUER || 'sumbi-theses';
+  private static readonly ISSUER = process.env.JWT_ISSUER || "sumbi-theses";
 
   // Token expiration times
-  private static readonly ACCESS_TOKEN_EXPIRY = '1h';
-  private static readonly REFRESH_TOKEN_EXPIRY = '7d';
+  private static readonly ACCESS_TOKEN_EXPIRY = "1h";
+  private static readonly REFRESH_TOKEN_EXPIRY_SHORT = "7d";
+  private static readonly REFRESH_TOKEN_EXPIRY_LONG = "30d";
 
   /**
    * Generate access token and refresh token pair
    */
-  static generateTokens(userId: string, email: string, role: UserRole): TokenPair {
+  static generateTokens(
+    userId: string,
+    email: string,
+    role: UserRole,
+    rememberMe: boolean = false,
+  ): TokenPair {
     const accessToken = this.generateAccessToken(userId, email, role);
-    const refreshToken = this.generateRefreshToken(userId, email, role);
+    const refreshToken = this.generateRefreshToken(userId, email, role, rememberMe);
 
     return { accessToken, refreshToken };
   }
@@ -59,7 +65,11 @@ export class JWTService {
   /**
    * Generate access token (short-lived, 1 hour)
    */
-  private static generateAccessToken(userId: string, email: string, role: UserRole): string {
+  private static generateAccessToken(
+    userId: string,
+    email: string,
+    role: UserRole,
+  ): string {
     const payload = {
       sub: userId,
       email,
@@ -75,17 +85,22 @@ export class JWTService {
   /**
    * Generate refresh token (long-lived, 7 days)
    */
-  private static generateRefreshToken(userId: string, email: string, role: UserRole): string {
+  private static generateRefreshToken(
+    userId: string,
+    email: string,
+    role: UserRole,
+    rememberMe: boolean = false,
+  ): string {
     const payload = {
       sub: userId,
       email,
       role,
       iss: this.ISSUER,
-      type: 'refresh', // Mark as refresh token
+      type: "refresh", // Mark as refresh token
     };
 
     return jwt.sign(payload, this.REFRESH_TOKEN_SECRET, {
-      expiresIn: this.REFRESH_TOKEN_EXPIRY,
+      expiresIn: rememberMe ? this.REFRESH_TOKEN_EXPIRY_LONG : this.REFRESH_TOKEN_EXPIRY_SHORT,
     });
   }
 
@@ -102,12 +117,12 @@ export class JWTService {
       return decoded;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new Error('Access token expired');
+        throw new Error("Access token expired");
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error('Invalid access token');
+        throw new Error("Invalid access token");
       }
-      throw new Error('Token verification failed');
+      throw new Error("Token verification failed");
     }
   }
 
@@ -122,17 +137,17 @@ export class JWTService {
       }) as JWTPayload & { type?: string };
 
       // Verify this is actually a refresh token (prevent access tokens from being used as refresh tokens)
-      if (decoded.type !== 'refresh') {
-        throw new Error('Token is not a refresh token');
+      if (decoded.type !== "refresh") {
+        throw new Error("Token is not a refresh token");
       }
 
       return decoded;
     } catch (error) {
       if (error instanceof jwt.TokenExpiredError) {
-        throw new Error('Refresh token expired');
+        throw new Error("Refresh token expired");
       }
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new Error('Invalid refresh token');
+        throw new Error("Invalid refresh token");
       }
       throw error; // Re-throw our custom "not a refresh token" error
     }
@@ -163,7 +178,7 @@ export class JWTService {
   static isTokenExpired(token: string): boolean {
     const decoded = this.decodeToken(token);
     if (!decoded || !decoded.exp) return true;
-    
+
     return Date.now() >= decoded.exp * 1000;
   }
 }

@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import type { CreateAttachmentRequest } from '@sumbi/shared-types';
 import fs from "fs";
 
 export class AttachmentService {
@@ -33,12 +34,7 @@ export class AttachmentService {
     });
   }
 
-  static async createAttachment(data: {
-    project_id: bigint;
-    storage_path: string;
-    filename: string;
-    description?: string;
-  }) {
+  static async createAttachment(data: CreateAttachmentRequest & { project_id: bigint }) {
     return await prisma.attachments.create({
       data: {
         project_id: Number(data.project_id),
@@ -58,10 +54,6 @@ export class AttachmentService {
     });
   }
 
-  /**
-   * Upload attachment to local storage (temporary solution)
-   * TODO: Replace with cloud storage (Supabase Storage) in the future
-   */
   static async uploadAttachment(file: Express.Multer.File, projectId: bigint) {
     // Verify file exists on disk (Multer should have saved it)
     if (!fs.existsSync(file.path)) {

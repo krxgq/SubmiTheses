@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { reviveDate } from './date-reviver';
 
 /**
  * Redis client for caching
@@ -48,8 +49,9 @@ export const cache = {
     try {
       const value = await redis.get(key);
       if (!value) return null;
-      
-      return JSON.parse(value) as T;
+
+      const parsed = JSON.parse(value);
+      return reviveDate(parsed) as T;
     } catch (err: any) {
       console.error('[Redis] Get error:', err.message);
       return null;

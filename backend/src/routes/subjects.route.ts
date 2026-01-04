@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { SubjectsController } from '../controllers/subjects.controller';
 import { validate } from '../middleware/validate';
+import { authenticated } from '../middleware/auth';
 import { requireRoles } from '../middleware/authorization.middleware';
 import {
   createSubjectSchema,
@@ -14,15 +15,17 @@ const router = Router();
 router.get('/', SubjectsController.getActiveSubjects);
 router.get('/:id', validate(subjectIdSchema), SubjectsController.getSubjectById);
 
-// Admin-only routes
+// Admin-only routes - need authentication first, then authorization
 router.get(
   '/all/list',
+  authenticated,
   requireRoles(['admin']),
   SubjectsController.getAllSubjects
 );
 
 router.post(
   '/',
+  authenticated,
   requireRoles(['admin']),
   validate(createSubjectSchema),
   SubjectsController.createSubject
@@ -30,6 +33,7 @@ router.post(
 
 router.patch(
   '/:id',
+  authenticated,
   requireRoles(['admin']),
   validate(updateSubjectSchema),
   SubjectsController.updateSubject
@@ -37,6 +41,7 @@ router.patch(
 
 router.delete(
   '/:id',
+  authenticated,
   requireRoles(['admin']),
   validate(subjectIdSchema),
   SubjectsController.deleteSubject
@@ -44,6 +49,7 @@ router.delete(
 
 router.post(
   '/:id/deactivate',
+  authenticated,
   requireRoles(['admin']),
   validate(subjectIdSchema),
   SubjectsController.deactivateSubject

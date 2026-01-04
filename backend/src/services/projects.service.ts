@@ -87,6 +87,10 @@ export class ProjectService {
         project_description: true,
       }
     });
+
+    // Invalidate projects list cache
+    await cache.delete('projects:all');
+
     return transformPrismaProject(project);
   }
 
@@ -102,11 +106,9 @@ export class ProjectService {
     // Check cache first
     const cached = await cache.get<ProjectWithRelations>(cacheKey);
     if (cached) {
-      console.log(`[Cache HIT] Project ${id}`);
       return cached;
     }
 
-    console.log(`[Cache MISS] Project ${id} - fetching from DB`);
     const startTime = Date.now();
     
     const project = await prisma.projects.findUnique({
@@ -244,9 +246,10 @@ export class ProjectService {
       }
     });
     
-    // Invalidate cache for this project
+    // Invalidate cache for this project and the projects list
     await cache.delete(`project:${id}`);
-    
+    await cache.delete('projects:all');
+
     return transformPrismaProject(project);
   }
 
@@ -258,9 +261,10 @@ export class ProjectService {
       where: { id: Number(id) },
     });
     
-    // Invalidate cache for this project
+    // Invalidate cache for this project and the projects list
     await cache.delete(`project:${id}`);
-    
+    await cache.delete('projects:all');
+
     return !!deletedProject;
   }
 
@@ -295,9 +299,10 @@ export class ProjectService {
       }
     });
     
-    // Invalidate cache for this project
+    // Invalidate cache for this project and the projects list
     await cache.delete(`project:${projectId}`);
-    
+    await cache.delete('projects:all');
+
     return transformPrismaProject(project);
   }
 }

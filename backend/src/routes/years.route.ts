@@ -8,6 +8,7 @@ import {
   createYear,
   updateYear,
   deleteYear,
+  getYearScaleSets,
 } from '../controllers/years.controller';
 import { validate } from '../middleware/validate';
 import {
@@ -23,6 +24,9 @@ router.get('/', authenticated, getAllYears);
 
 // Get current academic year
 router.get('/current', authenticated, getCurrentYear);
+
+// Get scale sets for a specific year (for cloning)
+router.get('/:id/scale-sets', authenticated, requireAdmin, validate(yearIdSchema), getYearScaleSets);
 
 // Get a specific year
 router.get('/:id', authenticated, validate(yearIdSchema), getYearById);

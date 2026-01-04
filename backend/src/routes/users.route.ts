@@ -12,10 +12,18 @@ import {
   getTeachers,
   updateUser,
   updateUserRole,
-  deleteUser
+  deleteUser,
+  validateInvitationToken,
+  setupPassword,
+  resendInvitation
 } from '../controllers/users.controller'
 import { validate } from '../middleware/validate'
-import { updateUserSchema } from '../validation/schemas'
+import {
+  updateUserSchema,
+  setupPasswordSchema,
+  validateInvitationTokenSchema,
+  resendInvitationSchema
+} from '../validation/schemas'
 import { z } from 'zod'
 
 const router = Router()
@@ -25,6 +33,16 @@ const userIdSchema = z.object({
     id: z.string().uuid(),
   }),
 })
+
+// ===== PUBLIC ROUTES (No authentication required) =====
+
+// Validate invitation token
+router.get('/validate-invitation', validate(validateInvitationTokenSchema), validateInvitationToken)
+
+// Setup password with invitation token
+router.post('/setup-password', validate(setupPasswordSchema), setupPassword)
+
+// ===== AUTHENTICATED ROUTES =====
 
 // Create user (admin only)
 router.post('/', authenticated, requireAdmin, createUser)
@@ -49,5 +67,8 @@ router.patch('/:id/role', authenticated, requireAdmin, validate(userIdSchema), u
 
 // Delete user (admin only)
 router.delete('/:id', authenticated, requireAdmin, validate(userIdSchema), deleteUser)
+
+// Resend invitation email (admin only)
+router.post('/:id/resend-invitation', authenticated, requireAdmin, validate(resendInvitationSchema), resendInvitation)
 
 export default router

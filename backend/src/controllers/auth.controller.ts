@@ -17,10 +17,10 @@ import jwt from "jsonwebtoken";
  */
 export async function login(req: Request, res: Response) {
   try {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
 
     // Login user using local authentication (bcrypt password verification)
-    const result = await AuthService.login(email, password);
+    const result = await AuthService.login(email, password, rememberMe);
 
     // Set httpOnly cookies with JWT tokens
     res.cookie('sb-access-token', result.accessToken, {
@@ -31,12 +31,13 @@ export async function login(req: Request, res: Response) {
       path: '/',
     });
 
+    // Refresh token only sent to /api/auth/refresh endpoint for security
     res.cookie('sb-refresh-token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
+      path: '/api/auth/refresh',
     });
 
     console.log('[Auth] Login successful for user:', result.user.id);
@@ -73,12 +74,13 @@ export async function register(req: Request, res: Response) {
       path: '/',
     });
 
+    // Refresh token only sent to /api/auth/refresh endpoint for security
     res.cookie('sb-refresh-token', result.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
+      path: '/api/auth/refresh',
     });
 
     console.log('[Auth] Registration successful for user:', result.user.id);
@@ -125,7 +127,7 @@ export async function logout(req: Request, res: Response) {
     });
 
     res.clearCookie('sb-refresh-token', {
-      path: '/',
+      path: '/api/auth/refresh',
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -136,7 +138,7 @@ export async function logout(req: Request, res: Response) {
     console.error("[Auth] Logout error:", err);
     // Always clear cookies even on error
     res.clearCookie('sb-access-token', { path: '/' });
-    res.clearCookie('sb-refresh-token', { path: '/' });
+    res.clearCookie('sb-refresh-token', { path: '/api/auth/refresh' });
     return res.status(204).send();
   }
 }
@@ -230,12 +232,13 @@ export async function refresh(req: Request, res: Response) {
       path: '/',
     });
 
+    // Refresh token only sent to /api/auth/refresh endpoint for security
     res.cookie('sb-refresh-token', tokens.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: '/',
+      path: '/api/auth/refresh',
     });
 
     console.log('[Auth] Token refreshed for user:', userProfile.id);
@@ -314,23 +317,21 @@ export async function getUser(req: Request, res: Response) {
  * Replaces the direct database query in frontend/src/lib/auth.ts:200-204
  */
 async function getUserProfile(userId: string) {
-  // Fetch user from database using existing UserService
   const user = await UserService.getUserById(userId);
 
   if (!user) {
     throw new Error("User profile not found");
   }
 
-  // Return enriched user profile
   return {
-    id: user.id,
-    email: user.email,
-    first_name: user.first_name,
-    last_name: user.last_name,
-    avatar_url: user.avatar_url,
-    role: user.role, // Role comes from database
-    year_id: user.year_id ? Number(user.year_id) : undefined,
-    created_at: user.created_at.toISOString(),
+    id: user!.id,
+    email: user!.email,
+    first_name: user!.first_name,
+    last_name: user!.last_name,
+    avatar_url: user!.avatar_url,
+    role: user!.role,
+    year_id: user!.year_id ? Number(user!.year_id) : undefined,
+    created_at: user!.created_at,
   };
 }
 

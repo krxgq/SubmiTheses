@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { AttachmentService } from '../services/attachments.service';
 import { deleteFile } from '../middleware/upload';
+import validator from 'validator';
 import path from 'path';
 
 export async function getProjectAttachments(req: Request, res: Response) {
@@ -43,11 +44,27 @@ export async function uploadAttachment(req: Request, res: Response) {
     // Create attachment records for all uploaded files
     for (const file of files) {
       try {
+        // Validate filename - prevent path traversal and XSS
+        const filename = file.originalname;
+
+        // Check for path traversal attempts
+        if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
+          deleteFile(file.path);
+          return res.status(400).json({ error: 'Invalid filename: path traversal not allowed' });
+        }
+
+        // Limit filename length
+        if (filename.length > 255) {
+          deleteFile(file.path);
+          return res.status(400).json({ error: 'Filename too long (max 255 characters)' });
+        }
+
         const upload = await AttachmentService.uploadAttachment(file, projectId);
         if (!upload.success) {
           // Clean up this file if upload failed
           deleteFile(file.path);
-          return res.status(500).json({ error: `Failed to upload file: ${file.originalname}` });
+          // Sanitize filename in error message to prevent XSS
+          return res.status(500).json({ error: `Failed to upload file: ${validator.escape(filename)}` });
         }
 
         const attachment = await AttachmentService.createAttachment({

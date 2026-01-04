@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import type { CreateScaleRequest, UpdateScaleRequest } from '@sumbi/shared-types';
 
 export class ScaleService {
   static async getAllScales() {
@@ -37,11 +38,7 @@ export class ScaleService {
     });
   }
 
-  static async createScale(data: {
-    name: string;
-    desc?: string;
-    maxVal: bigint;
-  }) {
+  static async createScale(data: CreateScaleRequest) {
     return await prisma.scales.create({
       data: {
         name: data.name,
@@ -51,11 +48,7 @@ export class ScaleService {
     });
   }
 
-  static async updateScale(id: bigint, data: {
-    name?: string;
-    desc?: string;
-    maxVal?: bigint;
-  }) {
+  static async updateScale(id: bigint, data: UpdateScaleRequest) {
     return await prisma.scales.update({
       where: { id: Number(id) },
       data: {

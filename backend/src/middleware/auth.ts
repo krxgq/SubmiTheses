@@ -19,7 +19,10 @@ export async function authenticated(
 ) {
   try {
     console.log('[Auth] Request:', req.method, req.originalUrl);
-    
+    console.log('[Auth] Cookie header:', req.headers.cookie);
+    console.log('[Auth] Parsed cookies:', req.cookies);
+    console.log('[Auth] Has sb-access-token cookie:', !!req.cookies['sb-access-token']);
+
     // Try to get token from Authorization header first
     const authHeader = req.headers.authorization;
     let token: string | undefined;
@@ -27,7 +30,7 @@ export async function authenticated(
     if (authHeader && authHeader.startsWith("Bearer ")) {
       token = authHeader.substring(7);
       console.log('[Auth] Token from Authorization header');
-    } 
+    }
     // Fallback to cookie (for server-side requests from Next.js)
     else if (req.cookies['sb-access-token']) {
       token = req.cookies['sb-access-token'];
@@ -36,6 +39,7 @@ export async function authenticated(
 
     if (!token) {
       console.log('[Auth] No token found in header or cookie');
+      console.log('[Auth] Authorization header:', authHeader);
       return res.status(401).json({
         error: "No token provided",
         code: "NO_TOKEN"

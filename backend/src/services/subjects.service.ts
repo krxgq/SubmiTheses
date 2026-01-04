@@ -1,54 +1,68 @@
 import { prisma } from '../lib/prisma';
-
-export interface CreateSubjectRequest {
-  name_cs: string;
-  name_en: string;
-  description?: string;
-}
-
-export interface UpdateSubjectRequest {
-  name_cs?: string;
-  name_en?: string;
-  description?: string;
-  is_active?: boolean;
-}
+import { cache } from '../lib/cache';
+import type { CreateSubjectRequest, UpdateSubjectRequest } from '@sumbi/shared-types';
 
 export class SubjectsService {
   /**
    * Get all active subjects for dropdown selection
+   * Cached heavily as this is used in UI dropdowns
    */
   static async getActiveSubjects() {
-    return prisma.subjects.findMany({
+    const cacheKey = 'subjects:active';
+
+    const cached = await cache.get(cacheKey);
+    if (cached) return cached;
+
+    const subjects = await prisma.subjects.findMany({
       where: { is_active: true },
-      orderBy: { name_cs: 'asc' },
+      orderBy: { name: 'asc' },
       select: {
         id: true,
-        name_cs: true,
-        name_en: true,
+        name: true,
         description: true,
       },
     });
+
+    // Cache for 10 minutes (subjects rarely change)
+    await cache.set(cacheKey, subjects, 600);
+
+    return subjects;
   }
 
   /**
    * Get all subjects (including inactive) - admin only
    */
   static async getAllSubjects() {
-    return prisma.subjects.findMany({
-      orderBy: { name_cs: 'asc' },
+    const cacheKey = 'subjects:all';
+
+    const cached = await cache.get(cacheKey);
+    if (cached) return cached;
+
+    const subjects = await prisma.subjects.findMany({
+      orderBy: { name: 'asc' },
       include: {
         _count: {
           select: { projects: true },
         },
       },
     });
+
+    // Cache for 10 minutes
+    await cache.set(cacheKey, subjects, 600);
+
+    return subjects;
   }
 
   /**
    * Get single subject by ID
    */
   static async getSubjectById(id: bigint) {
-    return prisma.subjects.findUnique({
+    const cacheKey = `subject:${id}`;
+
+    const cached = await cache.get(cacheKey);
+    if (cached) return cached;
+
+    const subject = await prisma.subjects.findUnique({
       where: { id },
       include: {
         _count: {
@@ -56,32 +70,51 @@ export class SubjectsService {
         },
       },
     });
+
+    // Cache for 10 minutes
+    if (subject) {
+      await cache.set(cacheKey, subject, 600);
+    }
+
+    return subject;
   }
 
   /**
    * Create new subject - admin only
    */
   static async createSubject(data: CreateSubjectRequest) {
-    return prisma.subjects.create({
+    const subject = await prisma.subjects.create({
       data: {
-        name_cs: data.name_cs,
-        name_en: data.name_en,
+        name: data.name,
         description: data.description,
       },
     });
+
+    // Invalidate subjects list caches
+    await cache.delete('subjects:all');
+    await cache.delete('subjects:active');
+
+    return subject;
   }
 
   /**
    * Update subject - admin only
    */
   static async updateSubject(id: bigint, data: UpdateSubjectRequest) {
-    return prisma.subjects.update({
+    const subject = await prisma.subjects.update({
       where: { id },
       data: {
         ...data,
         updated_at: new Date(),
       },
     });
+
+    // Invalidate all subject-related caches
+    await cache.delete(`subject:${id}`);
+    await cache.delete('subjects:all');
+    await cache.delete('subjects:active');
+
+    return subject;
   }
 
   /**
@@ -100,9 +133,16 @@ export class SubjectsService {
       );
     }
 
-    return prisma.subjects.delete({
+    const subject = await prisma.subjects.delete({
       where: { id },
     });
+
+    // Invalidate all subject-related caches
+    await cache.delete(`subject:${id}`);
+    await cache.delete('subjects:all');
+    await cache.delete('subjects:active');
+
+    return subject;
   }
 
   /**
@@ -110,12 +150,19 @@ export class SubjectsService {
    * Safer option when projects reference the subject
    */
   static async deactivateSubject(id: bigint) {
-    return prisma.subjects.update({
+    const subject = await prisma.subjects.update({
       where: { id },
       data: {
         is_active: false,
         updated_at: new Date(),
       },
     });
+
+    // Invalidate all subject-related caches
+    await cache.delete(`subject:${id}`);
+    await cache.delete('subjects:all');
+    await cache.delete('subjects:active');
+
+    return subject;
   }
 }

@@ -42,6 +42,7 @@ export async function getYearById(req: Request, res: Response) {
 export async function createYear(req: Request, res: Response) {
   try {
     const year = await YearService.createYear({
+      name: req.body.name,
       assignment_date: new Date(req.body.assignment_date),
       submission_date: new Date(req.body.submission_date),
       feedback_date: new Date(req.body.feedback_date),
@@ -58,6 +59,7 @@ export async function updateYear(req: Request, res: Response) {
     const id = BigInt(req.params.id);
 
     const year = await YearService.updateYear(id, {
+      name: req.body.name,
       assignment_date: req.body.assignment_date ? new Date(req.body.assignment_date) : undefined,
       submission_date: req.body.submission_date ? new Date(req.body.submission_date) : undefined,
       feedback_date: req.body.feedback_date ? new Date(req.body.feedback_date) : undefined,
@@ -85,5 +87,16 @@ export async function deleteYear(req: Request, res: Response) {
     return res.status(204).send();
   } catch (error) {
     return res.status(500).json({ error: 'Failed to delete year' });
+  }
+}
+
+// Get scale sets for a specific year (used for cloning)
+export async function getYearScaleSets(req: Request, res: Response) {
+  try {
+    const id = BigInt(req.params.id);
+    const scaleSets = await YearService.getScaleSetsForYear(id);
+    return res.status(200).json(scaleSets);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch scale sets' });
   }
 }

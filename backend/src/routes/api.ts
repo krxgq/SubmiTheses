@@ -6,6 +6,7 @@ import reviewRoutes from './reviews.route'
 import externalLinksRoutes from './external-links.route'
 import gradesRoutes from './grades.route'
 import scalesRoutes from './scales.route'
+import scaleSetRoutes from './scale-sets.route'
 import yearsRoutes from './years.route'
 import attachmentsRoutes from './attachments.route'
 import subjectsRoutes from './subjects.route'
@@ -19,6 +20,7 @@ apiRouter.use('/users', userRoutes)
 apiRouter.use('/projects', projectRoutes)
 apiRouter.use('/subjects', subjectsRoutes)
 apiRouter.use('/scales', scalesRoutes)
+apiRouter.use('/scale-sets', scaleSetRoutes)
 apiRouter.use('/years', yearsRoutes)
 
 // Project-related nested routes

@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import type { CreateGradeRequest, UpdateGradeRequest } from '@sumbi/shared-types';
 
 export class GradeService {
   static async getGradesByProjectId(projectId: bigint) {
@@ -60,13 +61,7 @@ export class GradeService {
     });
   }
 
-  static async createGrade(data: {
-    project_id: bigint;
-    reviewer_id: string;
-    value: bigint;
-    year_id: bigint;
-    scale_id?: bigint;
-  }) {
+  static async createGrade(data: CreateGradeRequest & { project_id: bigint }) {
     return await prisma.grades.create({
       data: {
         project_id: Number(data.project_id),
@@ -89,7 +84,7 @@ export class GradeService {
     });
   }
 
-  static async updateGrade(id: bigint, data: { value: bigint; scale_id?: bigint }) {
+  static async updateGrade(id: bigint, data: UpdateGradeRequest) {
     return await prisma.grades.update({
       where: { id: Number(id) },
       data: {

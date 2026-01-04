@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../lib/prisma';
 import { JWTService } from './jwt.service';
-import type { user_roles } from '@prisma/client';
+import type { UserRole } from '@sumbi/shared-types';
 
 /**
  * Authentication Service - Local password-based auth
@@ -33,7 +33,7 @@ export class AuthService {
     password: string,
     firstName?: string,
     lastName?: string,
-    role: user_roles = 'student'
+    role: UserRole = 'student'
   ) {
     // Check if user already exists
     const existing = await prisma.public_users.findUnique({
@@ -84,10 +84,55 @@ export class AuthService {
   }
 
   /**
+   * Register a new user WITHOUT password (for admin-created users with email invitations)
+   * Creates user with empty password - user will set password via invitation email
+   */
+  static async registerWithoutPassword(
+    email: string,
+    firstName?: string,
+    lastName?: string,
+    role: UserRole = 'student'
+  ) {
+    // Check if user already exists
+    const existing = await prisma.public_users.findUnique({
+      where: { email },
+    });
+
+    if (existing) {
+      throw new Error('User with this email already exists');
+    }
+
+    // Create user with empty password (will be set via invitation)
+    const user = await prisma.public_users.create({
+      data: {
+        id: crypto.randomUUID(),
+        email,
+        password_hash: '', // Empty password - user will set via invitation
+        first_name: firstName,
+        last_name: lastName,
+        role,
+        email_verified: false, // Not verified until password is set
+        created_at: new Date(),
+        updated_at: new Date(),
+      },
+    });
+
+    // Return user object without tokens (no automatic login)
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      avatar_url: user.avatar_url,
+    };
+  }
+
+  /**
    * Login user with email and password
    * Verifies password and returns JWT tokens
    */
-  static async login(email: string, password: string) {
+  static async login(email: string, password: string, rememberMe: boolean) {
     // Find user by email
     const user = await prisma.public_users.findUnique({
       where: { email },

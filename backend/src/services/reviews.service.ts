@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import type { CreateReviewRequest, UpdateReviewRequest } from '@sumbi/shared-types';
 
 export class ReviewService {
   static async getReviewsByProjectId(projectId: bigint) {
@@ -42,11 +43,7 @@ export class ReviewService {
     });
   }
 
-  static async createReview(data: {
-    project_id: bigint;
-    reviewer_id: string;
-    comments: string;
-  }) {
+  static async createReview(data: CreateReviewRequest & { project_id: bigint }) {
     return await prisma.reviews.create({
       data: {
         project_id: Number(data.project_id),
@@ -67,7 +64,7 @@ export class ReviewService {
     });
   }
 
-  static async updateReview(id: bigint, data: { comments: string }) {
+  static async updateReview(id: bigint, data: UpdateReviewRequest) {
     return await prisma.reviews.update({
       where: { id: Number(id) },
       data: {

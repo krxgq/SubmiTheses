@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma';
+import type { CreateExternalLinkRequest, UpdateExternalLinkRequest } from '@sumbi/shared-types';
 
 export class ExternalLinkService {
   static async getExternalLinksByProjectId(projectId: bigint) {
@@ -16,12 +17,7 @@ export class ExternalLinkService {
     });
   }
 
-  static async createExternalLink(data: {
-    project_id: bigint;
-    url: string;
-    title?: string;
-    description?: string;
-  }) {
+  static async createExternalLink(data: CreateExternalLinkRequest & { project_id: bigint }) {
     return await prisma.external_links.create({
       data: {
         project_id: Number(data.project_id),
@@ -33,14 +29,7 @@ export class ExternalLinkService {
     });
   }
 
-  static async updateExternalLink(
-    id: bigint,
-    data: {
-      url?: string;
-      title?: string;
-      description?: string;
-    }
-  ) {
+  static async updateExternalLink(id: bigint, data: UpdateExternalLinkRequest) {
     return await prisma.external_links.update({
       where: { id: Number(id) },
       data: {
