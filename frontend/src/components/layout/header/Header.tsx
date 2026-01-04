@@ -51,24 +51,22 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-background-elevated shadow-sm border-b px-6 py-4">
-        <div className="flex items-center justify-end">
+      <header className="bg-background-elevated border-b border-border px-8 py-4">
+        <div className="flex items-center justify-end gap-6">
           {/* Compact Search Button */}
-          <div className="mx-8">
-            <button
-              onClick={() => setIsSearchModalOpen(true)}
-              className="flex items-center px-3 py-2 text-sm text-secondary bg-background-secondary hover:bg-background-hover rounded-lg transition-colors duration-200"
-            >
-              <Search className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Search...</span>
-              <span className="ml-2 text-xs text-tertiary hidden sm:inline">
-                (⌘K)
-              </span>
-            </button>
-          </div>
+          <button
+            onClick={() => setIsSearchModalOpen(true)}
+            className="flex items-center px-4 py-2 text-sm text-text-secondary bg-background-secondary hover:bg-background-hover rounded-lg transition-all duration-200 hover:shadow-sm"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Search...</span>
+            <span className="ml-2 text-xs text-text-tertiary hidden sm:inline">
+              (⌘K)
+            </span>
+          </button>
 
           {/* User Menu */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             <ThemeToggle />
             <LanguageSwitcher />
             <NotificationsMenu />

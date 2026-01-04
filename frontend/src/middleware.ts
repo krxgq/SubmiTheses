@@ -90,6 +90,11 @@ export async function middleware(request: NextRequest) {
             return newResponse;
           }
         }
+
+        // Set user role header for all authenticated requests so sidebar can display correctly
+        const newResponse = NextResponse.next();
+        newResponse.headers.set('x-current-role', userRole);
+        return newResponse;
       } catch (error) {
         // JWT verification failed (expired, invalid signature, etc.)
         console.log('[Middleware] JWT verification failed:', error);

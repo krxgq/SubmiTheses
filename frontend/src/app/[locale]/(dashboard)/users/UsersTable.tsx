@@ -51,21 +51,21 @@ export function UsersTable({ users }: UsersTableProps) {
         <div className="bg-background-elevated rounded-xl shadow-sm border border-border overflow-visible">
           <div className="overflow-x-auto overflow-y-visible">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase bg-background-secondary border-b border-border">
+              <thead className="text-xs uppercase bg-background-secondary border-b border-border sticky top-0 z-10">
                 <tr>
-                  <th className="px-6 py-3 text-text-primary font-semibold">
+                  <th className="px-6 py-3 text-text-primary font-semibold bg-background-secondary">
                     {t('table.name')}
                   </th>
-                  <th className="px-6 py-3 text-text-primary font-semibold">
+                  <th className="px-6 py-3 text-text-primary font-semibold bg-background-secondary">
                     {t('table.email')}
                   </th>
-                  <th className="px-6 py-3 text-text-primary font-semibold">
+                  <th className="px-6 py-3 text-text-primary font-semibold bg-background-secondary">
                     {t('table.role')}
                   </th>
-                  <th className="px-6 py-3 text-text-primary font-semibold">
+                  <th className="px-6 py-3 text-text-primary font-semibold bg-background-secondary">
                     {t('table.year')}
                   </th>
-                  <th className="px-6 py-3 text-text-primary font-semibold">
+                  <th className="px-6 py-3 text-text-primary font-semibold bg-background-secondary">
                   </th>
                 </tr>
               </thead>
@@ -87,7 +87,7 @@ export function UsersTable({ users }: UsersTableProps) {
                     <td className="px-6 py-4 text-text-secondary">
                       {user.years?.name || user.year_id || 'N/A'}
                     </td>
-                    <td className="px-6 py-4 relative">
+                    <td className="px-6 py-4">
                       <UserActionsMenu userId={user.id} />
                     </td>
                   </tr>

@@ -66,6 +66,34 @@
       "passwordTooShort": "Password must be at least 8 characters",
       "passwordMismatch": "Passwords do not match"
     },
+    "invitation": {
+      "title": "Set Your Password",
+      "welcome": "Welcome{{name}}!",
+      "instructions": "Set a password for your account",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "passwordHelperText": "Minimum 6 characters",
+      "submit": "Set Password",
+      "submitting": "Setting Password...",
+      "validating": "Validating your invitation...",
+      "expired": {
+        "title": "Invitation Expired",
+        "message": "This invitation link has expired or is invalid.",
+        "contactAdmin": "Please contact your administrator to receive a new invitation email."
+      },
+      "success": {
+        "title": "Success!",
+        "message": "Your password has been set successfully.",
+        "redirecting": "Redirecting to login..."
+      },
+      "errors": {
+        "invalidToken": "Invalid invitation token",
+        "passwordMismatch": "Passwords do not match",
+        "passwordTooShort": "Password must be at least 6 characters",
+        "setupFailed": "Failed to set password. Please try again."
+      },
+      "securityNote": "After setting your password, you'll be redirected to the login page where you can sign in to your account."
+    },
     "loading": "Please wait...",
     "error": "Something went wrong. Please try again."
   },
@@ -93,7 +121,16 @@
       "role": "Role",
       "year": "Year",
       "save": "Save Changes",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "invitationNote": "An invitation email will be sent to the user with a secure link to set their password (valid for 30 days)."
+    },
+    "actions": {
+      "resendInvitation": "Resend Invitation"
+    },
+    "messages": {
+      "invitationSent": "Invitation email sent successfully",
+      "invitationResent": "Invitation email resent successfully",
+      "createSuccess": "User created successfully. Invitation email sent."
     }
   },
   "projects": {
@@ -105,6 +142,12 @@
     "noDescription": "No description available",
     "noStudent": "No student assigned",
     "noProjectsFound": "No projects found",
+    "noProjectsDescription": "Create your first project to get started",
+    "manageYourProjects": "Manage your thesis projects",
+    "noMyProjects": "No projects where you are the student",
+    "noSupervisorProjects": "No projects where you are the supervisor",
+    "noOpponentProjects": "No projects where you are the opponent",
+    "noOtherProjects": "No other projects available",
     "myProjects": "My Projects",
     "allProjects": "All Projects",
     "asSupervisor": "As Supervisor",
@@ -130,5 +173,62 @@
     "exportPdf": "Export as PDF",
     "noFilesSelected": "Please select at least one file",
     "category": "Category"
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "subjects": {
+      "title": "Subjects",
+      "create": "Create Subject",
+      "edit": "Edit Subject",
+      "nameCz": "Name (Czech)",
+      "nameEn": "Name (English)",
+      "descriptionCz": "Description (Czech)",
+      "descriptionEn": "Description (English)",
+      "isActive": "Active",
+      "deactivate": "Deactivate",
+      "delete": "Delete"
+    },
+    "scales": {
+      "title": "Grading Scales",
+      "create": "Create Scale",
+      "edit": "Edit Scale",
+      "name": "Name",
+      "description": "Description",
+      "maxValue": "Maximum Value",
+      "usedIn": "Used In"
+    },
+    "scaleSets": {
+      "title": "Scale Sets",
+      "create": "Create Scale Set",
+      "edit": "Edit Scale Set",
+      "name": "Name",
+      "year": "Year",
+      "role": "Role",
+      "supervisor": "Supervisor",
+      "opponent": "Opponent",
+      "scales": "Scales",
+      "addScale": "Add Scale",
+      "weight": "Weight (%)",
+      "displayOrder": "Display Order"
+    },
+    "years": {
+      "title": "Academic Years",
+      "create": "New Year",
+      "createNextYear": "Create Next Year",
+      "edit": "Edit Year",
+      "delete": "Delete Year",
+      "clone": "Clone Year",
+      "name": "Year Name",
+      "assignmentDate": "Assignment Date",
+      "submissionDate": "Submission Date",
+      "feedbackDate": "Feedback Date",
+      "status": "Status",
+      "actions": "Actions",
+      "statuses": {
+        "active": "Active",
+        "past": "Past",
+        "future": "Future"
+      }
+    }
   }
 }

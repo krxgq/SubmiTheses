@@ -30,7 +30,7 @@ export interface AuthResponse<T = AuthUser> {
   error: string | null;
 }
 
-// BroadcastChannel for cross-tab communication (NO Supabase dependency)
+// BroadcastChannel for cross-tab communication
 let authChannel: BroadcastChannel | null = null;
 
 if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {

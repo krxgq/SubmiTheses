@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from '@/lib/navigation';
-import type { UserWithYear, UserRole } from '@sumbi/shared-types';
+import { getAllYears } from '@/lib/api/years';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
+import type { UserWithYear, UserRole, Year } from '@sumbi/shared-types';
 
 interface UserEditFormProps {
   user: UserWithYear;
@@ -39,9 +42,34 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [years, setYears] = useState<Year[]>([]);
+  const [yearsLoading, setYearsLoading] = useState(true);
+
+  // Fetch years on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const yearsData = await getAllYears();
+        setYears(yearsData);
+      } catch (err) {
+        console.error('Failed to fetch years:', err);
+      } finally {
+        setYearsLoading(false);
+      }
+    };
+
+    fetchYears();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate: students must have year_id
+    if (formData.role === 'student' && !formData.year_id) {
+      setError('Academic year is required for students');
+      return;
+    }
+
     setIsSubmitting(true);
     setError('');
 
@@ -63,58 +91,76 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
       )}
 
       <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            First Name
-          </label>
-          <input
-            type="text"
-            value={formData.first_name}
-            onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
-            className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-text-primary mb-2">
-            Last Name
-          </label>
-          <input
-            type="text"
-            value={formData.last_name}
-            onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
-            className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-2">
-          {translations.email}
-        </label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-          required
+        <Input
+          label="First Name"
+          id="first-name"
+          type="text"
+          value={formData.first_name}
+          onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+        />
+        <Input
+          label="Last Name"
+          id="last-name"
+          type="text"
+          value={formData.last_name}
+          onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-2">
-          {translations.role}
-        </label>
-        <select
-          value={formData.role}
-          onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-          className="w-full px-4 py-2 bg-background-secondary border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+      <Input
+        label={translations.email}
+        id="email"
+        type="email"
+        value={formData.email}
+        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        required
+      />
+
+      <Select
+        label={translations.role}
+        id="role"
+        value={formData.role}
+        onChange={(value) => {
+          const newRole = value as UserRole;
+          setFormData({
+            ...formData,
+            role: newRole,
+            // Clear year_id when changing from student to non-student
+            year_id: newRole === 'student' ? formData.year_id : null
+          });
+        }}
+        options={[
+          { value: 'admin', label: translations.roles.admin },
+          { value: 'teacher', label: translations.roles.teacher },
+          { value: 'student', label: translations.roles.student },
+        ]}
+        required
+      />
+
+      {/* Academic Year (required for students) */}
+      {formData.role === 'student' && (
+        <Select
+          label={translations.year}
+          id="year"
           required
-        >
-          <option value="admin">{translations.roles.admin}</option>
-          <option value="teacher">{translations.roles.teacher}</option>
-          <option value="student">{translations.roles.student}</option>
-        </select>
-      </div>
+          value={formData.year_id?.toString() || ''}
+          onChange={(value) => setFormData({
+            ...formData,
+            year_id: value ? parseInt(value) : null
+          })}
+          options={years.map(year => ({
+            value: year.id.toString(),
+            label: year.name || `Year ${year.id}`
+          }))}
+          placeholder={yearsLoading ? 'Loading...' : 'Select year'}
+          disabled={yearsLoading || years.length === 0}
+          helperText={
+            years.length === 0 && !yearsLoading
+              ? 'No academic years available'
+              : undefined
+          }
+        />
+      )}
 
       <div className="flex gap-3 pt-4">
         <button

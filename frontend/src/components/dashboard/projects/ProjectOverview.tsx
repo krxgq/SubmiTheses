@@ -4,6 +4,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { FileText, Target, ListChecks, Calendar } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import DOMPurify from 'isomorphic-dompurify';
 
 interface ProjectOverviewProps {
   project: ProjectWithRelations;
@@ -48,8 +49,21 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
                 <h2 className="text-xl font-semibold text-text-primary">Specification</h2>
               </div>
               <div className="text-text-primary leading-relaxed prose prose-slate dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                  {description.specification}
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    // Disable potentially dangerous HTML elements to prevent XSS
+                    script: () => null,
+                    iframe: () => null,
+                    object: () => null,
+                    embed: () => null,
+                  }}
+                >
+                  {DOMPurify.sanitize(description.specification, {
+                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'del', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img'],
+                    ALLOWED_ATTR: ['href', 'title', 'alt', 'src', 'align'],
+                    ALLOW_DATA_ATTR: false,
+                  })}
                 </ReactMarkdown>
               </div>
             </div>

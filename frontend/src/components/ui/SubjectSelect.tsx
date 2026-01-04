@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Label } from "flowbite-react";
 import { getActiveSubjects, type Subject } from "@/lib/api/subjects";
-import { useLocale } from "next-intl";
 
 interface SubjectSelectProps {
   label: string;
@@ -25,7 +24,6 @@ export function SubjectSelect({
   helperText,
   required = false,
 }: SubjectSelectProps) {
-  const locale = useLocale(); // Get current locale (cs or en)
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [filteredSubjects, setFilteredSubjects] = useState<Subject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,10 +54,9 @@ export function SubjectSelect({
   useEffect(() => {
     const query = searchQuery.toLowerCase();
     const filtered = subjects.filter((subject) => {
-      // Search in both Czech and English names
-      const nameCs = subject.name_cs.toLowerCase();
-      const nameEn = subject.name_en.toLowerCase();
-      return nameCs.includes(query) || nameEn.includes(query);
+      // Search in subject name
+      const name = subject.name.toLowerCase();
+      return name.includes(query);
     });
     setFilteredSubjects(filtered);
   }, [searchQuery, subjects]);
@@ -79,13 +76,8 @@ export function SubjectSelect({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Get subject name based on current locale
-  const getSubjectName = (subject: Subject): string => {
-    return locale === "cs" ? subject.name_cs : subject.name_en;
-  };
-
   const selectedSubject = subjects.find((s) => s.id === value);
-  const displayValue = selectedSubject ? getSubjectName(selectedSubject) : "";
+  const displayValue = selectedSubject ? selectedSubject.name : "";
 
   const hasValue = value !== null;
   const isFloating = isFocused || isOpen || hasValue;
@@ -134,7 +126,7 @@ export function SubjectSelect({
           focus:outline-none focus:ring-2
           ${
             error
-              ? "border-red-500 dark:border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
               : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
           }
           ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -147,9 +139,7 @@ export function SubjectSelect({
         <div className="absolute z-20 w-full mt-1 bg-background-elevated border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {filteredSubjects.length === 0 ? (
             <div className="px-4 py-3 text-sm text-text-secondary">
-              {locale === "cs"
-                ? "Žádné předměty nenalezeny"
-                : "No subjects found"}
+              No subjects found
             </div>
           ) : (
             filteredSubjects.map((subject) => (
@@ -157,14 +147,10 @@ export function SubjectSelect({
                 key={subject.id.toString()}
                 type="button"
                 onClick={() => handleSelect(subject.id)}
-                className="w-full px-4 py-3 text-left text-sm hover:bg-background-secondary transition-colors duration-150 flex flex-col"
+                className="w-full px-4 py-3 text-left text-sm hover:bg-background-secondary transition-colors duration-150"
               >
                 <span className="font-medium text-text-primary">
-                  {getSubjectName(subject)}
-                </span>
-                {/* Show alternate language name as subtitle */}
-                <span className="text-xs text-text-secondary">
-                  {locale === "cs" ? subject.name_en : subject.name_cs}
+                  {subject.name}
                 </span>
               </button>
             ))

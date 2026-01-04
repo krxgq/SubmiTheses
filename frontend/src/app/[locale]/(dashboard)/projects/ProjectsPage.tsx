@@ -1,13 +1,15 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { LayoutList, LayoutGrid, Plus } from "lucide-react";
+import { LayoutList, LayoutGrid, Plus, Folder, FolderOpen, Search } from "lucide-react";
 import type { ProjectWithRelations, UserRole } from "@sumbi/shared-types";
 import { GridItem } from "@/components/dashboard/projects/GridItem";
 import { ListItem } from "@/components/dashboard/projects/ListItem";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/lib/navigation";
-import { Button } from "flowbite-react";
+import { Button } from "@/components/ui/Button";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 type ViewMode = "list" | "grid";
 
@@ -96,7 +98,7 @@ export function ProjectsPageClient({
   const renderProjectsGrid = (projectsList: ProjectWithRelations[]) => {
     if (viewMode === "grid") {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projectsList.map((project) => (
             <GridItem key={project.id} project={project} role={userRole} />
           ))}
@@ -106,7 +108,7 @@ export function ProjectsPageClient({
 
     // List view - horizontal cards
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         {projectsList.map((project) => (
           <ListItem key={project.id} project={project} role={userRole} />
         ))}
@@ -114,18 +116,26 @@ export function ProjectsPageClient({
     );
   };
 
-  // Render a section with header and projects (only if non-empty)
+  // Render a section with header, count badge, and projects
+  // Only renders if there are projects in the list
   const renderSection = (
     title: string,
     projectsList: ProjectWithRelations[],
   ) => {
+    // Don't render section if empty
     if (projectsList.length === 0) return null;
 
     return (
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-text-primary mb-4 pb-2 border-b border-border">
-          {title}
-        </h2>
+      <div className="mb-12">
+        {/* Section header with count badge */}
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
+          <div className="px-3 py-1 bg-background-tertiary text-text-secondary rounded-full text-sm font-medium">
+            {projectsList.length}
+          </div>
+        </div>
+
+        {/* Projects grid/list */}
         {renderProjectsGrid(projectsList)}
       </div>
     );
@@ -133,66 +143,46 @@ export function ProjectsPageClient({
 
   return (
     <div className="w-full">
-      {/* Header section with create button and view toggle */}
-      <div className="flex justify-between items-center mb-8">
-        {/* Create project button - only for teachers and admins */}
-        {(userRole === "teacher" || userRole === "admin") && (
-          <button
-            onClick={() => router.push("/projects/create")}
-            className="
-              flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium
-              bg-primary text-text-inverse
-              hover:bg-primary-hover
-              active:bg-primary-active
-              transition-all duration-200 ease-in-out
-              shadow-sm hover:shadow-md
-              focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
-            "
-          >
-            <Plus className="w-5 h-5" />
-            <span>{t("projects.createNewProject")}</span>
-          </button>
-        )}
+      {/* Modern Page Header with Title/Subtitle and Controls */}
+      <div className="flex items-start justify-between mb-12">
+        {/* Left: Title and Subtitle */}
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary">
+            {t("sidebar.projects")}
+          </h1>
+          <p className="mt-1 text-base text-text-secondary">
+            {t("projects.manageYourProjects")}
+          </p>
+        </div>
 
-        {/* Spacer for when button is not shown */}
-        {userRole === "student" && <div />}
+        {/* Right: Controls */}
+        <div className="flex items-center gap-3">
+          {/* View mode toggle with SegmentedControl */}
+          <SegmentedControl
+            options={[
+              { value: "grid", label: "Grid", icon: LayoutGrid },
+              { value: "list", label: "List", icon: LayoutList },
+            ]}
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ViewMode)}
+          />
 
-        {/* View mode toggle */}
-        <div className="flex items-center">
-          <div className="inline-flex">
+          {/* Create project button - only for teachers and admins */}
+          {(userRole === "teacher" || userRole === "admin") && (
             <Button
-              color="gray"
-              onClick={() => setViewMode("list")}
-              aria-label="List view"
-              aria-pressed={viewMode === "list"}
-              className={
-                "rounded-l-md border border-l-0 " +
-                (viewMode === "list"
-                  ? "bg-background-tertiary text-text-primary"
-                  : "bg-background text-text-secondary")
-              }
+              variant="primary"
+              size="md"
+              leftIcon={<Plus size={20} />}
+              onClick={() => router.push("/projects/create")}
             >
-              <LayoutList className="w-5 h-5" />
+              {t("projects.createNewProject")}
             </Button>
-            <Button
-              color="gray"
-              onClick={() => setViewMode("grid")}
-              aria-label="Grid view"
-              aria-pressed={viewMode === "grid"}
-              className={
-                "rounded-r-md border " +
-                (viewMode === "grid"
-                  ? "bg-background-tertiary text-text-primary"
-                  : "bg-background text-text-secondary")
-              }
-            >
-              <LayoutGrid className="w-5 h-5" />
-            </Button>
-          </div>
+          )}
         </div>
       </div>
 
       {/* Unified section-based layout for ALL roles */}
+      {/* Only show sections that have projects */}
       {renderSection(
         t("projects.sections.myProjects"),
         filteredProjects.myProjects,
@@ -205,12 +195,32 @@ export function ProjectsPageClient({
         t("projects.sections.opponent"),
         filteredProjects.opponent,
       )}
-      {renderSection(t("projects.sections.other"), filteredProjects.other)}
+      {renderSection(
+        t("projects.sections.other"),
+        filteredProjects.other,
+      )}
 
-      {/* Show empty state if no projects at all */}
+      {/* Show enhanced empty state if no projects at all */}
       {!hasAnyProjects && (
-        <div className="text-center py-12">
-          <p className="text-text-secondary">{t("projects.noProjectsFound")}</p>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <EmptyState
+            icon={FolderOpen}
+            title={t("projects.noProjectsFound")}
+            description={t("projects.noProjectsDescription")}
+            action={
+              (userRole === "teacher" || userRole === "admin") && (
+                <Button
+                  variant="primary"
+                  size="md"
+                  leftIcon={<Plus size={20} />}
+                  onClick={() => router.push("/projects/create")}
+                >
+                  {t("projects.createNewProject")}
+                </Button>
+              )
+            }
+            className="max-w-md"
+          />
         </div>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
 import './globals.css';
+import '@mdxeditor/editor/style.css';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 

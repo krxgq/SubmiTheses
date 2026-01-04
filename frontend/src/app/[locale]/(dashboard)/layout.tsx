@@ -25,13 +25,15 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
     return (
       <div className="flex h-screen bg-background">
         <AppSidebar userRole={currentRole as any} />
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-x-hidden">
           <Breadcrumbs />
-          <main className="flex-1 overflow-y-auto p-6">
-            <AccessDenied
-              requiredRoles={requiredRoles}
-              currentRole={currentRole}
-            />
+          <main className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-7xl mx-auto">
+              <AccessDenied
+                requiredRoles={requiredRoles}
+                currentRole={currentRole}
+              />
+            </div>
           </main>
         </div>
       </div>
@@ -41,10 +43,12 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   return (
     <div className="flex h-screen bg-background">
       <AppSidebar userRole={currentRole as any} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-x-hidden">
         <Breadcrumbs />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
+        <main className="flex-1 overflow-y-auto p-10">
+          <div className="max-w-[1400px] mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>

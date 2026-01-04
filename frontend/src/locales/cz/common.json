@@ -66,6 +66,34 @@
       "passwordTooShort": "Heslo musí mít alespoň 8 znaků",
       "passwordMismatch": "Hesla se neshodují"
     },
+    "invitation": {
+      "title": "Nastavte si heslo",
+      "welcome": "Vítejte{{name}}!",
+      "instructions": "Nastavte si heslo pro váš účet",
+      "password": "Heslo",
+      "confirmPassword": "Potvrdit heslo",
+      "passwordHelperText": "Minimálně 6 znaků",
+      "submit": "Nastavit heslo",
+      "submitting": "Nastavuji heslo...",
+      "validating": "Ověřuji vaši pozvánku...",
+      "expired": {
+        "title": "Pozvánka vypršela",
+        "message": "Tento odkaz na pozvánku vypršel nebo je neplatný.",
+        "contactAdmin": "Prosím kontaktujte vašeho administrátora pro získání nové pozvánky."
+      },
+      "success": {
+        "title": "Úspěch!",
+        "message": "Vaše heslo bylo úspěšně nastaveno.",
+        "redirecting": "Přesměrování na přihlášení..."
+      },
+      "errors": {
+        "invalidToken": "Neplatný token pozvánky",
+        "passwordMismatch": "Hesla se neshodují",
+        "passwordTooShort": "Heslo musí mít alespoň 6 znaků",
+        "setupFailed": "Nepodařilo se nastavit heslo. Zkuste to znovu."
+      },
+      "securityNote": "Po nastavení hesla budete přesměrováni na přihlašovací stránku, kde se můžete přihlásit ke svému účtu."
+    },
     "loading": "Prosím čekejte...",
     "error": "Něco se pokazilo. Zkuste to znovu."
   },
@@ -93,7 +121,16 @@
       "role": "Role",
       "year": "Ročník",
       "save": "Uložit změny",
-      "cancel": "Zrušit"
+      "cancel": "Zrušit",
+      "invitationNote": "Uživateli bude odeslán e-mail s pozvánkou obsahující bezpečný odkaz pro nastavení hesla (platnost 30 dní)."
+    },
+    "actions": {
+      "resendInvitation": "Znovu odeslat pozvánku"
+    },
+    "messages": {
+      "invitationSent": "Pozvánka byla úspěšně odeslána",
+      "invitationResent": "Pozvánka byla úspěšně znovu odeslána",
+      "createSuccess": "Uživatel byl úspěšně vytvořen. Pozvánka byla odeslána."
     }
   },
   "projects": {
@@ -105,6 +142,12 @@
     "noDescription": "Popis není k dispozici",
     "noStudent": "Nepřiřazen žádný student",
     "noProjectsFound": "Nebyly nalezeny žádné projekty",
+    "noProjectsDescription": "Vytvořte svůj první projekt a začněte",
+    "manageYourProjects": "Spravujte své závěrečné práce",
+    "noMyProjects": "Žádné projekty, kde jste studentem",
+    "noSupervisorProjects": "Žádné projekty, kde jste vedoucím",
+    "noOpponentProjects": "Žádné projekty, kde jste oponentem",
+    "noOtherProjects": "Žádné další projekty nejsou k dispozici",
     "myProjects": "Moje Projekty",
     "allProjects": "Všechny Projekty",
     "asSupervisor": "Jako Vedoucí",
@@ -130,5 +173,62 @@
     "exportPdf": "Exportovat jako PDF",
     "noFilesSelected": "Vyberte prosím alespoň jeden soubor",
     "category": "Kategorie"
+  },
+  "admin": {
+    "title": "Administrační Panel",
+    "subjects": {
+      "title": "Předměty",
+      "create": "Vytvořit předmět",
+      "edit": "Upravit předmět",
+      "nameCz": "Název (čeština)",
+      "nameEn": "Název (angličtina)",
+      "descriptionCz": "Popis (čeština)",
+      "descriptionEn": "Popis (angličtina)",
+      "isActive": "Aktivní",
+      "deactivate": "Deaktivovat",
+      "delete": "Smazat"
+    },
+    "scales": {
+      "title": "Hodnotící Škály",
+      "create": "Vytvořit škálu",
+      "edit": "Upravit škálu",
+      "name": "Název",
+      "description": "Popis",
+      "maxValue": "Maximální hodnota",
+      "usedIn": "Použito v"
+    },
+    "scaleSets": {
+      "title": "Sady Škál",
+      "create": "Vytvořit sadu škál",
+      "edit": "Upravit sadu škál",
+      "name": "Název",
+      "year": "Ročník",
+      "role": "Role",
+      "supervisor": "Vedoucí",
+      "opponent": "Oponent",
+      "scales": "Škály",
+      "addScale": "Přidat škálu",
+      "weight": "Váha (%)",
+      "displayOrder": "Pořadí zobrazení"
+    },
+    "years": {
+      "title": "Akademické Ročníky",
+      "create": "Nový ročník",
+      "createNextYear": "Vytvořit další ročník",
+      "edit": "Upravit ročník",
+      "delete": "Smazat ročník",
+      "clone": "Klonovat ročník",
+      "name": "Název ročníku",
+      "assignmentDate": "Datum přidělení",
+      "submissionDate": "Datum odevzdání",
+      "feedbackDate": "Datum zpětné vazby",
+      "status": "Stav",
+      "actions": "Akce",
+      "statuses": {
+        "active": "Aktivní",
+        "past": "Minulý",
+        "future": "Budoucí"
+      }
+    }
   }
 }

@@ -73,7 +73,7 @@ export function FilterMenu({ onFilterChange }: FilterMenuProps) {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-background-elevated rounded-lg shadow-lg z-10 border border-border">
+        <div className="absolute right-0 mt-2 w-64 bg-background-elevated rounded-lg shadow-lg z-50 border border-border">
           <div className="p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold text-text-primary">Filters</h3>

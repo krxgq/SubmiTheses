@@ -281,7 +281,7 @@ export default function CreateProjectModule() {
         {/* Sliding container - uses transform to slide between steps */}
         <div className="overflow-hidden">
           <div
-            className="flex transition-transform duration-500 ease-in-out"
+            className="flex items-start transition-transform duration-500 ease-in-out"
             style={{ transform: `translateX(-${currentStep * 100}%)` }}
           >
             {/* Step 1: Basic Information */}
@@ -296,6 +296,8 @@ export default function CreateProjectModule() {
                 value={formData.title}
                 onChange={(e) => updateField("title", e.target.value)}
                 helperText="Enter a descriptive title for your project"
+                maxLength={100}
+                showCharCount
                 required
               />
               <SubjectSelect
@@ -320,6 +322,8 @@ export default function CreateProjectModule() {
                 value={formData.topic}
                 onChange={(e) => updateField("topic", e.target.value)}
                 helperText="Brief topic or marketing name for your project"
+                maxLength={150}
+                showCharCount
                 required
               />
               <Textarea
@@ -330,6 +334,8 @@ export default function CreateProjectModule() {
                 value={formData.project_goal}
                 onChange={(e) => updateField("project_goal", e.target.value)}
                 helperText="Describe the main objective and what you aim to achieve (minimum 10 characters)"
+                maxLength={1000}
+                showCharCount
                 required
               />
             </div>
@@ -345,8 +351,11 @@ export default function CreateProjectModule() {
                 value={formData.specification}
                 onChange={(value) => updateField("specification", value)}
                 helperText="Define the detailed scope of work, requirements, and implementation plan (minimum 20 characters)"
+                maxLength={5000}
+                showCharCount
                 required
                 minHeight={250}
+                maxHeight="40vh"
               />
               <ArrayInput
                 label="Required Outputs"

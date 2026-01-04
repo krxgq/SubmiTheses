@@ -15,16 +15,16 @@ export const usersApi = {
   /**
    * Create new user (admin only)
    * POST /api/users
+   * Sends invitation email to user - no password required
    */
   async create(userData: {
     email: string;
-    password: string;
     first_name?: string;
     last_name?: string;
     role?: UserRole;
     year_id?: number;
-  }): Promise<User> {
-    return apiRequest<User>('/users', {
+  }): Promise<{ user: User; message: string }> {
+    return apiRequest<{ user: User; message: string }>('/users', {
       method: 'POST',
       body: JSON.stringify(userData),
     });
@@ -102,6 +102,16 @@ export const usersApi = {
   async delete(userId: string): Promise<void> {
     return apiRequest<void>(`/users/${userId}`, {
       method: 'DELETE',
+    });
+  },
+
+  /**
+   * Resend invitation email (admin only)
+   * POST /api/users/:id/resend-invitation
+   */
+  async resendInvitation(userId: string): Promise<{ success: boolean; message: string }> {
+    return apiRequest<{ success: boolean; message: string }>(`/users/${userId}/resend-invitation`, {
+      method: 'POST',
     });
   },
 }

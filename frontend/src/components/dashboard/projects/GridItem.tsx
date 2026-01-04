@@ -2,6 +2,8 @@ import type { ProjectWithRelations } from "@sumbi/shared-types";
 import { formatUserName } from "@/lib/formatters";
 import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
+import { Badge } from "@/components/ui/Badge";
+import { User, Users, GraduationCap } from "lucide-react";
 
 interface GridItemProps {
   project: ProjectWithRelations;
@@ -9,164 +11,93 @@ interface GridItemProps {
 }
 
 /**
- * Renders project cards with role-specific styling
- * - Student: Simple card with basic info
- * - Teacher: Card with student info
- * - Admin: Enhanced card with all participants and colored accent
+ * Unified project card design for all roles
+ * - Same visual design regardless of role
+ * - Different content based on what the role needs to see
+ * - Modern, clean, professional styling
  */
 export function GridItem({project, role}: GridItemProps) {
-  if (role === 'student') {
-    return <StudentCard project={project} />;
-  } else if (role === 'admin') {
-    return <AdminCard project={project} />;
-  } else {
-    return <TeacherCard project={project} />;
-  }
-}
-
-// Helper function to format date
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-}
-
-interface CardProps {
-  project: ProjectWithRelations;
-}
-
-function StudentCard({ project }: CardProps) {
   const t = useTranslations();
+
+  // Format date helper
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   return (
     <Link href={`/projects/${project.id}`}>
-      <div className="border border-border rounded-lg p-4 hover:shadow-md transition-shadow duration-200 bg-background-elevated cursor-pointer">
-        <h2 className="text-lg font-semibold mb-2 text-text-primary truncate" title={project.title}>
+      <div className="border border-border rounded-xl p-6 hover:shadow-md hover:border-border-strong transition-all duration-200 bg-background-elevated cursor-pointer">
+        {/* Top: Badges */}
+        <div className="flex items-center gap-2 mb-3">
+          <Badge variant="primary" size="sm">
+            {project.subject}
+          </Badge>
+          {/* Optional: Add status badge if you have status field */}
+          {/* <Badge variant="success" size="sm">Active</Badge> */}
+        </div>
+
+        {/* Title */}
+        <h2 className="text-xl font-bold text-text-primary mb-2 line-clamp-1" title={project.title}>
           {project.title}
         </h2>
 
-        <p className="text-sm text-text-tertiary mb-2">{project.subject}</p>
-
-        <p className="text-text-secondary text-sm mb-3 line-clamp-2">
+        {/* Description */}
+        <p className="text-sm text-text-secondary mb-4 line-clamp-2">
           {project.description || t('projects.noDescription')}
         </p>
 
-        <div className="space-y-1 text-sm">
-          <p className="text-text-secondary">
-            <span className="font-medium">{t('projects.supervisor')}:</span>{' '}
-            {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || t('common.unknown')}
-          </p>
-          <p className="text-text-secondary">
-            <span className="font-medium">{t('projects.opponent')}:</span>{' '}
-            {formatUserName(project.opponent?.first_name, project.opponent?.last_name) || t('common.unknown')}
-          </p>
-        </div>
-
-        <p className="text-xs text-text-tertiary mt-3">
-          {t('projects.lastUpdated')}: {formatDate(project.updated_at.toISOString())}
-        </p>
-      </div>
-    </Link>
-  );
-}
-
-function TeacherCard({ project }: CardProps) {
-  const t = useTranslations();
-
-  return (
-    <Link href={`/projects/${project.id}`}>
-      <div className="border border-border rounded-lg p-4 hover:shadow-md transition-shadow duration-200 bg-background-elevated cursor-pointer">
-        <h2 className="text-lg font-semibold mb-2 text-text-primary truncate" title={project.title}>
-          {project.title}
-        </h2>
-
-        <p className="text-sm text-text-tertiary mb-2">{project.subject}</p>
-
-        <p className="text-text-secondary text-sm mb-3 line-clamp-2">
-          {project.description || t('projects.noDescription')}
-        </p>
-
-        <div className="space-y-1 text-sm mb-3">
-          <p className="text-text-secondary">
-            <span className="font-medium">{t('projects.supervisor')}:</span>{' '}
-            {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || t('common.unknown')}
-          </p>
-          <p className="text-text-secondary">
-            <span className="font-medium">{t('projects.opponent')}:</span>{' '}
-            {formatUserName(project.opponent?.first_name, project.opponent?.last_name) || t('common.unknown')}
-          </p>
-
-          <p className="text-text-secondary">
-            <span className="font-medium">{t('projects.student')}:</span>{' '}
-            {formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email || t('projects.noStudent')}
-          </p>
-        </div>
-
-        <p className="text-xs text-text-tertiary">
-          {t('projects.lastUpdated')}: {formatDate(project.updated_at.toISOString())}
-        </p>
-      </div>
-    </Link>
-  );
-}
-
-function AdminCard({ project }: CardProps) {
-  const t = useTranslations();
-
-  return (
-    <Link href={`/projects/${project.id}`}>
-      <div className="relative border-2 border-border rounded-lg p-4 hover:shadow-lg transition-all duration-200 bg-background-elevated overflow-hidden cursor-pointer">
-        {/* Colored accent bar on the left */}
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-500 to-purple-500"></div>
-
-        <div className="pl-2">
-          <h2 className="text-lg font-bold mb-2 text-text-primary truncate" title={project.title}>
-            {project.title}
-          </h2>
-
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
-              {project.subject}
-            </span>
-          </div>
-
-          <p className="text-text-secondary text-sm mb-3 line-clamp-2">
-            {project.description || t('projects.noDescription')}
-          </p>
-
-          {/* All participants in a compact grid */}
-          <div className="grid grid-cols-1 gap-2 text-xs mb-3 bg-background p-2 rounded">
-            <div className="flex items-start">
-              <span className="font-semibold text-text-tertiary min-w-[70px]">{t('projects.supervisor')}:</span>
-              <span className="text-text-secondary ml-2">{formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || t('common.unknown')}</span>
-            </div>
-
-            <div className="flex items-start">
-              <span className="font-semibold text-text-tertiary min-w-[70px]">{t('projects.opponent')}:</span>
-              <span className="text-text-secondary ml-2">{formatUserName(project.opponent?.first_name, project.opponent?.last_name) || t('common.unknown')}</span>
-            </div>
-
-            <div className="flex items-start">
-              <span className="font-semibold text-text-tertiary min-w-[70px]">{t('projects.student')}:</span>
-              <span className="text-text-secondary ml-2">
-                {formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email || (
-                  <span className="italic text-text-tertiary">{t('projects.noStudent')}</span>
-                )}
+        {/* Participant Info Section - Clean background box */}
+        <div className="bg-background-secondary/50 rounded-lg p-3 mb-4 space-y-2">
+          {/* Student info (show for teachers and admins) */}
+          {(role === 'teacher' || role === 'admin') && (
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+              <span className="text-sm text-text-secondary">
+                {t('projects.student')}:
+              </span>
+              <span className="text-sm font-medium text-text-primary truncate">
+                {formatUserName(project.student?.first_name, project.student?.last_name) ||
+                 project.student?.email ||
+                 t('projects.noStudent')}
               </span>
             </div>
-          </div>
+          )}
 
-          <div className="flex justify-between items-center">
-            <p className="text-xs text-text-tertiary">
-              {t('projects.lastUpdated')}: {formatDate(project.updated_at.toISOString())}
-            </p>
-            <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
-              ID: {project.id}
+          {/* Supervisor */}
+          <div className="flex items-center gap-2">
+            <GraduationCap className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">
+              {t('projects.supervisor')}:
+            </span>
+            <span className="text-sm font-medium text-text-primary truncate">
+              {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) ||
+               t('common.unknown')}
             </span>
           </div>
+
+          {/* Opponent */}
+          <div className="flex items-center gap-2">
+            <Users className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">
+              {t('projects.opponent')}:
+            </span>
+            <span className="text-sm font-medium text-text-primary truncate">
+              {formatUserName(project.opponent?.first_name, project.opponent?.last_name) ||
+               t('common.unknown')}
+            </span>
+          </div>
+        </div>
+
+        {/* Footer: Last Updated */}
+        <div className="flex justify-between items-center">
+          <p className="text-xs text-text-tertiary">
+            {t('projects.lastUpdated')}: {formatDate(project.updated_at)}
+          </p>
         </div>
       </div>
     </Link>

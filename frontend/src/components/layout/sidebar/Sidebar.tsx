@@ -3,26 +3,21 @@ import { formatUserName } from "@/lib/formatters";
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "@/lib/navigation";
-import { 
-  GraduationCap, 
-  Folder, 
-  Users, 
-  Settings, 
-  Menu, 
+import {
+  GraduationCap,
+  Folder,
+  Users,
+  Settings,
+  Menu,
   X,
   Sun,
   Moon,
   Monitor,
   ChevronDown,
   LogOut,
-  Bell
+  Bell,
+  FileSliders,
 } from "lucide-react";
-import {
-  Sidebar,
-  SidebarItems,
-  SidebarItemGroup,
-  SidebarItem,
-} from "flowbite-react";
 import type { UserRole } from "@sumbi/shared-types";
 import { useTheme } from "next-themes";
 import { Avatar } from "@/components/ui/Avatar";
@@ -66,6 +61,13 @@ const allNavItems: NavItem[] = [
     path: "/settings",
     allowedRoles: ["admin", "teacher", "student"],
   },
+  {
+    id: "adminPanel",
+    label: "Admin Panel",
+    icon: FileSliders,
+    path: "/admin",
+    allowedRoles: ["admin"],
+  },
 ];
 
 interface AppSidebarProps {
@@ -82,7 +84,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
-  
+
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -93,10 +95,16 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (themeMenuRef.current && !themeMenuRef.current.contains(event.target as Node)) {
+      if (
+        themeMenuRef.current &&
+        !themeMenuRef.current.contains(event.target as Node)
+      ) {
         setShowThemeMenu(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(event.target as Node)
+      ) {
         setShowUserMenu(false);
       }
     };
@@ -124,9 +132,9 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
     try {
       await logout();
       setShowUserMenu(false);
-      router.push('/auth');
+      router.push("/auth");
     } catch (error) {
-      console.error('Logout failed:', error);
+      console.error("Logout failed:", error);
     } finally {
       setIsLoggingOut(false);
     }
@@ -137,9 +145,12 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
   const getThemeIcon = () => {
     if (!mounted) return <Monitor className="w-4 h-4" />;
     switch (theme) {
-      case 'light': return <Sun className="w-4 h-4" />;
-      case 'dark': return <Moon className="w-4 h-4" />;
-      default: return <Monitor className="w-4 h-4" />;
+      case "light":
+        return <Sun className="w-4 h-4" />;
+      case "dark":
+        return <Moon className="w-4 h-4" />;
+      default:
+        return <Monitor className="w-4 h-4" />;
     }
   };
 
@@ -169,48 +180,44 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
         bg-background-elevated shadow-sm border-r border-border flex flex-col
       `}
       >
-        {/* Logo */}
-        <div className="p-6 mb-2">
-          <div className="flex items-center">
-            <GraduationCap className="mx-2 text-primary" size={48} />
-            <span className="font-bold text-xl text-primary">SubmiTheses</span>
+        {/* Logo - Centered, Prominent */}
+        <div className="px-6 pt-8 pb-6 mb-6 text-center">
+          <div className="flex flex-col items-center">
+            <GraduationCap className="text-accent mb-3" size={56} />
+            <div className="font-bold text-lg text-accent leading-tight">
+              <div>SubmiTheses</div>
+            </div>
           </div>
         </div>
 
-        <div className="w-0.8 mx-2 rounded bg-border-strong h-0.5" />
-
-        {/* Navigation */}
-        <Sidebar className="flex-1 bg-transparent shadow-none border-none">
-          <SidebarItems>
-            <SidebarItemGroup className="border-none">
-              {navItems.map((item) => {
-                const IconComponent = item.icon;
-                const isActive = isActiveItem(item.path);
-                return (
-                  <SidebarItem
-                    key={item.id}
-                    onClick={() => handleNavigation(item.path)}
-                    className={`text-sm font-medium border-none transition-colors cursor-pointer ${
-                      isActive
-                        ? "bg-primary hover:bg-primary-hover !text-text-inverse"
-                        : "hover:bg-background-hover !text-text-primary"
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <IconComponent className="mr-3 w-5 h-5" />
-                      {item.label}
-                    </div>
-                  </SidebarItem>
-                );
-              })}
-            </SidebarItemGroup>
-          </SidebarItems>
-        </Sidebar>
-
-        <div className="w-0.8 mx-2 rounded bg-border-strong h-0.5 mb-2" />
+        {/* Navigation - Custom Pill Style */}
+        <nav className="flex-1 px-4 py-4 bg-background-secondary/30 flex flex-col gap-2">
+          {navItems.map((item) => {
+            const IconComponent = item.icon;
+            const isActive = isActiveItem(item.path);
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavigation(item.path)}
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                  transition-all duration-200
+                  ${
+                    isActive
+                      ? "bg-primary text-text-inverse shadow-sm"
+                      : "text-text-primary hover:bg-background-hover"
+                  }
+                `}
+              >
+                <IconComponent className="w-5 h-5 flex-shrink-0" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
 
         {/* Bottom Controls */}
-        <div className="p-4 space-y-2">
+        <div className="p-4 space-y-2 bg-background-secondary/50">
           {/* Theme Toggle Dropdown */}
           <div className="relative" ref={themeMenuRef}>
             <button
@@ -219,28 +226,39 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
             >
               <div className="flex items-center">
                 {getThemeIcon()}
-                <span className="ml-3 capitalize">{mounted ? theme || 'system' : 'Theme'}</span>
+                <span className="ml-3 capitalize">
+                  {mounted ? theme || "system" : "Theme"}
+                </span>
               </div>
               <ChevronDown className="w-4 h-4" />
             </button>
             {showThemeMenu && (
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl overflow-hidden z-50">
                 <button
-                  onClick={() => { setTheme('light'); setShowThemeMenu(false); }}
+                  onClick={() => {
+                    setTheme("light");
+                    setShowThemeMenu(false);
+                  }}
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Sun className="w-4 h-4 mr-3" />
                   Light
                 </button>
                 <button
-                  onClick={() => { setTheme('dark'); setShowThemeMenu(false); }}
+                  onClick={() => {
+                    setTheme("dark");
+                    setShowThemeMenu(false);
+                  }}
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Moon className="w-4 h-4 mr-3" />
                   Dark
                 </button>
                 <button
-                  onClick={() => { setTheme('system'); setShowThemeMenu(false); }}
+                  onClick={() => {
+                    setTheme("system");
+                    setShowThemeMenu(false);
+                  }}
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Monitor className="w-4 h-4 mr-3" />
@@ -260,13 +278,18 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
               className="w-full flex items-center justify-between px-3 py-2 hover:bg-background-hover rounded-lg transition-colors"
             >
               <div className="flex items-center min-w-0">
-                <Avatar src={user?.avatar_url} name={formatUserName(user?.first_name, user?.last_name)} size="sm" />
+                <Avatar
+                  src={user?.avatar_url}
+                  name={formatUserName(user?.first_name, user?.last_name)}
+                  size="sm"
+                />
                 <div className="ml-3 text-left min-w-0 flex-1">
                   <p className="text-sm font-medium text-primary truncate">
-                    {formatUserName(user?.first_name, user?.last_name) || 'User'}
+                    {formatUserName(user?.first_name, user?.last_name) ||
+                      "User"}
                   </p>
                   <p className="text-xs text-secondary truncate">
-                    {user?.role || 'Role'}
+                    {user?.role || "Role"}
                   </p>
                 </div>
               </div>
@@ -275,7 +298,10 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
             {showUserMenu && (
               <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl overflow-hidden z-50">
                 <button
-                  onClick={() => { handleNavigation('/settings'); setShowUserMenu(false); }}
+                  onClick={() => {
+                    handleNavigation("/settings");
+                    setShowUserMenu(false);
+                  }}
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Settings className="w-4 h-4 mr-3" />
@@ -292,7 +318,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   ) : (
                     <LogOut className="w-4 h-4 mr-3" />
                   )}
-                  {isLoggingOut ? 'Signing out...' : 'Sign out'}
+                  {isLoggingOut ? "Signing out..." : "Sign out"}
                 </button>
               </div>
             )}

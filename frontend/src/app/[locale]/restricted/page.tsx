@@ -39,18 +39,18 @@ export default async function RestrictedPage({
 
         {/* Heading */}
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-text-primary mb-2">
             {t('access.restricted.title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-text-secondary">
             {t('access.restricted.message')}
           </p>
         </div>
 
         {/* Attempted URL (optional debug info) */}
         {from && process.env.NODE_ENV === 'development' && (
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-3">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="bg-background-secondary rounded-lg p-3">
+            <p className="text-sm text-text-secondary">
               Attempted to access: <code className="text-xs">{from}</code>
             </p>
           </div>

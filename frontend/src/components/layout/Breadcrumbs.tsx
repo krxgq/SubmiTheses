@@ -1,20 +1,21 @@
 "use client";
 
-import { Breadcrumb, BreadcrumbItem } from "flowbite-react";
 import { usePathname } from "@/lib/navigation";
-import { useTranslations } from "next-intl";
 import { Link } from "@/lib/navigation";
+import { useTranslations } from "next-intl";
+import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { formatUserName } from "@/lib/formatters";
+
+// Modern Breadcrumbs component with chip/pill design
+// Replaces traditional breadcrumb trail with contemporary chip navigation
 
 export default function Breadcrumbs() {
   const pathname = usePathname();
   const t = useTranslations();
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
-  const pathSegments = pathname
-    .split("/")
-    .filter((segment) => segment);
+  const pathSegments = pathname.split("/").filter((segment) => segment);
 
   if (pathSegments.length === 0 || pathSegments[0] === "auth") {
     return null;
@@ -27,7 +28,10 @@ export default function Breadcrumbs() {
       for (let i = 0; i < pathSegments.length; i++) {
         const segment = pathSegments[i];
         const parentSegment = pathSegments[i - 1];
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
+        const isUUID =
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            segment
+          );
 
         if (isUUID) {
           try {
@@ -35,7 +39,8 @@ export default function Breadcrumbs() {
 
             if (parentSegment === "users") {
               const user = await apiRequest<any>(`/users/${segment}`);
-              names[segment] = formatUserName(user.first_name, user.last_name) || user.email;
+              names[segment] =
+                formatUserName(user.first_name, user.last_name) || user.email;
             } else if (parentSegment === "projects") {
               const project = await apiRequest<any>(`/projects/${segment}`);
               names[segment] = project.title;
@@ -57,7 +62,10 @@ export default function Breadcrumbs() {
       return entityNames[segment];
     }
 
-    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
+    const isUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        segment
+      );
     if (isUUID) {
       return `${segment.substring(0, 8)}...`;
     }
@@ -82,7 +90,10 @@ export default function Breadcrumbs() {
       edit: t("common.edit") || "Edit",
     };
 
-    return translations[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+    return (
+      translations[segment] ||
+      segment.charAt(0).toUpperCase() + segment.slice(1)
+    );
   };
 
   const breadcrumbItems = pathSegments.map((segment, index) => {
@@ -98,20 +109,31 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <div className="bg-background-elevated border-b border-border px-6 py-3">
-      <Breadcrumb aria-label="Page navigation">
+    <div className="bg-background-secondary/30 border-b border-border px-8 py-4 shadow-sm">
+      <div className="flex items-center gap-2 flex-wrap" aria-label="Page navigation">
         {breadcrumbItems.map((item, index) => (
-          <BreadcrumbItem key={index}>
+          <div key={index} className="flex items-center gap-2">
+            {/* Breadcrumb Chip */}
             {item.isLast ? (
-              <span className="text-text-primary font-medium">{item.label}</span>
+              <div className="px-3 py-1.5 bg-primary/10 text-primary font-semibold text-sm rounded-full">
+                {item.label}
+              </div>
             ) : (
-              <Link href={item.href} className="text-text-secondary hover:text-text-primary">
+              <Link
+                href={item.href}
+                className="px-3 py-1.5 bg-background-secondary text-text-secondary hover:bg-background-tertiary hover:text-text-primary font-medium text-sm rounded-full transition-all duration-200"
+              >
                 {item.label}
               </Link>
             )}
-          </BreadcrumbItem>
+
+            {/* Separator Arrow */}
+            {!item.isLast && (
+              <ChevronRight className="text-text-tertiary flex-shrink-0" size={16} />
+            )}
+          </div>
         ))}
-      </Breadcrumb>
+      </div>
     </div>
   );
 }

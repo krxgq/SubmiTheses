@@ -1,9 +1,10 @@
 'use client'
 import { TabItem, Tabs } from "flowbite-react"
 import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle, GraduationCap } from 'lucide-react'
 import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
+import { Input } from '@/components/ui/Input'
 
 export default function AuthPageClient() {
     // Feature flag: set to true to enable public registration
@@ -14,7 +15,6 @@ export default function AuthPageClient() {
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const [activeTab, setActiveTab] = useState('login')
 
     // Form states
     const [loginForm, setLoginForm] = useState({ email: '', password: '', rememberMe: false })
@@ -176,9 +176,13 @@ export default function AuthPageClient() {
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
             <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold text-primary mb-2">Welcome</h1>
-                    <p className="text-secondary">Sign in to your account or create a new one</p>
+                {/* Logo and branding */}
+                <div className="flex flex-col items-center mb-8">
+                    <GraduationCap className="text-accent mb-4" size={64} />
+                    <h1 className="text-3xl font-bold text-accent mb-2">SubmiTheses</h1>
+                    <p className="text-text-secondary text-center">
+                        Sign in to your account
+                    </p>
                 </div>
 
                 {/* Global Messages */}
@@ -197,61 +201,38 @@ export default function AuthPageClient() {
                 )}
 
                 <div className="bg-surface rounded-xl shadow-sm border">
-                    <div className="[&_.flex.text-center]:w-full [&_.flex.text-center]:mx-auto [&_.flex.text-center]:justify-center [&_button]:flex-1 [&_button]:px-8 [&_button]:py-3">
-                        <Tabs
-                            aria-label="Auth tabs"
-                            variant="underline"
-                            className="px-6 pt-3 pb-6"
-                            onActiveTabChange={(tab) => setActiveTab(tab === 0 ? 'login' : 'register')}
-                        >
-                        <TabItem title="Sign In" active={activeTab === 'login'}>
-                            <form onSubmit={handleLogin} className="space-y-4 mt-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="email"
-                                            value={loginForm.email}
-                                            onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${loginErrors.email ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Enter your email"
-                                        />
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-                                    </div>
-                                    {loginErrors.email && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{loginErrors.email}</p>
-                                    )}
-                                </div>
+                    <div className="px-6 py-6">
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <Input
+                                    label="Email Address"
+                                    id="login-email"
+                                    type="email"
+                                    value={loginForm.email}
+                                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                                    error={loginErrors.email}
+                                    leftIcon={<Mail className="w-5 h-5" />}
+                                    required
+                                />
 
-                                <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            value={loginForm.password}
-                                            onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${loginErrors.password ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Enter your password"
-                                        />
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
+                                <Input
+                                    label="Password"
+                                    id="login-password"
+                                    type={showPassword ? "text" : "password"}
+                                    value={loginForm.password}
+                                    onChange={(e) => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
+                                    error={loginErrors.password}
+                                    leftIcon={<Lock className="w-5 h-5" />}
+                                    rightIcon={
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
+                                            className="hover:text-text-primary transition-colors"
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
-                                    </div>
-                                    {loginErrors.password && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{loginErrors.password}</p>
-                                    )}
-                                </div>
+                                    }
+                                    required
+                                />
 
                                 <div className="flex items-center justify-between">
                                     <label className="flex items-center">
@@ -276,94 +257,67 @@ export default function AuthPageClient() {
                                     {(isLoading || authLoading) ? 'Signing In...' : 'Sign In'}
                                 </button>
                             </form>
-                        </TabItem>
 
                         {/* Public registration disabled - can be re-enabled via REGISTRATION_ENABLED flag */}
                         {REGISTRATION_ENABLED && (
-                        <TabItem title="Sign Up" active={activeTab === 'register'}>
-                            <form onSubmit={handleRegister} className="space-y-4 mt-4">
+                            <form onSubmit={handleRegister} className="space-y-4 mt-8">
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-primary mb-2">
-                                            First Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={registerForm.firstName}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, firstName: e.target.value }))}
-                                            className={`w-full px-4 py-3 bg-input-background border ${registerErrors.firstName ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="First name"
-                                        />
-                                        {registerErrors.firstName && (
-                                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.firstName}</p>
-                                        )}
-                                    </div>
+                                    <Input
+                                        label="First Name"
+                                        id="register-first-name"
+                                        type="text"
+                                        value={registerForm.firstName}
+                                        onChange={(e) => setRegisterForm(prev => ({ ...prev, firstName: e.target.value }))}
+                                        error={registerErrors.firstName}
+                                        required
+                                    />
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-primary mb-2">
-                                            Last Name
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={registerForm.lastName}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, lastName: e.target.value }))}
-                                            className={`w-full px-4 py-3 bg-input-background border ${registerErrors.lastName ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Last name"
-                                        />
-                                        {registerErrors.lastName && (
-                                            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.lastName}</p>
-                                        )}
-                                    </div>
+                                    <Input
+                                        label="Last Name"
+                                        id="register-last-name"
+                                        type="text"
+                                        value={registerForm.lastName}
+                                        onChange={(e) => setRegisterForm(prev => ({ ...prev, lastName: e.target.value }))}
+                                        error={registerErrors.lastName}
+                                        required
+                                    />
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Email Address
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="email"
-                                            value={registerForm.email}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, email: e.target.value }))}
-                                            className={`w-full pl-10 pr-4 py-3 bg-input-background border ${registerErrors.email ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Enter your email"
-                                        />
-                                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-                                    </div>
-                                    {registerErrors.email && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.email}</p>
-                                    )}
-                                </div>
+                                <Input
+                                    label="Email Address"
+                                    id="register-email"
+                                    type="email"
+                                    value={registerForm.email}
+                                    onChange={(e) => setRegisterForm(prev => ({ ...prev, email: e.target.value }))}
+                                    error={registerErrors.email}
+                                    leftIcon={<Mail className="w-5 h-5" />}
+                                    required
+                                />
 
                                 <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Password
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            value={registerForm.password}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${registerErrors.password ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Create a password"
-                                        />
-                                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
-                                        >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
-                                    </div>
+                                    <Input
+                                        label="Password"
+                                        id="register-password"
+                                        type={showPassword ? "text" : "password"}
+                                        value={registerForm.password}
+                                        onChange={(e) => setRegisterForm(prev => ({ ...prev, password: e.target.value }))}
+                                        error={registerErrors.password}
+                                        leftIcon={<Lock className="w-5 h-5" />}
+                                        rightIcon={
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="hover:text-text-primary transition-colors"
+                                            >
+                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                            </button>
+                                        }
+                                        required
+                                    />
                                     {registerForm.password && (
                                         <div className="mt-2">
                                             <div className="flex items-center justify-between mb-1">
-                                                <span className="text-xs text-secondary">Password strength:</span>
+                                                <span className="text-xs text-text-secondary">Password strength:</span>
                                                 <span className={`text-xs font-medium ${passwordStrength <= 1 ? 'text-red-600 dark:text-red-400' :
                                                         passwordStrength <= 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'
                                                     }`}>
@@ -378,37 +332,27 @@ export default function AuthPageClient() {
                                             </div>
                                         </div>
                                     )}
-                                    {registerErrors.password && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.password}</p>
-                                    )}
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-primary mb-2">
-                                        Confirm Password
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            value={registerForm.confirmPassword}
-                                            onChange={(e) => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                                            className={`w-full pl-10 pr-12 py-3 bg-input-background border ${registerErrors.confirmPassword ? 'border-red-500 dark:border-red-400' : 'border'
-                                                } rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-colors text-primary`}
-                                            placeholder="Confirm your password"
-                                        />
-                                        <Shield className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-secondary" />
+                                <Input
+                                    label="Confirm Password"
+                                    id="register-confirm-password"
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    value={registerForm.confirmPassword}
+                                    onChange={(e) => setRegisterForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    error={registerErrors.confirmPassword}
+                                    leftIcon={<Shield className="w-5 h-5" />}
+                                    rightIcon={
                                         <button
                                             type="button"
                                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-secondary hover:text-primary"
+                                            className="hover:text-text-primary transition-colors"
                                         >
                                             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
-                                    </div>
-                                    {registerErrors.confirmPassword && (
-                                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">{registerErrors.confirmPassword}</p>
-                                    )}
-                                </div>
+                                    }
+                                    required
+                                />
 
                                 <div className="space-y-3">
                                     <label className="flex items-start">
@@ -454,9 +398,7 @@ export default function AuthPageClient() {
                                     {(isLoading || authLoading) ? 'Creating Account...' : 'Create Account'}
                                 </button>
                             </form>
-                        </TabItem>
                         )}
-                    </Tabs>
                     </div>
                 </div>
             </div>

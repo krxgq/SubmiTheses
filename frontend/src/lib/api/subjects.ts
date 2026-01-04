@@ -3,10 +3,8 @@ import { apiRequest } from './client';
 // Subject interface matching database schema
 export interface Subject {
   id: bigint;
-  name_cs: string;
-  name_en: string;
-  description_cs?: string;
-  description_en?: string;
+  name: string;
+  description?: string;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -16,17 +14,13 @@ export interface Subject {
 }
 
 export interface CreateSubjectRequest {
-  name_cs: string;
-  name_en: string;
-  description_cs?: string;
-  description_en?: string;
+  name: string;
+  description?: string;
 }
 
 export interface UpdateSubjectRequest {
-  name_cs?: string;
-  name_en?: string;
-  description_cs?: string;
-  description_en?: string;
+  name?: string;
+  description?: string;
   is_active?: boolean;
 }
 

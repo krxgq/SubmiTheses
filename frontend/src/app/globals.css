@@ -1,101 +1,116 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Light theme colors - Modern, clean palette */
+  /* Light theme colors - Professional academic palette */
   --color-background: #fafafa;
   --color-background-secondary: #f4f4f5;
   --color-background-tertiary: #e4e4e7;
   --color-background-elevated: #ffffff;
-  --color-background-hover: #f1f5f9;
+  --color-background-hover: #f8fafc;
   --color-background-active: #e2e8f0;
 
-  --color-text-primary: #09090b;
-  --color-text-secondary: #71717a;
-  --color-text-tertiary: #a1a1aa;
-  --color-text-disabled: #d4d4d8;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-text-disabled: #cbd5e1;
   --color-text-inverse: #ffffff;
-  --color-text-accent: #3b82f6;
+  --color-text-accent: #1e3a5f;
 
-  --color-border: #e4e4e7;
-  --color-border-strong: #a1a1aa;
-  --color-border-subtle: #f4f4f5;
+  --color-border: #e2e8f0;
+  --color-border-strong: #94a3b8;
+  --color-border-subtle: #f1f5f9;
 
-  --color-primary: #2563eb;
-  --color-primary-hover: #1d4ed8;
-  --color-primary-active: #1e40af;
+  /* Deep Navy - Professional, academic, trustworthy */
+  --color-primary: #1e3a5f;
+  --color-primary-hover: #162d47;
+  --color-primary-active: #0f1f30;
 
-  --color-interactive-primary: #2563eb;
-  --color-interactive-primary-hover: #1d4ed8;
+  /* Burgundy Accent - Academic, sophisticated */
+  --color-accent: #9b2c2c;
+  --color-accent-hover: #7c2323;
+  --color-accent-active: #5e1a1a;
+
+  --color-interactive-primary: #1e3a5f;
+  --color-interactive-primary-hover: #162d47;
   --color-interactive-secondary: #f4f4f5;
   --color-interactive-secondary-hover: #e4e4e7;
 
   --color-input-background: #ffffff;
 
-  --color-success: #16a34a;
-  --color-success-hover: #15803d;
-  --color-warning: #ea580c;
-  --color-warning-hover: #c2410c;
-  --color-danger: #dc2626;
-  --color-danger-hover: #b91c1c;
+  /* Forest Green - Professional success indicator */
+  --color-success: #065f46;
+  --color-success-hover: #064e3b;
+  /* Amber - Professional warning tone */
+  --color-warning: #d97706;
+  --color-warning-hover: #b45309;
+  /* Deep Red - Serious error state */
+  --color-danger: #991b1b;
+  --color-danger-hover: #7f1d1d;
 
-  --color-accent-success: #16a34a;
-  --color-accent-warning: #ea580c;
-  --color-accent-danger: #dc2626;
+  --color-accent-success: #065f46;
+  --color-accent-warning: #d97706;
+  --color-accent-danger: #991b1b;
 
-  --color-focus: rgba(37, 99, 235, 0.2);
-  --color-selection: rgba(37, 99, 235, 0.1);
+  --color-focus: rgba(30, 58, 95, 0.2);
+  --color-selection: rgba(30, 58, 95, 0.1);
   --color-backdrop: rgba(0, 0, 0, 0.5);
   --color-surface: #ffffff;
   --color-surface-overlay: rgba(255, 255, 255, 0.98);
 }
 
 .dark {
-  /* Dark theme colors - Modern, high contrast */
-  --color-background: #09090b;
-  --color-background-secondary: #18181b;
-  --color-background-tertiary: #27272a;
-  --color-background-elevated: #18181b;
-  --color-background-hover: #27272a;
-  --color-background-active: #3f3f46;
+  /* Dark theme colors - University academic palette with improved contrast */
+  --color-background: #0f172a;
+  --color-background-secondary: #1e293b;
+  --color-background-tertiary: #334155;
+  --color-background-elevated: #1e293b;
+  --color-background-hover: #334155;
+  --color-background-active: #475569;
 
-  --color-text-primary: #fafafa;
-  --color-text-secondary: #a1a1aa;
-  --color-text-tertiary: #71717a;
-  --color-text-disabled: #52525b;
-  --color-text-inverse: #09090b;
-  --color-text-accent: #60a5fa;
+  --color-text-primary: #f0f4f8;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-disabled: #64748b;
+  --color-text-inverse: #0f172a;
+  --color-text-accent: #cbd5e1;
 
-  --color-border: #27272a;
-  --color-border-strong: #52525b;
-  --color-border-subtle: #18181b;
+  --color-border: #334155;
+  --color-border-strong: #475569;
+  --color-border-subtle: #1e293b;
 
-  --color-primary: #3b82f6;
-  --color-primary-hover: #60a5fa;
-  --color-primary-active: #2563eb;
+  /* Light Slate - Good contrast for text in dark mode */
+  --color-primary: #94a3b8;
+  --color-primary-hover: #cbd5e1;
+  --color-primary-active: #64748b;
 
-  --color-interactive-primary: #3b82f6;
-  --color-interactive-primary-hover: #60a5fa;
-  --color-interactive-secondary: #27272a;
-  --color-interactive-secondary-hover: #3f3f46;
+  /* Academic Burgundy - Warmer, sophisticated accent */
+  --color-accent: #e74c3c;
+  --color-accent-hover: #ef5350;
+  --color-accent-active: #c23621;
 
-  --color-input-background: #18181b;
+  --color-interactive-primary: #e74c3c;
+  --color-interactive-primary-hover: #ef5350;
+  --color-interactive-secondary: #334155;
+  --color-interactive-secondary-hover: #475569;
 
-  --color-success: #22c55e;
-  --color-success-hover: #4ade80;
-  --color-warning: #f97316;
-  --color-warning-hover: #fb923c;
-  --color-danger: #ef4444;
-  --color-danger-hover: #f87171;
+  --color-input-background: #1e293b;
 
-  --color-accent-success: #22c55e;
-  --color-accent-warning: #f97316;
-  --color-accent-danger: #ef4444;
+  --color-success: #10b981;
+  --color-success-hover: #34d399;
+  --color-warning: #f59e0b;
+  --color-warning-hover: #fbbf24;
+  --color-danger: #ef5350;
+  --color-danger-hover: #f44336;
 
-  --color-focus: rgba(96, 165, 250, 0.3);
-  --color-selection: rgba(96, 165, 250, 0.2);
+  --color-accent-success: #10b981;
+  --color-accent-warning: #f59e0b;
+  --color-accent-danger: #ef5350;
+
+  --color-focus: rgba(231, 76, 60, 0.3);
+  --color-selection: rgba(231, 76, 60, 0.2);
   --color-backdrop: rgba(0, 0, 0, 0.8);
-  --color-surface: #18181b;
-  --color-surface-overlay: rgba(24, 24, 27, 0.98);
+  --color-surface: #1e293b;
+  --color-surface-overlay: rgba(30, 41, 59, 0.98);
 }
 
 /* Global theming */
@@ -254,12 +269,64 @@ a {
   background: var(--color-text-tertiary);
 }
 
+/* Professional Typography Scale */
+h1 {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+
+h2 {
+  font-size: 1.875rem; /* 30px */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+h3 {
+  font-size: 1.5rem; /* 24px */
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-primary);
+}
+
+h4 {
+  font-size: 1.25rem; /* 20px */
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+h5 {
+  font-size: 1.125rem; /* 18px */
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+}
+
+body {
+  font-size: 1rem; /* 16px */
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+}
+
+small {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
 /* Enhanced form styling */
 input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--color-interactive-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px var(--color-focus);
 }
 
 /* Enhanced button hover states */
