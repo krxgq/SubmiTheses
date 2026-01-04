@@ -1,43 +1,52 @@
 import { Request, Response } from "express";
 import { UserService } from "../services/users.service";
 import { AuthService } from "../services/auth.service";
+import { InvitationService } from "../services/invitation.service";
+import { EmailService } from "../services/email.service";
 import type { UserWithYear, UserRole } from "@sumbi/shared-types";
 
 /**
  * Create new user (admin only)
  * POST /api/users
+ * No password required - sends invitation email instead
  */
 export async function createUser(req: Request, res: Response) {
   try {
-    const { email, password, first_name, last_name, role, year_id } = req.body;
+    const { email, first_name, last_name, role, year_id } = req.body;
 
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+    // Validation - password no longer required
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Create user using AuthService (reuses registration logic)
-    const result = await AuthService.register(
+    // Create user without password (will be set via invitation email)
+    const user = await AuthService.registerWithoutPassword(
       email,
-      password,
       first_name,
       last_name,
       role || 'student'
     );
 
-    // Update year_id if provided (AuthService doesn't handle this)
+    // Update year_id if provided
     if (year_id !== undefined) {
-      const updatedUser = await UserService.updateUser(result.user.id, { year_id });
-      if (updatedUser) {
-        return res.status(201).json(updatedUser);
-      }
+      await UserService.updateUser(user.id, { year_id });
     }
 
-    return res.status(201).json(result.user);
+    // Generate invitation token (30-day expiry)
+    const token = await InvitationService.createInvitation(user.id);
+
+    // Send invitation email with password setup link
+    await EmailService.sendInvitationEmail(email, first_name, token);
+
+    return res.status(201).json({
+      user,
+      message: 'User created successfully. Invitation email sent.',
+    });
   } catch (err: any) {
     if (err.message.includes('already exists')) {
       return res.status(409).json({ error: err.message });
     }
+    console.error('Error creating user:', err);
     return res.status(500).json({ error: 'Failed to create user' });
   }
 }
@@ -164,5 +173,120 @@ export async function deleteUser(req: Request, res: Response) {
     return res.status(204).send();
   } catch (error) {
     return res.status(500).json({ error: "Failed to delete user" });
+  }
+}
+
+/**
+ * Validate invitation token
+ * GET /api/users/validate-invitation?token=xxx
+ * Public endpoint - no authentication required
+ */
+export async function validateInvitationToken(req: Request, res: Response) {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({
+        valid: false,
+        error: 'Token parameter is required',
+      });
+    }
+
+    // Validate the token
+    const user = await InvitationService.validateInvitationToken(token);
+
+    if (!user) {
+      return res.status(200).json({
+        valid: false,
+        error: 'Invalid or expired invitation token',
+      });
+    }
+
+    return res.status(200).json({
+      valid: true,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      email: user.email,
+    });
+  } catch (error) {
+    console.error('Error validating invitation token:', error);
+    return res.status(500).json({
+      valid: false,
+      error: 'Failed to validate invitation token',
+    });
+  }
+}
+
+/**
+ * Setup password using invitation token
+ * POST /api/users/setup-password
+ * Public endpoint - no authentication required
+ */
+export async function setupPassword(req: Request, res: Response) {
+  try {
+    const { token, password } = req.body;
+
+    // Validation
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Token and password are required',
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 6 characters',
+      });
+    }
+
+    // Complete the invitation
+    const result = await InvitationService.completeInvitation(token, password);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error setting up password:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to set password. Please try again.',
+    });
+  }
+}
+
+/**
+ * Resend invitation email
+ * POST /api/users/:id/resend-invitation
+ * Admin only
+ */
+export async function resendInvitation(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'User ID is required',
+      });
+    }
+
+    // Resend invitation
+    const result = await InvitationService.resendInvitation(id);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error resending invitation:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to resend invitation. Please try again.',
+    });
   }
 }
