@@ -92,8 +92,7 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
     try {
       await usersApi.delete(userId);
       toast.success('User deleted successfully');
-      onUserDeleted?.();
-      router.refresh();
+      onUserDeleted?.(); // Triggers local state update in parent component
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete user');
       console.error('Delete error:', error);

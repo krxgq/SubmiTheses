@@ -33,9 +33,27 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
 
-  // Check if user can manage this project (admin or supervisor)
-  const canManage = user?.role === 'admin' || user?.id === project.supervisor_id;
+  // Permission checks based on user role and project relationship
+  const isAdmin = user?.role === 'admin';
+  const isStudent = user?.role === 'student';
+  const isTeacher = user?.role === 'teacher';
+
+  // Check if user is assigned to this project
+  const isAssignedStudent = isStudent && project.student_id === user?.id;
+  const isSupervisor = isTeacher && project.supervisor_id === user?.id;
+  const isOpponent = isTeacher && project.opponent_id === user?.id;
+  const isAssignedTeacher = isSupervisor || isOpponent;
+
+  // Derived permissions
+  const canManage = isAdmin || isSupervisor; // Edit/Delete/Assign permissions
+  const canEdit = isAdmin || (isAssignedStudent && project.status === 'draft') || isSupervisor;
+  const canDelete = isAdmin || (isSupervisor && project.status === 'draft');
+  const canInteract = isAdmin || isAssignedStudent || isAssignedTeacher; // Upload/Export/Share permissions
+
   const hasStudent = !!project.student_id;
+
+  // Check if user has ANY actions available - if not, hide the entire Actions section
+  const hasAnyActions = canEdit || canManage || canDelete || canInteract;
 
   const handleEdit = () => {
     router.push(`/projects/${project.id}/edit`);
@@ -189,24 +207,31 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     }
   };
 
+  // Early return if user has no actions available - hide entire Actions section
+  if (!hasAnyActions) {
+    return null;
+  }
+
   return (
     <>
       <div className="bg-background-elevated rounded-lg border border-border p-6 mb-6">
         <h3 className="text-lg font-semibold text-text-primary mb-4">Actions</h3>
 
         <div className="space-y-2">
-          {/* Management Actions - Only for admin/supervisor */}
+          {/* Edit Button - Admin, assigned student (draft only), or supervisor */}
+          {canEdit && (
+            <button
+              onClick={handleEdit}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
+            >
+              <Edit className="w-5 h-5 text-primary" />
+              <span>Edit Project</span>
+            </button>
+          )}
+
+          {/* Student Assignment - Only for admin/supervisor */}
           {canManage && (
             <>
-              <button
-                onClick={handleEdit}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
-              >
-                <Edit className="w-5 h-5 text-primary" />
-                <span>Edit Project</span>
-              </button>
-
-              {/* Assign or Remove Student */}
               {!hasStudent ? (
                 <button
                   onClick={handleAssignClick}
@@ -224,7 +249,12 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                   <span>Remove Student</span>
                 </button>
               )}
+            </>
+          )}
 
+          {/* Delete Button - Admin or supervisor (draft only) */}
+          {canDelete && (
+            <>
               <button
                 onClick={handleDeleteClick}
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-danger bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
@@ -232,59 +262,45 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                 <Trash2 className="w-5 h-5 text-danger" />
                 <span>Delete Project</span>
               </button>
-
-              <div className="border-t border-border my-2" />
             </>
           )}
 
-          {/* Upload File */}
-          <button
-            onClick={handleUploadClick}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
-          >
-            <Upload className="w-5 h-5 text-text-accent" />
-            <span>Upload File</span>
-          </button>
+          {/* Separator if there are management actions */}
+          {(canEdit || canManage || canDelete) && <div className="border-t border-border my-2" />}
 
-          {/* Export as PDF */}
-          <button
-            onClick={handleExportPDF}
-            disabled={isExportingPDF}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
-          >
-            {isExportingPDF ? (
-              <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-            ) : (
-              <FileDown className="w-5 h-5 text-text-accent" />
-            )}
-            <span>{isExportingPDF ? 'Exporting...' : 'Export as PDF'}</span>
-          </button>
+          {/* Upload and Export - Only for admin, assigned student, supervisor, or opponent */}
+          {canInteract && (
+            <>
+              <button
+                onClick={handleUploadClick}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
+              >
+                <Upload className="w-5 h-5 text-text-accent" />
+                <span>Upload File</span>
+              </button>
 
-          {/* Share Project */}
-          <button
-            onClick={handleShare}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
-          >
-            <Share2 className="w-5 h-5 text-text-accent" />
-            <span>Share Project</span>
-          </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={isExportingPDF}
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
+              >
+                {isExportingPDF ? (
+                  <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+                ) : (
+                  <FileDown className="w-5 h-5 text-text-accent" />
+                )}
+                <span>{isExportingPDF ? 'Exporting...' : 'Export as PDF'}</span>
+              </button>
+            </>
+          )}
 
-          {/* Print View */}
+          {/* Print View - Available to all users with view access */}
           <button
             onClick={handlePrint}
             className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
           >
             <Printer className="w-5 h-5 text-text-secondary" />
             <span>Print View</span>
-          </button>
-
-          {/* Notifications */}
-          <button
-            onClick={handleNotifications}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
-          >
-            <Bell className="w-5 h-5 text-text-accent" />
-            <span>Notifications</span>
           </button>
         </div>
       </div>

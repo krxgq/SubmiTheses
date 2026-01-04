@@ -1,7 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { LayoutList, LayoutGrid, Plus, Folder, FolderOpen, Search } from "lucide-react";
+import {
+  LayoutList,
+  LayoutGrid,
+  Plus,
+  Folder,
+  FolderOpen,
+  Search,
+} from "lucide-react";
 import type { ProjectWithRelations, UserRole } from "@sumbi/shared-types";
 import { GridItem } from "@/components/dashboard/projects/GridItem";
 import { ListItem } from "@/components/dashboard/projects/ListItem";
@@ -108,7 +115,7 @@ export function ProjectsPageClient({
 
     // List view - horizontal cards
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 pb-2">
         {projectsList.map((project) => (
           <ListItem key={project.id} project={project} role={userRole} />
         ))}
@@ -195,10 +202,7 @@ export function ProjectsPageClient({
         t("projects.sections.opponent"),
         filteredProjects.opponent,
       )}
-      {renderSection(
-        t("projects.sections.other"),
-        filteredProjects.other,
-      )}
+      {renderSection(t("projects.sections.other"), filteredProjects.other)}
 
       {/* Show enhanced empty state if no projects at all */}
       {!hasAnyProjects && (

@@ -209,11 +209,11 @@ export const requireOwnershipOrPrivileged = (ownershipParam: string) =>
   });
 
 /**
- * Middleware for checking if user can access a project
+ * Middleware for checking if user can access a project (view-only)
  * Access Rules:
- * - Admin: Can access any project
- * - Student: Can access only their own projects (where student_id matches)
- * - Teacher: Can access projects where they are supervisor_id OR opponent_id
+ * - All authenticated users (admin, teacher, student) can VIEW any project
+ * - Modification/deletion permissions are handled by separate middleware
+ * - Frontend components should conditionally show interactive elements based on user permissions
  */
 export const requireProjectAccess = async (
   req: Request,
@@ -251,22 +251,11 @@ export const requireProjectAccess = async (
       return;
     }
 
-    // Admins can access any project
-    if (req.user.role === 'admin') {
-      console.log(`[Auth] Admin ${req.user.id} granted access to project ${projectId}`);
-      next();
-      return;
-    }
-
-    // Fetch project with only fields needed for access check
+    // Verify project exists (all authenticated users can view)
     const { prisma } = await import('../lib/prisma');
     const project = await prisma.projects.findUnique({
       where: { id: projectIdBigInt },
-      select: {
-        student_id: true,
-        supervisor_id: true,
-        opponent_id: true,
-      },
+      select: { id: true },
     });
 
     if (!project) {
@@ -278,52 +267,8 @@ export const requireProjectAccess = async (
       return;
     }
 
-    // Students can only access their own projects
-    if (req.user.role === 'student') {
-      if (project.student_id === req.user.id) {
-        console.log(`[Auth] Student ${req.user.id} granted access to their project ${projectId}`);
-        next();
-        return;
-      }
-
-      console.log(`[Auth] Student ${req.user.id} denied access to project ${projectId} (owner: ${project.student_id})`);
-      res.status(403).json({
-        error: 'Access denied to this project',
-        code: 'PROJECT_ACCESS_DENIED'
-      });
-      return;
-    }
-
-    // Teachers can access projects where they are supervisor OR opponent
-    if (req.user.role === 'teacher') {
-      console.log(`[Auth] Teacher access check:`, {
-        userId: req.user.id,
-        supervisorId: project.supervisor_id,
-        opponentId: project.opponent_id,
-        isSupervisor: project.supervisor_id === req.user.id,
-        isOpponent: project.opponent_id === req.user.id
-      });
-
-      if (project.supervisor_id === req.user.id || project.opponent_id === req.user.id) {
-        console.log(`[Auth] Teacher ${req.user.id} granted access to project ${projectId}`);
-        next();
-        return;
-      }
-
-      console.log(`[Auth] Teacher ${req.user.id} denied access to project ${projectId} (not supervisor or opponent)`);
-      res.status(403).json({
-        error: 'Access denied to this project',
-        code: 'PROJECT_ACCESS_DENIED'
-      });
-      return;
-    }
-
-    // Fallback: deny access
-    console.log(`[Auth] Access denied for user ${req.user.id} with role ${req.user.role} to project ${projectId}`);
-    res.status(403).json({
-      error: 'Access denied',
-      code: 'ACCESS_DENIED'
-    });
+    console.log(`[Auth] ${req.user.role} ${req.user.id} granted view access to project ${projectId}`);
+    next();
   } catch (error) {
     console.error('[Auth] Error in requireProjectAccess:', error);
     res.status(500).json({
@@ -383,16 +328,6 @@ export const requireProjectModify = async (
       return;
     }
 
-    // Teachers CANNOT modify projects (only review/grade)
-    if (req.user.role === 'teacher') {
-      console.log(`[Auth] Teacher ${req.user.id} denied modify permission (teachers can only review)`);
-      res.status(403).json({
-        error: 'Teachers cannot modify projects. You can only review and grade projects.',
-        code: 'TEACHER_CANNOT_MODIFY'
-      });
-      return;
-    }
-
     // Students can only modify their own draft projects
     if (req.user.role === 'student') {
       const { prisma } = await import('../lib/prisma');
@@ -439,6 +374,63 @@ export const requireProjectModify = async (
       return;
     }
 
+    // Teachers can modify projects where they are supervisor AND status allows it
+    if (req.user.role === 'teacher') {
+      const { prisma } = await import('../lib/prisma');
+      const project = await prisma.projects.findUnique({
+        where: { id: projectIdBigInt },
+        select: {
+          supervisor_id: true,
+          status: true,
+        },
+      });
+
+      if (!project) {
+        console.log(`[Auth] Project ${projectId} not found`);
+        res.status(404).json({
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND'
+        });
+        return;
+      }
+
+      // Check if project has a supervisor assigned
+      if (!project.supervisor_id) {
+        console.log(`[Auth] Teacher ${req.user.id} denied modify permission (project has no supervisor)`);
+        res.status(403).json({
+          error: 'Project has no assigned supervisor',
+          code: 'NO_SUPERVISOR_ASSIGNED'
+        });
+        return;
+      }
+
+      // Check if user is the supervisor
+      if (project.supervisor_id !== req.user.id) {
+        console.log(`[Auth] Teacher ${req.user.id} denied modify permission (not supervisor, supervisor is ${project.supervisor_id})`);
+        res.status(403).json({
+          error: 'Only the project supervisor can modify this project',
+          code: 'NOT_PROJECT_SUPERVISOR'
+        });
+        return;
+      }
+
+      // Check if status allows modification (draft or submitted)
+      if (project.status !== 'draft' && project.status !== 'submitted') {
+        console.log(`[Auth] Teacher ${req.user.id} denied modify permission (status is '${project.status}', only 'draft' and 'submitted' can be modified)`);
+        res.status(403).json({
+          error: `Cannot modify projects with status '${project.status}'. Only 'draft' and 'submitted' projects can be modified.`,
+          code: 'INVALID_PROJECT_STATUS',
+          current_status: project.status,
+          allowed_statuses: ['draft', 'submitted']
+        });
+        return;
+      }
+
+      console.log(`[Auth] Teacher ${req.user.id} granted modify permission as supervisor for project ${projectId} with status '${project.status}'`);
+      next();
+      return;
+    }
+
     // Fallback: deny modification
     console.log(`[Auth] Modify permission denied for user ${req.user.id} with role ${req.user.role}`);
     res.status(403).json({
@@ -447,6 +439,138 @@ export const requireProjectModify = async (
     });
   } catch (error) {
     console.error('[Auth] Error in requireProjectModify:', error);
+    res.status(500).json({
+      error: 'Internal server error during authorization',
+      code: 'AUTHORIZATION_ERROR'
+    });
+  }
+};
+
+/**
+ * Middleware for checking if user can delete a project
+ * Deletion Rules:
+ * - Admin: Can delete any project regardless of status
+ * - Teacher (Supervisor): Can delete ONLY their supervised projects with status 'draft'
+ * - Student: Cannot delete projects
+ */
+export const requireProjectDelete = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        code: 'UNAUTHENTICATED'
+      });
+      return;
+    }
+
+    const projectId = req.params.id;
+    if (!projectId) {
+      res.status(400).json({
+        error: 'Project ID is required',
+        code: 'MISSING_PROJECT_ID'
+      });
+      return;
+    }
+
+    let projectIdBigInt: bigint;
+    try {
+      projectIdBigInt = BigInt(projectId);
+    } catch (error) {
+      console.error(`[Auth] Invalid project ID for delete: "${projectId}"`, error);
+      res.status(400).json({
+        error: 'Invalid project ID format',
+        code: 'INVALID_PROJECT_ID',
+        received: projectId
+      });
+      return;
+    }
+
+    // Admin can delete any project
+    if (req.user.role === 'admin') {
+      console.log(`[Auth] Admin ${req.user.id} granted delete permission for project ${projectId}`);
+      next();
+      return;
+    }
+
+    // Students cannot delete projects
+    if (req.user.role === 'student') {
+      console.log(`[Auth] Student ${req.user.id} denied delete permission (students cannot delete projects)`);
+      res.status(403).json({
+        error: 'Students cannot delete projects',
+        code: 'STUDENT_CANNOT_DELETE'
+      });
+      return;
+    }
+
+    // Teachers can delete ONLY draft projects where they are supervisor
+    if (req.user.role === 'teacher') {
+      const { prisma } = await import('../lib/prisma');
+      const project = await prisma.projects.findUnique({
+        where: { id: projectIdBigInt },
+        select: {
+          supervisor_id: true,
+          status: true,
+        },
+      });
+
+      if (!project) {
+        console.log(`[Auth] Project ${projectId} not found`);
+        res.status(404).json({
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND'
+        });
+        return;
+      }
+
+      // Check if project has a supervisor assigned
+      if (!project.supervisor_id) {
+        console.log(`[Auth] Teacher ${req.user.id} denied delete permission (project has no supervisor)`);
+        res.status(403).json({
+          error: 'Project has no assigned supervisor',
+          code: 'NO_SUPERVISOR_ASSIGNED'
+        });
+        return;
+      }
+
+      // Check if user is the supervisor
+      if (project.supervisor_id !== req.user.id) {
+        console.log(`[Auth] Teacher ${req.user.id} denied delete permission (not supervisor, supervisor is ${project.supervisor_id})`);
+        res.status(403).json({
+          error: 'Only the project supervisor can delete this project',
+          code: 'NOT_PROJECT_SUPERVISOR'
+        });
+        return;
+      }
+
+      // Check if status is draft (only draft projects can be deleted)
+      if (project.status !== 'draft') {
+        console.log(`[Auth] Teacher ${req.user.id} denied delete permission (status is '${project.status}', only 'draft' can be deleted)`);
+        res.status(403).json({
+          error: `Only 'draft' projects can be deleted. Cannot delete projects with status '${project.status}'.`,
+          code: 'INVALID_PROJECT_STATUS_FOR_DELETE',
+          current_status: project.status,
+          allowed_status: 'draft'
+        });
+        return;
+      }
+
+      console.log(`[Auth] Teacher ${req.user.id} granted delete permission as supervisor for draft project ${projectId}`);
+      next();
+      return;
+    }
+
+    // Fallback: deny deletion
+    console.log(`[Auth] Delete permission denied for user ${req.user.id} with role ${req.user.role}`);
+    res.status(403).json({
+      error: 'Access denied',
+      code: 'ACCESS_DENIED'
+    });
+  } catch (error) {
+    console.error('[Auth] Error in requireProjectDelete:', error);
     res.status(500).json({
       error: 'Internal server error during authorization',
       code: 'AUTHORIZATION_ERROR'

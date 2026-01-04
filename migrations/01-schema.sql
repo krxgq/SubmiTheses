@@ -1,0 +1,1407 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict xIL7nG0aG7DHtW1yPWD0GuDU1b6DfqtsGdaNc8J7m6hCefrbMogkL3bkNa0v9KW
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 18.1
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+CREATE SCHEMA public;
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+--
+-- Name: project_role; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.project_role AS ENUM (
+    'supervisor',
+    'opponent'
+);
+
+
+--
+-- Name: TYPE project_role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.project_role IS 'Project-level roles: supervisor or opponent (both are teachers at user level)';
+
+
+--
+-- Name: status; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.status AS ENUM (
+    'draft',
+    'submitted',
+    'locked',
+    'public'
+);
+
+
+--
+-- Name: user_roles; Type: TYPE; Schema: public; Owner: -
+--
+
+CREATE TYPE public.user_roles AS ENUM (
+    'admin',
+    'teacher',
+    'student'
+);
+
+
+--
+-- Name: TYPE user_roles; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TYPE public.user_roles IS 'User roles';
+
+
+--
+-- Name: get_user_role(uuid); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.get_user_role(user_id uuid DEFAULT NULL) RETURNS public.user_roles
+    LANGUAGE plpgsql STABLE SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Returns the role of a user by ID (used for legacy compatibility)
+    -- Note: With local auth, user_id must be passed explicitly
+    RETURN (SELECT role FROM public.users WHERE id = user_id);
+END;
+$$;
+
+
+--
+-- Name: FUNCTION get_user_role(user_id uuid); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.get_user_role(user_id uuid) IS 'Returns the role of a user by ID (local auth - no default user).';
+
+
+--
+-- Name: handle_new_user(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+-- Removed handle_new_user() function - not needed with local authentication
+
+
+--
+-- Name: has_role(public.user_roles); Type: FUNCTION; Schema: public; Owner: -
+--
+
+-- Removed has_role() function - RLS not used with local authentication and JWT-based auth
+
+
+-- Removed is_admin() and is_teacher() functions - not needed with local authentication
+
+
+--
+-- Name: sync_role_to_jwt(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+-- Removed sync_role_to_jwt() function - not needed with local authentication
+
+
+--
+-- Name: sync_user_email(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+-- Removed sync_user_email() function - not needed with local authentication
+
+
+--
+-- Name: update_project_descriptions_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_project_descriptions_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: update_updated_at_column(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_updated_at_column() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+
+--
+-- Name: update_user_role(uuid, public.user_roles); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.update_user_role(target_user_id uuid, new_role public.user_roles) RETURNS boolean
+    LANGUAGE plpgsql SECURITY DEFINER
+    AS $$
+BEGIN
+    -- Only admins can update roles
+    IF NOT public.is_admin() THEN
+        RAISE EXCEPTION 'Only admins can update user roles';
+    END IF;
+    
+    UPDATE public.users
+    SET role = new_role, updated_at = NOW()
+    WHERE id = target_user_id;
+    
+    RETURN FOUND;
+END;
+$$;
+
+
+--
+-- Name: FUNCTION update_user_role(target_user_id uuid, new_role public.user_roles); Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON FUNCTION public.update_user_role(target_user_id uuid, new_role public.user_roles) IS 'Update a user''s role. Only callable by admins.';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: attachments; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.attachments (
+    id bigint NOT NULL,
+    project_id bigint,
+    filename character varying NOT NULL,
+    storage_path character varying NOT NULL,
+    description character varying,
+    uploaded_at timestamp(6) with time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at timestamp(6) with time zone NOT NULL
+);
+
+
+--
+-- Name: attachments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.attachments ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.attachments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: external_links; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.external_links (
+    id bigint NOT NULL,
+    project_id bigint,
+    url character varying,
+    title character varying,
+    description character varying,
+    added_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp(6) with time zone NOT NULL
+);
+
+
+--
+-- Name: external_links_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.external_links ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.external_links_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: grades; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.grades (
+    id bigint NOT NULL,
+    value bigint NOT NULL,
+    year_id bigint NOT NULL,
+    project_id bigint NOT NULL,
+    reviewer_id uuid NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    scale_id bigint
+);
+
+
+--
+-- Name: TABLE grades; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.grades IS 'All user references now point to public.users only';
+
+
+--
+-- Name: grade_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.grades ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.grade_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: project_descriptions; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.project_descriptions (
+    id bigint NOT NULL,
+    project_id bigint NOT NULL,
+    topic text,
+    project_goal text,
+    specification text,
+    schedule jsonb,
+    needed_output text[],
+    grading_criteria text[],
+    grading_notes text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: TABLE project_descriptions; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.project_descriptions IS 'Structured descriptions for thesis projects with detailed sections';
+
+
+--
+-- Name: COLUMN project_descriptions.topic; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.topic IS 'Brief project topic or theme';
+
+
+--
+-- Name: COLUMN project_descriptions.project_goal; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.project_goal IS 'Main goal or objective of the project';
+
+
+--
+-- Name: COLUMN project_descriptions.specification; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.specification IS 'Detailed project specification as HTML/Markdown text';
+
+
+--
+-- Name: COLUMN project_descriptions.schedule; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.schedule IS 'Project schedule as array of {month: string, tasks: string} objects';
+
+
+--
+-- Name: COLUMN project_descriptions.needed_output; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.needed_output IS 'Array of required project outputs/deliverables';
+
+
+--
+-- Name: COLUMN project_descriptions.grading_criteria; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.grading_criteria IS 'Array of evaluation criteria';
+
+
+--
+-- Name: COLUMN project_descriptions.grading_notes; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.project_descriptions.grading_notes IS 'Additional grading notes or requirements';
+
+
+--
+-- Name: project_descriptions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.project_descriptions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: project_descriptions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.project_descriptions_id_seq OWNED BY public.project_descriptions.id;
+
+
+--
+-- Name: projects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.projects (
+    id bigint NOT NULL,
+    title character varying NOT NULL,
+    supervisor_id uuid NOT NULL,
+    opponent_id uuid,
+    subject character varying NOT NULL,
+    description character varying,
+    main_documentation character varying,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    student_id uuid,
+    status character varying DEFAULT 'draft'::character varying,
+    year_id bigint,
+    subject_id bigint
+);
+
+
+--
+-- Name: TABLE projects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.projects IS 'All user references now point to public.users only';
+
+
+--
+-- Name: COLUMN projects.student_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.projects.student_id IS 'The student assigned to this project (changed from many-to-many to one-to-many relationship)';
+
+
+--
+-- Name: COLUMN projects.status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.projects.status IS 'Project status: draft, submitted, locked, or public';
+
+
+--
+-- Name: COLUMN projects.year_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.projects.year_id IS 'Academic year classification for the project. Used for filtering and organizing projects by year.';
+
+
+--
+-- Name: COLUMN projects.subject_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.projects.subject_id IS 'Reference to subjects table (replaces old subject text field)';
+
+
+--
+-- Name: projects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.projects ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.projects_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: reviews; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.reviews (
+    id bigint NOT NULL,
+    project_id bigint NOT NULL,
+    reviewer_id uuid NOT NULL,
+    comments character varying NOT NULL,
+    submitted_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone NOT NULL
+);
+
+
+--
+-- Name: TABLE reviews; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.reviews IS 'All user references now point to public.users only';
+
+
+--
+-- Name: reviews_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.reviews ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.reviews_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: scales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.scales (
+    id bigint NOT NULL,
+    "maxVal" bigint NOT NULL,
+    name text NOT NULL,
+    "desc" text,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: scale_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.scales ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.scale_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: scale_sets; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.scale_sets (
+    id bigint NOT NULL,
+    name character varying,
+    year_id bigint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    project_role public.project_role
+);
+
+
+--
+-- Name: TABLE scale_sets; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.scale_sets IS 'Defines which grading scales are used by which project role in each academic year';
+
+
+--
+-- Name: COLUMN scale_sets.project_role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.scale_sets.project_role IS 'Which project role (supervisor/opponent) uses this grading scale set';
+
+
+--
+-- Name: scale_set_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.scale_sets ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.scale_set_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: scale_set_scales; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.scale_set_scales (
+    id bigint NOT NULL,
+    scale_set_id bigint NOT NULL,
+    scale_id bigint NOT NULL,
+    weight smallint NOT NULL,
+    display_order smallint,
+    created_at timestamp with time zone DEFAULT now() NOT NULL
+);
+
+
+--
+-- Name: scale_set_scales_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.scale_set_scales ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.scale_set_scales_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: subjects; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.subjects (
+    id bigint NOT NULL,
+    name_cs character varying(255) NOT NULL,
+    name_en character varying(255) NOT NULL,
+    description text,
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+--
+-- Name: TABLE subjects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.subjects IS 'Subject/field of study with Czech and English translations';
+
+
+--
+-- Name: COLUMN subjects.name_cs; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.subjects.name_cs IS 'Subject name in Czech (e.g., Informatika)';
+
+
+--
+-- Name: COLUMN subjects.name_en; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.subjects.name_en IS 'Subject name in English (e.g., Computer Science)';
+
+
+--
+-- Name: COLUMN subjects.is_active; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.subjects.is_active IS 'Whether subject is available for selection';
+
+
+--
+-- Name: subjects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.subjects_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: subjects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.subjects_id_seq OWNED BY public.subjects.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.users (
+    id uuid NOT NULL,
+    role public.user_roles NOT NULL,
+    full_name character varying,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    email character varying NOT NULL,
+    year_id bigint,
+    avatar_url character varying,
+    CONSTRAINT check_year_only_for_students CHECK ((((role = 'student'::public.user_roles) AND (year_id IS NOT NULL)) OR ((role <> 'student'::public.user_roles) AND (year_id IS NULL)) OR ((role = 'student'::public.user_roles) AND (year_id IS NULL))))
+);
+
+
+--
+-- Name: TABLE users; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.users IS 'Application user profiles with role-based access control';
+
+
+--
+-- Name: COLUMN users.id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.users.id IS 'Primary user identifier (UUID)';
+
+
+--
+-- Name: COLUMN users.role; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.users.role IS 'User role from user_roles enum (admin, teacher, student)';
+
+
+--
+-- Name: COLUMN users.email; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.users.email IS 'User email address (unique)';
+
+
+--
+-- Name: COLUMN users.year_id; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.users.year_id IS 'Academic year for students (NULL for teachers and admins)';
+
+
+--
+-- Name: COLUMN users.avatar_url; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.users.avatar_url IS 'URL to user avatar/profile picture';
+
+
+--
+-- Name: CONSTRAINT check_year_only_for_students ON users; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT check_year_only_for_students ON public.users IS 'Only students can have a year_id assigned';
+
+
+--
+-- Name: user_profiles; Type: VIEW; Schema: public; Owner: -
+--
+
+-- Removed user_profiles view - not needed with local authentication
+
+
+--
+-- Name: years; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.years (
+    id bigint NOT NULL,
+    school_id bigint,
+    assignment_date timestamp with time zone,
+    submission_date timestamp with time zone,
+    feedback_date timestamp with time zone,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    name character varying(50)
+);
+
+
+--
+-- Name: COLUMN years.name; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON COLUMN public.years.name IS 'Academic year name in format YYYY/YYYY (e.g., 2025/2026)';
+
+
+--
+-- Name: year_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+ALTER TABLE public.years ALTER COLUMN id ADD GENERATED BY DEFAULT AS IDENTITY (
+    SEQUENCE NAME public.year_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- Name: project_descriptions id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_descriptions ALTER COLUMN id SET DEFAULT nextval('public.project_descriptions_id_seq'::regclass);
+
+
+--
+-- Name: subjects id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.subjects ALTER COLUMN id SET DEFAULT nextval('public.subjects_id_seq'::regclass);
+
+
+--
+-- Name: attachments attachments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.attachments
+    ADD CONSTRAINT attachments_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: external_links external_links_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_links
+    ADD CONSTRAINT external_links_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: grades grade_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grades
+    ADD CONSTRAINT grade_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project_descriptions project_descriptions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_descriptions
+    ADD CONSTRAINT project_descriptions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: project_descriptions project_descriptions_project_id_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_descriptions
+    ADD CONSTRAINT project_descriptions_project_id_key UNIQUE (project_id);
+
+
+--
+-- Name: projects projects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: reviews reviews_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: scales scale_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scales
+    ADD CONSTRAINT scale_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: scale_sets scale_set_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scale_sets
+    ADD CONSTRAINT scale_set_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: scale_set_scales scale_set_scales_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scale_set_scales
+    ADD CONSTRAINT scale_set_scales_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: subjects subjects_name_cs_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.subjects
+    ADD CONSTRAINT subjects_name_cs_key UNIQUE (name_cs);
+
+
+--
+-- Name: subjects subjects_name_en_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.subjects
+    ADD CONSTRAINT subjects_name_en_key UNIQUE (name_en);
+
+
+--
+-- Name: subjects subjects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.subjects
+    ADD CONSTRAINT subjects_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: years unique_year_name; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.years
+    ADD CONSTRAINT unique_year_name UNIQUE (name);
+
+
+--
+-- Name: users users_email_unique; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_unique UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: years year_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.years
+    ADD CONSTRAINT year_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: attachments_project_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX attachments_project_id_idx ON public.attachments USING btree (project_id);
+
+
+--
+-- Name: external_links_project_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX external_links_project_id_idx ON public.external_links USING btree (project_id);
+
+
+--
+-- Name: grades_scale_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX grades_scale_id_idx ON public.grades USING btree (scale_id);
+
+
+--
+-- Name: idx_attachments_uploaded_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_attachments_uploaded_at ON public.attachments USING btree (uploaded_at DESC);
+
+
+--
+-- Name: INDEX idx_attachments_uploaded_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_attachments_uploaded_at IS 'Performance: Sort attachments by upload date';
+
+
+--
+-- Name: idx_external_links_added_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_external_links_added_at ON public.external_links USING btree (added_at DESC);
+
+
+--
+-- Name: INDEX idx_external_links_added_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_external_links_added_at IS 'Performance: Sort links by added date';
+
+
+--
+-- Name: idx_grades_created_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_grades_created_at ON public.grades USING btree (created_at DESC);
+
+
+--
+-- Name: INDEX idx_grades_created_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_grades_created_at IS 'Performance: Sort grades by creation date';
+
+
+--
+-- Name: idx_grades_project_reviewer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_grades_project_reviewer ON public.grades USING btree (project_id, reviewer_id);
+
+
+--
+-- Name: INDEX idx_grades_project_reviewer; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_grades_project_reviewer IS 'Performance: Grade queries by project and reviewer';
+
+
+--
+-- Name: idx_grades_reviewer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_grades_reviewer ON public.grades USING btree (reviewer_id);
+
+
+--
+-- Name: idx_project_descriptions_project_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_project_descriptions_project_id ON public.project_descriptions USING btree (project_id);
+
+
+--
+-- Name: idx_project_descriptions_schedule; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_project_descriptions_schedule ON public.project_descriptions USING gin (schedule);
+
+
+--
+-- Name: idx_project_descriptions_updated_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_project_descriptions_updated_at ON public.project_descriptions USING btree (updated_at DESC);
+
+
+--
+-- Name: INDEX idx_project_descriptions_updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_project_descriptions_updated_at IS 'Performance: Sort descriptions by update date';
+
+
+--
+-- Name: idx_projects_opponent; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_opponent ON public.projects USING btree (opponent_id);
+
+
+--
+-- Name: idx_projects_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_status ON public.projects USING btree (status);
+
+
+--
+-- Name: idx_projects_status_year; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_status_year ON public.projects USING btree (status, year_id) WHERE (status IS NOT NULL);
+
+
+--
+-- Name: INDEX idx_projects_status_year; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_projects_status_year IS 'Performance: Filter projects by status and year';
+
+
+--
+-- Name: idx_projects_student; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_student ON public.projects USING btree (student_id);
+
+
+--
+-- Name: idx_projects_student_status; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_student_status ON public.projects USING btree (student_id, status) WHERE (student_id IS NOT NULL);
+
+
+--
+-- Name: INDEX idx_projects_student_status; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_projects_student_status IS 'Performance: Student project queries with status';
+
+
+--
+-- Name: idx_projects_subject_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_subject_id ON public.projects USING btree (subject_id);
+
+
+--
+-- Name: idx_projects_supervisor; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_supervisor ON public.projects USING btree (supervisor_id);
+
+
+--
+-- Name: idx_projects_title_trgm; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_title_trgm ON public.projects USING gin (title public.gin_trgm_ops);
+
+
+--
+-- Name: idx_projects_updated_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_updated_at ON public.projects USING btree (updated_at DESC);
+
+
+--
+-- Name: INDEX idx_projects_updated_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_projects_updated_at IS 'Performance: Sort projects by last update';
+
+
+--
+-- Name: idx_projects_year_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_projects_year_id ON public.projects USING btree (year_id);
+
+
+--
+-- Name: idx_reviews_project_reviewer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reviews_project_reviewer ON public.reviews USING btree (project_id, reviewer_id);
+
+
+--
+-- Name: INDEX idx_reviews_project_reviewer; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_reviews_project_reviewer IS 'Performance: Review queries by project and reviewer';
+
+
+--
+-- Name: idx_reviews_reviewer; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reviews_reviewer ON public.reviews USING btree (reviewer_id);
+
+
+--
+-- Name: idx_reviews_submitted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_reviews_submitted_at ON public.reviews USING btree (submitted_at DESC);
+
+
+--
+-- Name: INDEX idx_reviews_submitted_at; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_reviews_submitted_at IS 'Performance: Sort reviews by submission date';
+
+
+--
+-- Name: idx_subjects_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_subjects_active ON public.subjects USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: idx_subjects_is_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_subjects_is_active ON public.subjects USING btree (is_active) WHERE (is_active = true);
+
+
+--
+-- Name: INDEX idx_subjects_is_active; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON INDEX public.idx_subjects_is_active IS 'Performance: Filter active subjects';
+
+
+--
+-- Name: idx_users_email; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_email ON public.users USING btree (email);
+
+
+--
+-- Name: idx_users_role; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_role ON public.users USING btree (role);
+
+
+--
+-- Name: idx_users_year_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_year_id ON public.users USING btree (year_id);
+
+
+--
+-- Name: reviews_project_id_idx; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX reviews_project_id_idx ON public.reviews USING btree (project_id);
+
+
+--
+-- Name: users sync_role_to_jwt_on_insert; Type: TRIGGER; Schema: public; Owner: -
+--
+
+-- Removed sync_role_to_jwt triggers - not needed with local authentication
+
+
+--
+-- Name: project_descriptions trigger_update_project_descriptions_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER trigger_update_project_descriptions_updated_at BEFORE UPDATE ON public.project_descriptions FOR EACH ROW EXECUTE FUNCTION public.update_project_descriptions_updated_at();
+
+
+--
+-- Name: users update_users_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON public.users FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+
+--
+-- Name: attachments attachments_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.attachments
+    ADD CONSTRAINT attachments_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: external_links external_links_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.external_links
+    ADD CONSTRAINT external_links_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: grades fk_grades_reviewer; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grades
+    ADD CONSTRAINT fk_grades_reviewer FOREIGN KEY (reviewer_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT fk_grades_reviewer ON grades; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fk_grades_reviewer ON public.grades IS 'Ensures reviewer exists in public.users';
+
+
+--
+-- Name: project_descriptions fk_project_descriptions_project; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.project_descriptions
+    ADD CONSTRAINT fk_project_descriptions_project FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: projects fk_projects_opponent; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_opponent FOREIGN KEY (opponent_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT fk_projects_opponent ON projects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fk_projects_opponent ON public.projects IS 'Ensures opponent exists in public.users';
+
+
+--
+-- Name: projects fk_projects_student; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_student FOREIGN KEY (student_id) REFERENCES public.users(id) ON DELETE SET NULL;
+
+
+--
+-- Name: projects fk_projects_supervisor; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_supervisor FOREIGN KEY (supervisor_id) REFERENCES public.users(id) ON DELETE RESTRICT;
+
+
+--
+-- Name: CONSTRAINT fk_projects_supervisor ON projects; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fk_projects_supervisor ON public.projects IS 'Ensures supervisor exists in public.users';
+
+
+--
+-- Name: projects fk_projects_year; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT fk_projects_year FOREIGN KEY (year_id) REFERENCES public.years(id) ON DELETE SET NULL;
+
+
+--
+-- Name: reviews fk_reviews_reviewer; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT fk_reviews_reviewer FOREIGN KEY (reviewer_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: CONSTRAINT fk_reviews_reviewer ON reviews; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON CONSTRAINT fk_reviews_reviewer ON public.reviews IS 'Ensures reviewer exists in public.users';
+
+
+--
+-- Name: users fk_users_year; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT fk_users_year FOREIGN KEY (year_id) REFERENCES public.years(id) ON DELETE SET NULL;
+
+
+--
+-- Name: grades grade_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grades
+    ADD CONSTRAINT grade_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id);
+
+
+--
+-- Name: grades grade_year_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grades
+    ADD CONSTRAINT grade_year_id_fkey FOREIGN KEY (year_id) REFERENCES public.years(id);
+
+
+--
+-- Name: grades grades_scale_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.grades
+    ADD CONSTRAINT grades_scale_id_fkey FOREIGN KEY (scale_id) REFERENCES public.scales(id);
+
+
+--
+-- Name: projects projects_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.projects
+    ADD CONSTRAINT projects_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id);
+
+
+--
+-- Name: reviews reviews_project_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.reviews
+    ADD CONSTRAINT reviews_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE;
+
+
+--
+-- Name: scale_set_scales scale_set_scales_scale_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scale_set_scales
+    ADD CONSTRAINT scale_set_scales_scale_id_fkey FOREIGN KEY (scale_id) REFERENCES public.scales(id);
+
+
+--
+-- Name: scale_set_scales scale_set_scales_scale_set_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scale_set_scales
+    ADD CONSTRAINT scale_set_scales_scale_set_id_fkey FOREIGN KEY (scale_set_id) REFERENCES public.scale_sets(id);
+
+
+--
+-- Name: scale_sets scale_set_year_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.scale_sets
+    ADD CONSTRAINT scale_set_year_id_fkey FOREIGN KEY (year_id) REFERENCES public.years(id);
+
+
+--
+-- Name: users users_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+-- Removed users_id_fkey constraint - not needed with local authentication
+
+
+--
+-- Name: users Admins and teachers can view all users; Type: POLICY; Schema: public; Owner: -
+--
+
+--
+-- RLS policies removed - using JWT-based authentication in backend instead
+-- Authorization is handled at application level, not database level
+--
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict xIL7nG0aG7DHtW1yPWD0GuDU1b6DfqtsGdaNc8J7m6hCefrbMogkL3bkNa0v9KW
+

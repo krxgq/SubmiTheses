@@ -179,6 +179,7 @@ export class UserService {
 
   /**
    * Delete user (admin only - handled by middleware)
+   * Unassigns user from all projects before deletion
    */
   static async deleteUser(id: string) {
     try {
@@ -187,6 +188,23 @@ export class UserService {
         select: { role: true },
       });
 
+      // Unassign user from all projects before deletion
+      await prisma.projects.updateMany({
+        where: { supervisor_id: id },
+        data: { supervisor_id: null },
+      });
+
+      await prisma.projects.updateMany({
+        where: { opponent_id: id },
+        data: { opponent_id: null },
+      });
+
+      await prisma.projects.updateMany({
+        where: { student_id: id },
+        data: { student_id: null },
+      });
+
+      // Delete the user (grades will cascade delete automatically)
       const deleted = await prisma.public_users.delete({
         where: { id: String(id) },
       });

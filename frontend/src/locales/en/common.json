@@ -124,6 +124,10 @@
       "cancel": "Cancel",
       "invitationNote": "An invitation email will be sent to the user with a secure link to set their password (valid for 30 days)."
     },
+    "status": {
+      "pending": "Pending - Email not verified yet",
+      "verified": "Verified"
+    },
     "actions": {
       "resendInvitation": "Resend Invitation"
     },

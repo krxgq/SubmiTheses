@@ -3,7 +3,8 @@ import { authenticated } from '../middleware/auth'
 import {
   requireAdmin,
   requireProjectAccess,
-  requireProjectModify
+  requireProjectModify,
+  requireProjectDelete
 } from '../middleware/authorization.middleware'
 import {
   getAllProjects,
@@ -32,7 +33,7 @@ router.get('/:id', authenticated, requireProjectAccess, validate(projectIdSchema
 
 router.put('/:id', authenticated, requireProjectModify, validate(updateProjectSchema), updateProject);
 
-router.delete('/:id', authenticated, requireAdmin, validate(projectIdSchema), deleteProject);
+router.delete('/:id', authenticated, requireProjectDelete, validate(projectIdSchema), deleteProject);
 
 // Student assignment route (replaces old student management routes)
 router.put('/:id/student', authenticated, requireProjectModify, validate(addStudentToProjectSchema), assignStudentToProject);

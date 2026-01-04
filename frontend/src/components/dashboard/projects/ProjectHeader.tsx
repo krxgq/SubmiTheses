@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import UploadField from '@/components/dashboard/projects/UploadField';
 import { attachmentsApi } from '@/lib/api/attachments';
 import { downloadProjectPDF } from '@/lib/downloadPDF';
+import { useAuth } from '@/hooks/useAuth';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 
 interface ProjectHeaderProps {
@@ -17,11 +18,25 @@ interface ProjectHeaderProps {
 
 export default function ProjectHeader({ project }: ProjectHeaderProps) {
   const t = useTranslations('projects');
+  const { user } = useAuth();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [uploadError, setUploadError] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+
+  // Permission checks - same as ProjectActions component
+  const isAdmin = user?.role === 'admin';
+  const isStudent = user?.role === 'student';
+  const isTeacher = user?.role === 'teacher';
+
+  const isAssignedStudent = isStudent && project.student_id === user?.id;
+  const isSupervisor = isTeacher && project.supervisor_id === user?.id;
+  const isOpponent = isTeacher && project.opponent_id === user?.id;
+  const isAssignedTeacher = isSupervisor || isOpponent;
+
+  // Can interact = can upload and export
+  const canInteract = isAdmin || isAssignedStudent || isAssignedTeacher;
 
   const handleUploadClick = () => {
     setShowUploadModal(true);
@@ -117,32 +132,34 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
           </div>
         </div>
 
-        {/* Action buttons (Export PDF, Upload File) */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleExportPDF}
-            disabled={isExportingPDF}
-            className="px-4 py-2 text-sm font-medium text-text-primary bg-background-elevated border border-border rounded-lg hover:bg-background-hover flex items-center gap-2 disabled:opacity-50"
-          >
-            {isExportingPDF ? (
-              <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-            ) : (
+        {/* Action buttons (Export PDF, Upload File) - Only for assigned users */}
+        {canInteract && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportPDF}
+              disabled={isExportingPDF}
+              className="px-4 py-2 text-sm font-medium text-text-primary bg-background-elevated border border-border rounded-lg hover:bg-background-hover flex items-center gap-2 disabled:opacity-50"
+            >
+              {isExportingPDF ? (
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              )}
+              {isExportingPDF ? 'Exporting...' : t('exportPdf')}
+            </button>
+            <button
+              onClick={handleUploadClick}
+              className="px-4 py-2 text-sm font-medium text-text-inverse bg-interactive-primary rounded-lg hover:bg-interactive-primary-hover flex items-center gap-2"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
-            )}
-            {isExportingPDF ? 'Exporting...' : t('exportPdf')}
-          </button>
-          <button
-            onClick={handleUploadClick}
-            className="px-4 py-2 text-sm font-medium text-text-inverse bg-interactive-primary rounded-lg hover:bg-interactive-primary-hover flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            {t('uploadFile')}
-          </button>
-        </div>
+              {t('uploadFile')}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Upload File Modal */}

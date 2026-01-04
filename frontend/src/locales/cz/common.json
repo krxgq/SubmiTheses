@@ -124,6 +124,10 @@
       "cancel": "Zrušit",
       "invitationNote": "Uživateli bude odeslán e-mail s pozvánkou obsahující bezpečný odkaz pro nastavení hesla (platnost 30 dní)."
     },
+    "status": {
+      "pending": "Čeká se - Email ještě nebyl ověřen",
+      "verified": "Ověřeno"
+    },
     "actions": {
       "resendInvitation": "Znovu odeslat pozvánku"
     },

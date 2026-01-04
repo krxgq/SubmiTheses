@@ -3,3 +3,4 @@ storage/
 packages/
 node_modules/
 .claude/
+.env

@@ -7,15 +7,17 @@ import { Button } from 'flowbite-react';
 import { Plus } from 'lucide-react';
 import { UserActionsMenu } from '@/components/dashboard/users/UserActionsMenu';
 import { FilterMenu, UserFilters } from '@/components/dashboard/users/FilterMenu';
+import { UserStatusIndicator } from '@/components/dashboard/users/UserStatusIndicator';
 import type { UserWithYear } from '@sumbi/shared-types';
 
 interface UsersTableProps {
   users: UserWithYear[];
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ users: initialUsers }: UsersTableProps) {
   const t = useTranslations('users');
   const [filters, setFilters] = useState<UserFilters>({});
+  const [users, setUsers] = useState<UserWithYear[]>(initialUsers);
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -28,6 +30,11 @@ export function UsersTable({ users }: UsersTableProps) {
 
   const handleFilterChange = (newFilters: UserFilters) => {
     setFilters(newFilters);
+  };
+
+  // Handler to remove user from local state after deletion
+  const handleUserDeleted = (userId: string) => {
+    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== userId));
   };
 
   return (
@@ -76,7 +83,10 @@ export function UsersTable({ users }: UsersTableProps) {
                     className="hover:bg-background-hover transition-colors"
                   >
                     <td className="px-6 py-4 font-medium text-text-primary">
-                      {[user.first_name, user.last_name].filter(Boolean).join(' ') || 'N/A'}
+                      <div className="flex items-center gap-2">
+                        <span>{[user.first_name, user.last_name].filter(Boolean).join(' ') || 'N/A'}</span>
+                        <UserStatusIndicator emailVerified={user.email_verified} />
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
                       {user.email}
@@ -88,7 +98,10 @@ export function UsersTable({ users }: UsersTableProps) {
                       {user.years?.name || user.year_id || 'N/A'}
                     </td>
                     <td className="px-6 py-4">
-                      <UserActionsMenu userId={user.id} />
+                      <UserActionsMenu
+                        userId={user.id}
+                        onUserDeleted={() => handleUserDeleted(user.id)}
+                      />
                     </td>
                   </tr>
                 ))}

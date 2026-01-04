@@ -5,6 +5,7 @@ import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle, Graduation
 import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
 import { Input } from '@/components/ui/Input'
+import { ThemeToggle } from '@/components/ui/ThemeToggle'
 
 export default function AuthPageClient() {
     // Feature flag: set to true to enable public registration
@@ -174,7 +175,12 @@ export default function AuthPageClient() {
     }
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="min-h-screen bg-background flex items-center justify-center p-4 relative">
+            {/* Theme toggle in top-right corner */}
+            <div className="absolute top-4 right-4">
+                <ThemeToggle />
+            </div>
+
             <div className="w-full max-w-md">
                 {/* Logo and branding */}
                 <div className="flex flex-col items-center mb-8">

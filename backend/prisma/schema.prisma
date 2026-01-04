@@ -60,7 +60,7 @@ model grades {
   reviewer_id String       @db.Uuid
   created_at  DateTime     @default(now()) @db.Timestamptz(6)
   scale_id    BigInt?
-  users       public_users @relation(fields: [reviewer_id], references: [id], onUpdate: NoAction, map: "fk_grades_reviewer")
+  users       public_users @relation(fields: [reviewer_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_grades_reviewer")
   projects    projects     @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grade_project_id_fkey")
   years       years        @relation(fields: [year_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "grade_year_id_fkey")
   scales      scales?      @relation(fields: [scale_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -75,7 +75,7 @@ model grades {
 model projects {
   id                                  BigInt                @id @default(autoincrement())
   title                               String                @db.VarChar
-  supervisor_id                       String                @db.Uuid
+  supervisor_id                       String?               @db.Uuid
   opponent_id                         String?               @db.Uuid
   subject                             String                @db.VarChar
   description                         String?               @db.VarChar
@@ -89,9 +89,9 @@ model projects {
   external_links                      external_links[]
   grades                              grades[]
   project_description                 project_descriptions?
-  users_projects_opponent_idTousers   public_users?         @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onDelete: Restrict, onUpdate: NoAction, map: "fk_projects_opponent")
-  users_projects_student_idTousers    public_users?         @relation("projects_student_idTousers", fields: [student_id], references: [id], onUpdate: NoAction, map: "fk_projects_student")
-  users_projects_supervisor_idTousers public_users          @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onUpdate: NoAction, map: "fk_projects_supervisor")
+  users_projects_opponent_idTousers   public_users?         @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_opponent")
+  users_projects_student_idTousers    public_users?         @relation("projects_student_idTousers", fields: [student_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_student")
+  users_projects_supervisor_idTousers public_users?         @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_supervisor")
   years                               years?                @relation(fields: [year_id], references: [id], onUpdate: NoAction, map: "fk_projects_year")
   subjects                            subjects?             @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reviews                             reviews[]
