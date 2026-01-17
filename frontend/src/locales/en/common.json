@@ -16,7 +16,23 @@
     "dashboard": "Dashboard",
     "schools": "Schools",
     "projects": "Projects",
-    "logout": "Logout"
+    "notifications": "Notifications",
+    "users": "Users",
+    "settings": "Settings",
+    "adminPanel": "Admin Panel",
+    "logout": "Logout",
+    "theme": {
+      "label": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "user": {
+      "label": "User",
+      "role": "Role",
+      "signOut": "Sign out",
+      "signingOut": "Signing out..."
+    }
   },
   "header": {
     "theme": {
@@ -68,7 +84,7 @@
     },
     "invitation": {
       "title": "Set Your Password",
-      "welcome": "Welcome{{name}}!",
+      "welcome": "Welcome{name}!",
       "instructions": "Set a password for your account",
       "password": "Password",
       "confirmPassword": "Confirm Password",
@@ -99,6 +115,7 @@
   },
   "common": {
     "unknown": "Unknown",
+    "unassigned": "Unassigned",
     "edit": "Edit"
   },
   "users": {
@@ -175,7 +192,12 @@
     "uploadError": "Failed to upload files. Please try again.",
     "uploading": "Uploading...",
     "exportPdf": "Export as PDF",
+    "exporting": "Exporting...",
+    "pdfExportSuccess": "PDF exported successfully",
+    "pdfExportFailed": "Failed to export PDF",
     "noFilesSelected": "Please select at least one file",
+    "uploadButton": "Upload",
+    "fileFormatsHelper": "Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB per file)",
     "category": "Category"
   },
   "admin": {
@@ -233,6 +255,149 @@
         "past": "Past",
         "future": "Future"
       }
+    }
+  },
+  "projectDetail": {
+    "mainDocumentation": "Main Documentation",
+    "exporting": "Exporting...",
+    "cancel": "Cancel",
+    "upload": "Upload",
+    "team": "Team",
+    "topic": "Topic",
+    "projectGoal": "Project Goal",
+    "specification": "Specification",
+    "neededOutput": "Needed Output",
+    "schedule": "Schedule",
+    "deadline": "Deadline",
+    "noDescription": "No project description available.",
+    "quickStats": {
+      "title": "Quick Stats",
+      "totalAttachments": "Total Attachments",
+      "reviews": "Reviews",
+      "externalLinks": "External Links",
+      "currentGrade": "Current Grade",
+      "submissionDate": "Submission Date",
+      "lastUpdated": "Last Updated",
+      "locked": "Locked",
+      "pending": "Pending",
+      "inProgress": "In Progress",
+      "reviewCount": "{count} review(s)"
+    },
+    "actions": {
+      "title": "Actions",
+      "editProject": "Edit Project",
+      "lockProject": "Lock Project",
+      "unlockProject": "Unlock Project",
+      "publishProject": "Publish Project",
+      "locking": "Locking...",
+      "unlocking": "Unlocking...",
+      "publishing": "Publishing...",
+      "projectLocked": "Project is locked",
+      "assignStudent": "Assign Student",
+      "removeStudent": "Remove Student",
+      "deleteProject": "Delete Project",
+      "uploadFile": "Upload File",
+      "exportPdf": "Export as PDF",
+      "selectStudent": "Select Student",
+      "selectStudentHelper": "Choose a student to assign to this project",
+      "assigning": "Assigning...",
+      "removing": "Removing...",
+      "deleting": "Deleting...",
+      "selectFiles": "Select files to upload",
+      "acceptedFormats": "Accepted formats: PDF, DOC, DOCX, TXT, ZIP (Max 20MB per file)",
+      "acceptedFormatsHeader": "Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB per file)",
+      "upload": "Upload",
+      "uploading": "Uploading..."
+    },
+    "confirmations": {
+      "removeStudentTitle": "Remove Student",
+      "removeStudentMessage": "Are you sure you want to remove {name} from this project?",
+      "removeStudentDescription": "The student will no longer be assigned to this project.",
+      "deleteProjectTitle": "Delete Project",
+      "deleteProjectMessage": "Are you sure you want to delete {title}?",
+      "deleteProjectDescription": "This action cannot be undone. All project data, attachments, and related information will be permanently removed."
+    },
+    "messages": {
+      "projectDeleted": "Project deleted successfully",
+      "projectDeleteFailed": "Failed to delete project",
+      "selectStudent": "Please select a student",
+      "studentAssigned": "Student assigned successfully",
+      "studentAssignFailed": "Failed to assign student",
+      "studentRemoved": "Student removed successfully",
+      "studentRemoveFailed": "Failed to remove student",
+      "selectFile": "Please select at least one file",
+      "filesUploaded": "Files uploaded successfully",
+      "filesUploadFailed": "Failed to upload files. Please try again.",
+      "pdfExported": "PDF exported successfully",
+      "pdfExportFailed": "Failed to export PDF",
+      "projectLocked": "Project locked successfully",
+      "projectLockFailed": "Failed to lock project",
+      "projectUnlocked": "Project unlocked successfully",
+      "projectUnlockFailed": "Failed to unlock project",
+      "projectPublished": "Project published successfully",
+      "projectPublishFailed": "Failed to publish project"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "noActivity": "No recent activity"
+    },
+    "tabs": {
+      "attachments": "Attachments",
+      "externalLinks": "External Links",
+      "reviews": "Reviews",
+      "grades": "Grades",
+      "linksPlaceholder": "External links section - to be implemented",
+      "linksDescription": "Will display related URLs, resources, references, etc.",
+      "reviewsPlaceholder": "Reviews section - to be implemented",
+      "reviewsDescription": "Will display supervisor and opponent reviews",
+      "noGradesAccess": "You do not have access to view or submit grades for this project."
+    },
+    "attachments": {
+      "uploadTitle": "Upload Attachment",
+      "uploadLabel": "Drag and drop or click to select file",
+      "uploadHelper": "Supported: PDF, Word, Excel, Images, Text, ZIP (Max 10MB)",
+      "uploading": "Uploading...",
+      "listTitle": "Attachments ({count})",
+      "noAttachments": "No attachments yet",
+      "noAttachmentsHelper": "Upload files to get started",
+      "uploaded": "Uploaded {date}",
+      "download": "Download",
+      "delete": "Delete",
+      "deleteTitle": "Delete Attachment",
+      "deleteMessage": "Are you sure you want to delete {filename}?",
+      "deleteDescription": "This action cannot be undone. The file will be permanently removed from storage.",
+      "deleting": "Deleting...",
+      "fileUploaded": "File \"{name}\" uploaded successfully",
+      "fileUploadFailed": "Failed to upload file",
+      "downloading": "Downloading \"{name}\"",
+      "downloadFailed": "Failed to download file",
+      "fileDeleted": "File \"{name}\" deleted",
+      "fileDeleteFailed": "Failed to delete file",
+      "loadFailed": "Failed to load attachments",
+      "sizes": {
+        "bytes": "Bytes",
+        "kb": "KB",
+        "mb": "MB",
+        "gb": "GB"
+      }
+    },
+    "grading": {
+      "noScaleSet": "No scale set configured for your role",
+      "instructions": "Grade each criterion below. Your grades are private (blind grading). You can modify them anytime before the feedback date.",
+      "weight": "Weight: {weight}%",
+      "points": "/ {max} points",
+      "weightedAverage": "Weighted Average:",
+      "saving": "Saving...",
+      "saveGrades": "Save Grades",
+      "loadFailed": "Failed to load grading data",
+      "missingGrades": "Please grade all scales before submitting",
+      "gradesSubmitted": "Grades submitted successfully",
+      "gradesSubmitFailed": "Failed to submit grades",
+      "gradingInProgress": "Grading in Progress",
+      "gradesAvailableAfter": "Grades will be available after the feedback date",
+      "noGrades": "No grades submitted yet",
+      "gradesLoadFailed": "Failed to load grades",
+      "average": "Average"
     }
   }
 }

@@ -16,7 +16,23 @@
     "dashboard": "Nástěnka",
     "schools": "Školy",
     "projects": "Projekty",
-    "logout": "Odhlásit se"
+    "notifications": "Oznámení",
+    "users": "Uživatelé",
+    "settings": "Nastavení",
+    "adminPanel": "Administrační panel",
+    "logout": "Odhlásit se",
+    "theme": {
+      "label": "Motiv",
+      "light": "Světlý",
+      "dark": "Tmavý",
+      "system": "Systémový"
+    },
+    "user": {
+      "label": "Uživatel",
+      "role": "Role",
+      "signOut": "Odhlásit se",
+      "signingOut": "Odhlašování..."
+    }
   },
   "header": {
     "theme": {
@@ -68,7 +84,7 @@
     },
     "invitation": {
       "title": "Nastavte si heslo",
-      "welcome": "Vítejte{{name}}!",
+      "welcome": "Vítejte{name}!",
       "instructions": "Nastavte si heslo pro váš účet",
       "password": "Heslo",
       "confirmPassword": "Potvrdit heslo",
@@ -99,6 +115,7 @@
   },
   "common": {
     "unknown": "Neznámý",
+    "unassigned": "Nepřiřazeno",
     "edit": "Upravit"
   },
   "users": {
@@ -175,7 +192,12 @@
     "uploadError": "Nepodařilo se nahrát soubory. Zkuste to znovu.",
     "uploading": "Nahrávání...",
     "exportPdf": "Exportovat jako PDF",
+    "exporting": "Exportování...",
+    "pdfExportSuccess": "PDF úspěšně exportováno",
+    "pdfExportFailed": "Nepodařilo se exportovat PDF",
     "noFilesSelected": "Vyberte prosím alespoň jeden soubor",
+    "uploadButton": "Nahrát",
+    "fileFormatsHelper": "Akceptované formáty: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB na soubor)",
     "category": "Kategorie"
   },
   "admin": {
@@ -233,6 +255,149 @@
         "past": "Minulý",
         "future": "Budoucí"
       }
+    }
+  },
+  "projectDetail": {
+    "mainDocumentation": "Hlavní dokumentace",
+    "exporting": "Exportování...",
+    "cancel": "Zrušit",
+    "upload": "Nahrát",
+    "team": "Tým",
+    "topic": "Téma",
+    "projectGoal": "Cíl projektu",
+    "specification": "Specifikace",
+    "neededOutput": "Požadovaný výstup",
+    "schedule": "Harmonogram",
+    "deadline": "Termín",
+    "noDescription": "Popis projektu není k dispozici.",
+    "quickStats": {
+      "title": "Rychlé statistiky",
+      "totalAttachments": "Celkem příloh",
+      "reviews": "Posudky",
+      "externalLinks": "Externí odkazy",
+      "currentGrade": "Aktuální známka",
+      "submissionDate": "Datum odevzdání",
+      "lastUpdated": "Naposledy aktualizováno",
+      "locked": "Uzamčeno",
+      "pending": "Čeká se",
+      "inProgress": "Probíhá",
+      "reviewCount": "{count} posudek/posudky"
+    },
+    "actions": {
+      "title": "Akce",
+      "editProject": "Upravit projekt",
+      "lockProject": "Uzamknout projekt",
+      "unlockProject": "Odemknout projekt",
+      "publishProject": "Zveřejnit projekt",
+      "locking": "Zamykání...",
+      "unlocking": "Odemykání...",
+      "publishing": "Zveřejňování...",
+      "projectLocked": "Projekt je uzamčen",
+      "assignStudent": "Přiřadit studenta",
+      "removeStudent": "Odebrat studenta",
+      "deleteProject": "Smazat projekt",
+      "uploadFile": "Nahrát soubor",
+      "exportPdf": "Exportovat jako PDF",
+      "selectStudent": "Vyberte studenta",
+      "selectStudentHelper": "Vyberte studenta k přiřazení k tomuto projektu",
+      "assigning": "Přiřazování...",
+      "removing": "Odebírání...",
+      "deleting": "Mazání...",
+      "selectFiles": "Vyberte soubory k nahrání",
+      "acceptedFormats": "Podporované formáty: PDF, DOC, DOCX, TXT, ZIP (Max 20MB na soubor)",
+      "acceptedFormatsHeader": "Podporované formáty: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB na soubor)",
+      "upload": "Nahrát",
+      "uploading": "Nahrávání..."
+    },
+    "confirmations": {
+      "removeStudentTitle": "Odebrat studenta",
+      "removeStudentMessage": "Opravdu chcete odebrat {name} z tohoto projektu?",
+      "removeStudentDescription": "Student již nebude přiřazen k tomuto projektu.",
+      "deleteProjectTitle": "Smazat projekt",
+      "deleteProjectMessage": "Opravdu chcete smazat {title}?",
+      "deleteProjectDescription": "Tuto akci nelze vrátit zpět. Veškerá data projektu, přílohy a související informace budou trvale odstraněny."
+    },
+    "messages": {
+      "projectDeleted": "Projekt byl úspěšně smazán",
+      "projectDeleteFailed": "Nepodařilo se smazat projekt",
+      "selectStudent": "Prosím vyberte studenta",
+      "studentAssigned": "Student byl úspěšně přiřazen",
+      "studentAssignFailed": "Nepodařilo se přiřadit studenta",
+      "studentRemoved": "Student byl úspěšně odebrán",
+      "studentRemoveFailed": "Nepodařilo se odebrat studenta",
+      "selectFile": "Vyberte prosím alespoň jeden soubor",
+      "filesUploaded": "Soubory byly úspěšně nahrány",
+      "filesUploadFailed": "Nepodařilo se nahrát soubory. Zkuste to znovu.",
+      "pdfExported": "PDF bylo úspěšně exportováno",
+      "pdfExportFailed": "Nepodařilo se exportovat PDF",
+      "projectLocked": "Projekt byl úspěšně uzamčen",
+      "projectLockFailed": "Nepodařilo se uzamknout projekt",
+      "projectUnlocked": "Projekt byl úspěšně odemčen",
+      "projectUnlockFailed": "Nepodařilo se odemknout projekt",
+      "projectPublished": "Projekt byl úspěšně zveřejněn",
+      "projectPublishFailed": "Nepodařilo se zveřejnit projekt"
+    },
+    "recentActivity": {
+      "title": "Nedávná aktivita",
+      "noActivity": "Žádná nedávná aktivita"
+    },
+    "tabs": {
+      "attachments": "Přílohy",
+      "externalLinks": "Externí odkazy",
+      "reviews": "Posudky",
+      "grades": "Známky",
+      "linksPlaceholder": "Sekce externích odkazů - bude implementována",
+      "linksDescription": "Zobrazí související URL, zdroje, reference atd.",
+      "reviewsPlaceholder": "Sekce posudků - bude implementována",
+      "reviewsDescription": "Zobrazí posudky vedoucího a oponenta",
+      "noGradesAccess": "Nemáte přístup k zobrazení nebo odevzdání známek pro tento projekt."
+    },
+    "attachments": {
+      "uploadTitle": "Nahrát přílohu",
+      "uploadLabel": "Přetáhněte nebo klikněte pro výběr souboru",
+      "uploadHelper": "Podporováno: PDF, Word, Excel, obrázky, text, ZIP (Max 10MB)",
+      "uploading": "Nahrávání...",
+      "listTitle": "Přílohy ({count})",
+      "noAttachments": "Zatím žádné přílohy",
+      "noAttachmentsHelper": "Nahrajte soubory a začněte",
+      "uploaded": "Nahráno {date}",
+      "download": "Stáhnout",
+      "delete": "Smazat",
+      "deleteTitle": "Smazat přílohu",
+      "deleteMessage": "Opravdu chcete smazat {filename}?",
+      "deleteDescription": "Tuto akci nelze vrátit zpět. Soubor bude trvale odstraněn z úložiště.",
+      "deleting": "Mazání...",
+      "fileUploaded": "Soubor \"{name}\" byl úspěšně nahrán",
+      "fileUploadFailed": "Nepodařilo se nahrát soubor",
+      "downloading": "Stahování \"{name}\"",
+      "downloadFailed": "Nepodařilo se stáhnout soubor",
+      "fileDeleted": "Soubor \"{name}\" byl smazán",
+      "fileDeleteFailed": "Nepodařilo se smazat soubor",
+      "loadFailed": "Nepodařilo se načíst přílohy",
+      "sizes": {
+        "bytes": "Bytů",
+        "kb": "KB",
+        "mb": "MB",
+        "gb": "GB"
+      }
+    },
+    "grading": {
+      "noScaleSet": "Pro vaši roli není nakonfigurována žádná sada škál",
+      "instructions": "Ohodnoťte každé kritérium níže. Vaše známky jsou soukromé (slepé hodnocení). Můžete je upravit kdykoli před datem zpětné vazby.",
+      "weight": "Váha: {weight}%",
+      "points": "/ {max} bodů",
+      "weightedAverage": "Vážený průměr:",
+      "saving": "Ukládání...",
+      "saveGrades": "Uložit známky",
+      "loadFailed": "Nepodařilo se načíst data pro hodnocení",
+      "missingGrades": "Před odesláním prosím ohodnoťte všechny škály",
+      "gradesSubmitted": "Známky byly úspěšně odevzdány",
+      "gradesSubmitFailed": "Nepodařilo se odevzdat známky",
+      "gradingInProgress": "Probíhá hodnocení",
+      "gradesAvailableAfter": "Známky budou k dispozici po datu zpětné vazby",
+      "noGrades": "Zatím nebyly odevzdány žádné známky",
+      "gradesLoadFailed": "Nepodařilo se načíst známky",
+      "average": "Průměr"
     }
   }
 }
