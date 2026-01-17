@@ -112,6 +112,12 @@ export class ScaleSetsService {
    * Update scale set (admin only)
    */
   static async updateScaleSet(id: bigint, data: UpdateScaleSetRequest) {
+    // Get the original scale set to find the old year_id for cache invalidation
+    const originalScaleSet = await prisma.scale_sets.findUnique({
+      where: { id },
+      select: { year_id: true },
+    });
+
     const scaleSet = await prisma.scale_sets.update({
       where: { id },
       data,
@@ -134,9 +140,16 @@ export class ScaleSetsService {
     // Invalidate all scale set related caches
     await cache.delete(`scale-set:${id}`);
     await cache.delete('scale-sets:all');
-    // Also invalidate year's scale sets if year_id changed
-    if (data.year_id) {
+
+    // If year_id was changed, invalidate caches for both old and new years
+    if (data.year_id && originalScaleSet?.year_id !== data.year_id) {
+      if (originalScaleSet?.year_id) {
+        await cache.delete(`year:${originalScaleSet.year_id}:scale-sets`);
+      }
       await cache.delete(`year:${data.year_id}:scale-sets`);
+    } else if (originalScaleSet?.year_id) {
+      // If year_id was not changed, still invalidate the cache for that year
+      await cache.delete(`year:${originalScaleSet.year_id}:scale-sets`);
     }
 
     return scaleSet;
@@ -147,30 +160,28 @@ export class ScaleSetsService {
    * Cascade will delete associated scale_set_scales records
    */
   static async deleteScaleSet(id: bigint) {
-    // Get scale set to find year_id for cache invalidation
     const scaleSet = await prisma.scale_sets.findUnique({
       where: { id },
       select: { year_id: true },
     });
 
-    // First delete all scale_set_scales associations
-    await prisma.scale_set_scales.deleteMany({
-      where: { scale_set_id: id },
-    });
+    if (!scaleSet) {
+      throw new Error('Scale set not found');
+    }
 
-    // Then delete the scale set
-    const deleted = await prisma.scale_sets.delete({
-      where: { id },
-    });
+    const [, deletedScaleSet] = await prisma.$transaction([
+      prisma.scale_set_scales.deleteMany({ where: { scale_set_id: id } }),
+      prisma.scale_sets.delete({ where: { id } }),
+    ]);
 
     // Invalidate all scale set related caches
     await cache.delete(`scale-set:${id}`);
     await cache.delete('scale-sets:all');
-    if (scaleSet?.year_id) {
+    if (scaleSet.year_id) {
       await cache.delete(`year:${scaleSet.year_id}:scale-sets`);
     }
 
-    return deleted;
+    return deletedScaleSet;
   }
 
   /**
@@ -279,7 +290,7 @@ export class ScaleSetsService {
         // Add scales to the scale set
         if (scaleSetData.scales.length > 0) {
           await tx.scale_set_scales.createMany({
-            data: scaleSetData.scales.map((scale) => ({
+            data: scaleSetData.scales.map((scale: { scale_id: bigint | number; weight: number; display_order?: number }) => ({
               scale_set_id: scaleSet.id,
               scale_id: scale.scale_id,
               weight: scale.weight,
