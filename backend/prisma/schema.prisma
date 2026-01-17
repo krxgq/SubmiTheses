@@ -5,12 +5,12 @@ generator client {
 generator zod {
   provider               = "zod-prisma-types"
   output                 = "../../packages/shared-types/src/generated"
-  useMultipleFiles       = true
-  createInputTypes       = true
-  createModelTypes       = true
-  addInputTypeValidation = true
-  addIncludeType         = true
-  addSelectType          = true
+  addIncludeType         = "true"
+  addInputTypeValidation = "true"
+  addSelectType          = "true"
+  createInputTypes       = "true"
+  createModelTypes       = "true"
+  useMultipleFiles       = "true"
 }
 
 datasource db {
@@ -18,6 +18,23 @@ datasource db {
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
   schemas   = ["public"]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model activity_logs {
+  id          BigInt       @id @default(autoincrement())
+  project_id  BigInt
+  user_id     String       @db.Uuid
+  action_type String       @db.VarChar(50)
+  description String       @db.VarChar(255)
+  metadata    Json?
+  created_at  DateTime     @default(now()) @db.Timestamptz(6)
+  projects    projects     @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users       public_users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([project_id])
+  @@index([created_at])
+  @@schema("public")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -82,16 +99,21 @@ model projects {
   main_documentation                  String?               @db.VarChar
   updated_at                          DateTime              @default(now()) @db.Timestamptz(6)
   student_id                          String?               @db.Uuid
-  status                              String?               @default("draft") @db.VarChar
+  status                              status?               @default(draft)
   year_id                             BigInt?
   subject_id                          BigInt?
+  lock_reason                         String?               @db.VarChar(255)
+  locked_at                           DateTime?             @db.Timestamptz(6)
+  locked_by                           String?               @db.Uuid
+  activity_logs                       activity_logs[]
   attachments                         attachments[]
   external_links                      external_links[]
   grades                              grades[]
   project_description                 project_descriptions?
-  users_projects_opponent_idTousers   public_users?         @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_opponent")
-  users_projects_student_idTousers    public_users?         @relation("projects_student_idTousers", fields: [student_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_student")
-  users_projects_supervisor_idTousers public_users?         @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onDelete: SetNull, onUpdate: NoAction, map: "fk_projects_supervisor")
+  users_projects_locked_byTousers     public_users?         @relation("projects_locked_byTousers", fields: [locked_by], references: [id], onUpdate: NoAction, map: "fk_projects_locked_by")
+  users_projects_opponent_idTousers   public_users?         @relation("projects_opponent_idTousers", fields: [opponent_id], references: [id], onUpdate: NoAction, map: "fk_projects_opponent")
+  users_projects_student_idTousers    public_users?         @relation("projects_student_idTousers", fields: [student_id], references: [id], onUpdate: NoAction, map: "fk_projects_student")
+  users_projects_supervisor_idTousers public_users?         @relation("projects_supervisor_idTousers", fields: [supervisor_id], references: [id], onUpdate: NoAction, map: "fk_projects_supervisor")
   years                               years?                @relation(fields: [year_id], references: [id], onUpdate: NoAction, map: "fk_projects_year")
   subjects                            subjects?             @relation(fields: [subject_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   reviews                             reviews[]
@@ -103,6 +125,7 @@ model projects {
   @@index([subject_id], map: "idx_projects_subject_id")
   @@index([title(ops: raw("gin_trgm_ops"))], map: "idx_projects_title_trgm", type: Gin)
   @@index([year_id], map: "idx_projects_year_id")
+  @@index([locked_by], map: "idx_projects_locked_by")
   @@schema("public")
 }
 
@@ -188,28 +211,30 @@ model scales {
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model public_users {
-  id                                     String     @id @db.Uuid
+  id                                     String          @id @db.Uuid
   role                                   user_roles
-  first_name                             String?    @db.VarChar
-  last_name                              String?    @db.VarChar
-  created_at                             DateTime   @default(now()) @db.Timestamptz(6)
-  updated_at                             DateTime   @default(now()) @db.Timestamptz(6)
-  email                                  String     @unique(map: "users_email_unique") @db.VarChar
+  first_name                             String?         @db.VarChar
+  last_name                              String?         @db.VarChar
+  created_at                             DateTime        @default(now()) @db.Timestamptz(6)
+  updated_at                             DateTime        @default(now()) @db.Timestamptz(6)
+  email                                  String          @unique(map: "users_email_unique") @db.VarChar
   year_id                                BigInt?
-  avatar_url                             String?    @db.VarChar
-  password_hash                          String     @default("") @db.VarChar
-  email_verified                         Boolean    @default(false)
-  email_verified_at                      DateTime?  @db.Timestamptz(6)
-  password_reset_token                   String?    @db.VarChar
-  password_reset_expires                 DateTime?  @db.Timestamptz(6)
-  last_login                             DateTime?  @db.Timestamptz(6)
+  avatar_url                             String?         @db.VarChar
+  password_hash                          String          @default("") @db.VarChar
+  email_verified                         Boolean         @default(false)
+  email_verified_at                      DateTime?       @db.Timestamptz(6)
+  password_reset_token                   String?         @db.VarChar
+  password_reset_expires                 DateTime?       @db.Timestamptz(6)
+  last_login                             DateTime?       @db.Timestamptz(6)
+  class                                  String?         @db.VarChar(10)
+  activity_logs                          activity_logs[]
   grades                                 grades[]
-  projects_projects_opponent_idTousers   projects[] @relation("projects_opponent_idTousers")
-  projects_projects_student_idTousers    projects[] @relation("projects_student_idTousers")
-  projects_projects_supervisor_idTousers projects[] @relation("projects_supervisor_idTousers")
+  projects_projects_locked_byTousers     projects[]      @relation("projects_locked_byTousers")
+  projects_projects_opponent_idTousers   projects[]      @relation("projects_opponent_idTousers")
+  projects_projects_student_idTousers    projects[]      @relation("projects_student_idTousers")
+  projects_projects_supervisor_idTousers projects[]      @relation("projects_supervisor_idTousers")
   reviews                                reviews[]
-  years                                  years?     @relation(fields: [year_id], references: [id], onUpdate: NoAction, map: "fk_users_year")
-  // Removed auth.users relation - using local authentication only
+  years                                  years?          @relation(fields: [year_id], references: [id], onUpdate: NoAction, map: "fk_users_year")
 
   @@index([email], map: "idx_users_email")
   @@index([email_verified], map: "idx_users_email_verified")
@@ -241,11 +266,11 @@ model years {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model subjects {
   id          BigInt     @id @default(autoincrement())
-  name        String     @unique @db.VarChar(255)
   description String?
   is_active   Boolean?   @default(true)
   created_at  DateTime?  @default(now()) @db.Timestamptz(6)
   updated_at  DateTime?  @default(now()) @db.Timestamptz(6)
+  name        String     @unique @db.VarChar(255)
   projects    projects[]
 
   @@schema("public")
@@ -261,7 +286,6 @@ enum project_role {
 
 enum status {
   draft
-  submitted
   locked
   public
 
