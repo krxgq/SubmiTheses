@@ -114,6 +114,16 @@ export function SubjectSelect({
           setIsOpen(true);
         }}
         onBlur={() => setIsFocused(false)}
+        onKeyDown={(e) => {
+          // Prevent Enter from submitting the parent form
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // If there's exactly one filtered subject, select it
+            if (filteredSubjects.length === 1) {
+              handleSelect(filteredSubjects[0].id);
+            }
+          }
+        }}
         placeholder={label}
         disabled={isLoading}
         className={`
@@ -126,7 +136,7 @@ export function SubjectSelect({
           focus:outline-none focus:ring-2
           ${
             error
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              ? "border-danger focus:border-danger focus:ring-danger/20"
               : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
           }
           ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -169,7 +179,7 @@ export function SubjectSelect({
       {(helperText || error) && (
         <p
           className={`mt-1.5 text-xs ${
-            error ? "text-red-600 dark:text-red-400" : "text-text-secondary"
+            error ? "text-danger dark:text-danger" : "text-text-secondary"
           }`}
         >
           {error || helperText}

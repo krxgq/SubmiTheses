@@ -110,7 +110,7 @@ export function YearEditForm({ year }: YearEditFormProps) {
       />
 
       {error && (
-        <div className="text-danger bg-red-50 border border-red-200 rounded-lg p-3 text-sm flex items-start gap-2">
+        <div className="text-danger bg-danger/10 border border-danger/30 rounded-lg p-3 text-sm flex items-start gap-2">
           <AlertCircle className="w-4 h-4 mt-0.5" />
           {error}
         </div>
@@ -120,7 +120,7 @@ export function YearEditForm({ year }: YearEditFormProps) {
         <Button type="submit" disabled={loading}>
           {loading ? 'Saving...' : 'Save Changes'}
         </Button>
-        <Button color="gray" onClick={() => router.push('/admin')} type="button">
+        <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={() => router.push('/admin')} type="button">
           Cancel
         </Button>
       </div>

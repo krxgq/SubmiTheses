@@ -43,12 +43,12 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       danger: 'border-t-danger',
     };
 
-    // Padding styles
+    // Padding styles - responsive for mobile devices
     const paddingStyles = {
       none: '',
-      sm: 'p-4',
-      md: 'p-6',
-      lg: 'p-8',
+      sm: 'p-3 sm:p-4',
+      md: 'p-3 sm:p-6',
+      lg: 'p-4 sm:p-8',
     };
 
     const cardClasses = `${baseStyles} ${variantStyles[variant]} ${
@@ -77,7 +77,7 @@ export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
     return (
       <div
         ref={ref}
-        className={`flex items-start justify-between mb-4 ${className}`}
+        className={`flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-4 ${className}`}
         {...props}
       >
         <div className="flex-1">

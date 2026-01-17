@@ -1,13 +1,17 @@
-import { projectsApiServer } from '@/lib/api/projects';
-import { ApiError } from '@/lib/api/client';
-import { setRequestLocale } from 'next-intl/server';
-import { notFound } from 'next/navigation';
-import ProjectHeader from '@/components/dashboard/projects/ProjectHeader';
-import ProjectOverview from '@/components/dashboard/projects/ProjectOverview';
-import QuickStats from '@/components/dashboard/projects/QuickStats';
-import ProjectActions from '@/components/dashboard/projects/ProjectActions';
-import RecentActivity from '@/components/dashboard/projects/RecentActivity';
-import ProjectTabs from '@/components/dashboard/projects/ProjectTabs';
+import { projectsApiServer } from "@/lib/api/projects";
+import { ApiError } from "@/lib/api/client";
+import { setRequestLocale, getTranslations } from "next-intl/server";
+import { notFound } from "next/navigation";
+import ProjectHeader from "@/components/dashboard/projects/ProjectHeader";
+import ProjectOverview from "@/components/dashboard/projects/ProjectOverview";
+import QuickStats from "@/components/dashboard/projects/QuickStats";
+import ProjectActions from "@/components/dashboard/projects/ProjectActions";
+import RecentActivity from "@/components/dashboard/projects/RecentActivity";
+import ProjectTabs from "@/components/dashboard/projects/ProjectTabs";
+
+// Force dynamic rendering - no caching
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface ProjectPageProps {
   params: Promise<{ locale: string; projectid: string }>;
@@ -22,6 +26,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   const { locale, projectid } = await params;
 
   setRequestLocale(locale);
+  const t = await getTranslations("projectDetail");
 
   let project;
   try {
@@ -39,7 +44,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
         {/* Header with title, status, breadcrumbs */}
         <ProjectHeader project={project} />
 
@@ -51,8 +56,10 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
             {/* Main documentation section */}
             {project?.main_documentation && (
-              <div className="bg-background-elevated rounded-lg border border-border p-6">
-                <h2 className="text-xl font-semibold text-text-primary mb-4">Main Documentation</h2>
+              <div className="bg-background-elevated rounded-lg border border-border p-3 sm:p-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-text-primary mb-4">
+                  {t("mainDocumentation")}
+                </h2>
                 <p className="text-text-primary leading-relaxed whitespace-pre-wrap">
                   {project.main_documentation}
                 </p>
@@ -60,19 +67,14 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
             )}
 
             {/* Tabs: Attachments, Links, Reviews, Grades */}
-            <ProjectTabs />
+            <ProjectTabs projectId={projectid} project={project} />
           </div>
 
           {/* Right column: Sidebar (1/3 width) */}
           <div className="space-y-6">
-            {/* Quick stats */}
             <QuickStats project={project} />
-
-            {/* Action buttons */}
             <ProjectActions project={project} />
-
-            {/* Recent activity timeline */}
-            <RecentActivity />
+            <RecentActivity projectId={projectid} />
           </div>
         </div>
       </div>

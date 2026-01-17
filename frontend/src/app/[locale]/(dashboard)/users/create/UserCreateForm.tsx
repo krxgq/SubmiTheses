@@ -78,8 +78,8 @@ export default function UserCreateForm() {
       />
 
       {/* Invitation Notice */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
-        <p className="text-sm text-blue-800 dark:text-blue-200">
+      <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+        <p className="text-sm text-text-primary">
           An invitation email will be sent to the user with a secure link to set their password (valid for 30 days).
         </p>
       </div>
@@ -151,18 +151,18 @@ export default function UserCreateForm() {
 
       {/* Error Message */}
       {error && (
-        <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+        <div className="text-danger bg-danger/10 border border-danger/30 rounded-lg p-3 text-sm">
           {error}
         </div>
       )}
 
       {/* Action Buttons */}
       <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
           {loading ? 'Creating...' : 'Create User'}
         </Button>
         <Button
-          color="gray"
+          className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all"
           onClick={() => router.push('/users')}
           disabled={loading}
         >

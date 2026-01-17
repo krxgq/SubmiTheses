@@ -23,10 +23,11 @@ import { useTheme } from "next-themes";
 import { Avatar } from "@/components/ui/Avatar";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { LanguageSwitcher } from "@/components/layout/header/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 interface NavItem {
   id: string;
-  label: string;
+  translationKey: string;
   icon: any;
   path: string;
   allowedRoles: UserRole[];
@@ -35,35 +36,35 @@ interface NavItem {
 const allNavItems: NavItem[] = [
   {
     id: "projects",
-    label: "Projects",
+    translationKey: "projects",
     icon: Folder,
     path: "/projects",
     allowedRoles: ["admin", "teacher", "student"],
   },
   {
     id: "notifications",
-    label: "Notifications",
+    translationKey: "notifications",
     icon: Bell,
     path: "/notifications",
     allowedRoles: ["admin", "teacher", "student"],
   },
   {
     id: "users",
-    label: "Users",
+    translationKey: "users",
     icon: Users,
     path: "/users",
     allowedRoles: ["admin"],
   },
   {
     id: "settings",
-    label: "Settings",
+    translationKey: "settings",
     icon: Settings,
     path: "/settings",
     allowedRoles: ["admin", "teacher", "student"],
   },
   {
     id: "adminPanel",
-    label: "Admin Panel",
+    translationKey: "adminPanel",
     icon: FileSliders,
     path: "/admin",
     allowedRoles: ["admin"],
@@ -79,6 +80,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { user, logout } = useAuthContext();
+  const t = useTranslations("sidebar");
   const [isOpen, setIsOpen] = useState(false);
   const [showThemeMenu, setShowThemeMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -210,7 +212,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                 `}
               >
                 <IconComponent className="w-5 h-5 flex-shrink-0" />
-                <span>{item.label}</span>
+                <span>{t(item.translationKey)}</span>
               </button>
             );
           })}
@@ -227,7 +229,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
               <div className="flex items-center">
                 {getThemeIcon()}
                 <span className="ml-3 capitalize">
-                  {mounted ? theme || "system" : "Theme"}
+                  {mounted ? t(`theme.${theme || "system"}`) : t("theme.label")}
                 </span>
               </div>
               <ChevronDown className="w-4 h-4" />
@@ -242,7 +244,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Sun className="w-4 h-4 mr-3" />
-                  Light
+                  {t("theme.light")}
                 </button>
                 <button
                   onClick={() => {
@@ -252,7 +254,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Moon className="w-4 h-4 mr-3" />
-                  Dark
+                  {t("theme.dark")}
                 </button>
                 <button
                   onClick={() => {
@@ -262,7 +264,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Monitor className="w-4 h-4 mr-3" />
-                  System
+                  {t("theme.system")}
                 </button>
               </div>
             )}
@@ -286,10 +288,10 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                 <div className="ml-3 text-left min-w-0 flex-1">
                   <p className="text-sm font-medium text-primary truncate">
                     {formatUserName(user?.first_name, user?.last_name) ||
-                      "User"}
+                      t("user.label")}
                   </p>
                   <p className="text-xs text-secondary truncate">
-                    {user?.role || "Role"}
+                    {user?.role || t("user.role")}
                   </p>
                 </div>
               </div>
@@ -305,7 +307,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
                 >
                   <Settings className="w-4 h-4 mr-3" />
-                  Settings
+                  {t("settings")}
                 </button>
                 <div className="border-t border-border"></div>
                 <button
@@ -318,7 +320,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                   ) : (
                     <LogOut className="w-4 h-4 mr-3" />
                   )}
-                  {isLoggingOut ? "Signing out..." : "Sign out"}
+                  {isLoggingOut ? t("user.signingOut") : t("user.signOut")}
                 </button>
               </div>
             )}

@@ -8,13 +8,14 @@ import { Select } from '@/components/ui/Select';
 import type { UserWithYear, UserRole, Year } from '@sumbi/shared-types';
 
 interface UserEditFormProps {
-  user: UserWithYear;
+  user: UserWithYear & { class?: string | null };
   updateUser: (formData: {
     first_name: string;
     last_name: string;
     email: string;
     role: UserRole;
     year_id: number | null;
+    class?: string;
   }) => Promise<void>;
   translations: {
     fullName: string;
@@ -39,6 +40,7 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
     email: user.email,
     role: user.role,
     year_id: user.year_id ? Number(user.year_id) : null,
+    class: user.class || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -85,8 +87,8 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="p-3 bg-danger/10 border border-danger/30 rounded-lg">
+          <p className="text-sm text-danger">{error}</p>
         </div>
       )}
 
@@ -137,29 +139,39 @@ export function UserEditForm({ user, updateUser, translations }: UserEditFormPro
         required
       />
 
-      {/* Academic Year (required for students) */}
+      {/* Academic Year and Class (required for students) */}
       {formData.role === 'student' && (
-        <Select
-          label={translations.year}
-          id="year"
-          required
-          value={formData.year_id?.toString() || ''}
-          onChange={(value) => setFormData({
-            ...formData,
-            year_id: value ? parseInt(value) : null
-          })}
-          options={years.map(year => ({
-            value: year.id.toString(),
-            label: year.name || `Year ${year.id}`
-          }))}
-          placeholder={yearsLoading ? 'Loading...' : 'Select year'}
-          disabled={yearsLoading || years.length === 0}
-          helperText={
-            years.length === 0 && !yearsLoading
-              ? 'No academic years available'
-              : undefined
-          }
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <Select
+            label={translations.year}
+            id="year"
+            required
+            value={formData.year_id?.toString() || ''}
+            onChange={(value) => setFormData({
+              ...formData,
+              year_id: value ? parseInt(value) : null
+            })}
+            options={years.map(year => ({
+              value: year.id.toString(),
+              label: year.name || `Year ${year.id}`
+            }))}
+            placeholder={yearsLoading ? 'Loading...' : 'Select year'}
+            disabled={yearsLoading || years.length === 0}
+            helperText={
+              years.length === 0 && !yearsLoading
+                ? 'No academic years available'
+                : undefined
+            }
+          />
+          <Input
+            label="Class"
+            id="class"
+            type="text"
+            value={formData.class}
+            onChange={(e) => setFormData({ ...formData, class: e.target.value })}
+            maxLength={10}
+          />
+        </div>
       )}
 
       <div className="flex gap-3 pt-4">

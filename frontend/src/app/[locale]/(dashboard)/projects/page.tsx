@@ -22,7 +22,7 @@ export default async function ProjectsPage() {
   }
 
   return (
-    <div className="w-full">
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
       <ProjectsPageClient
         projects={projects}
         userRole={userRole}

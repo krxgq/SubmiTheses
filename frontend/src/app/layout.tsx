@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import './globals.css';
-import '@mdxeditor/editor/style.css';
+import '@/lib/bigint-serialization'; // Enable BigInt serialization globally
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { ThemeProvider } from '@/components/providers/theme-provider';
 

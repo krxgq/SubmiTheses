@@ -19,9 +19,9 @@ export function ListItem({project, role}: ListItemProps) {
   const t = useTranslations();
 
   // Format date helper
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
+  const formatDate = (date: string | Date): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -29,9 +29,9 @@ export function ListItem({project, role}: ListItemProps) {
   };
 
   return (
-    <Link href={`/projects/${project.id}`}>
-      <div className="border border-border rounded-xl p-6 hover:shadow-md hover:border-border-strong transition-all duration-200 bg-background-elevated cursor-pointer">
-        <div className="flex items-center gap-6">
+    <Link href={`/projects/${project.id}`} className="block">
+      <div className="border border-border rounded-xl p-3 sm:p-6 hover:shadow-md hover:border-border-strong transition-all duration-200 bg-background-elevated cursor-pointer">
+        <div className="flex items-center gap-3 sm:gap-6">
           {/* Left: Badge + Title */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
@@ -39,7 +39,7 @@ export function ListItem({project, role}: ListItemProps) {
                 {project.subject}
               </Badge>
             </div>
-            <h2 className="text-lg font-bold text-text-primary truncate" title={project.title}>
+            <h2 className="text-base sm:text-lg font-bold text-text-primary line-clamp-2 sm:truncate" title={project.title}>
               {project.title}
             </h2>
           </div>
@@ -67,7 +67,7 @@ export function ListItem({project, role}: ListItemProps) {
               </span>
               <span className="font-medium text-text-primary truncate block">
                 {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) ||
-                 t('common.unknown')}
+                 t('common.unassigned')}
               </span>
             </div>
 
@@ -78,15 +78,15 @@ export function ListItem({project, role}: ListItemProps) {
               </span>
               <span className="font-medium text-text-primary truncate block">
                 {formatUserName(project.opponent?.first_name, project.opponent?.last_name) ||
-                 t('common.unknown')}
+                 t('common.unassigned')}
               </span>
             </div>
           </div>
 
           {/* Right: Last Updated */}
-          <div className="flex items-center gap-2 text-xs text-text-tertiary min-w-[120px]">
+          <div className="flex items-center gap-2 text-xs text-text-tertiary min-w-[100px] sm:min-w-[120px]">
             <Clock className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{formatDate(project.updated_at)}</span>
+            <span className="text-xs">{formatDate(project.updated_at)}</span>
           </div>
         </div>
       </div>

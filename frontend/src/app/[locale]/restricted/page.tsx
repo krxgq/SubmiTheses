@@ -32,8 +32,8 @@ export default async function RestrictedPage({
       <div className="max-w-md w-full text-center space-y-6">
         {/* Lock Icon */}
         <div className="flex justify-center">
-          <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-6">
-            <LockKeyhole className="h-16 w-16 text-red-600 dark:text-red-400" />
+          <div className="rounded-full bg-danger/10 dark:bg-danger/10 p-6">
+            <LockKeyhole className="h-16 w-16 text-danger dark:text-danger" />
           </div>
         </div>
 

@@ -1,4 +1,4 @@
-import { apiRequest, API_BASE_URL } from './api/client';
+import { apiRequest, API_BASE_URL } from "./api/client";
 
 export interface AuthUser {
   id: string;
@@ -33,11 +33,11 @@ export interface AuthResponse<T = AuthUser> {
 // BroadcastChannel for cross-tab communication
 let authChannel: BroadcastChannel | null = null;
 
-if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
-  authChannel = new BroadcastChannel('auth-state');
+if (typeof window !== "undefined" && "BroadcastChannel" in window) {
+  authChannel = new BroadcastChannel("auth-state");
 }
 
-function broadcastAuthEvent(event: 'login' | 'logout', user: AuthUser | null) {
+function broadcastAuthEvent(event: "login" | "logout", user: AuthUser | null) {
   if (authChannel) {
     authChannel.postMessage({ event, user, timestamp: Date.now() });
   }
@@ -50,22 +50,22 @@ class AuthService {
     rememberMe,
   }: LoginCredentials): Promise<AuthResponse> {
     try {
-      const data = await apiRequest<{ user: AuthUser }>('/auth/login', {
-        method: 'POST',
+      const data = await apiRequest<{ user: AuthUser }>("/auth/login", {
+        method: "POST",
         body: JSON.stringify({ email, password }),
       });
 
       if (data.user) {
         if (rememberMe) {
-          localStorage.setItem('remember-me', 'true');
+          localStorage.setItem("remember-me", "true");
         }
-        broadcastAuthEvent('login', data.user);
+        broadcastAuthEvent("login", data.user);
         return { data: data.user, error: null };
       }
 
-      return { data: null, error: 'Login failed' };
+      return { data: null, error: "Login failed" };
     } catch (err: any) {
-      return { data: null, error: err.message || 'Network error occurred' };
+      return { data: null, error: err.message || "Network error occurred" };
     }
   }
 
@@ -79,45 +79,45 @@ class AuthService {
       const data = await apiRequest<{
         user: AuthUser | null;
         message?: string;
-      }>('/auth/register', {
-        method: 'POST',
+      }>("/auth/register", {
+        method: "POST",
         body: JSON.stringify({ email, password, firstName, lastName }),
       });
 
       // Registration successful with immediate login
       if (data.user) {
-        broadcastAuthEvent('login', data.user);
+        broadcastAuthEvent("login", data.user);
         return { data: data.user, error: null };
       }
 
-      return { data: null, error: 'Registration failed' };
+      return { data: null, error: "Registration failed" };
     } catch (err: any) {
-      return { data: null, error: err.message || 'Network error occurred' };
+      return { data: null, error: err.message || "Network error occurred" };
     }
   }
 
   async logout(): Promise<AuthResponse<null>> {
     try {
-      await apiRequest<void>('/auth/logout', { method: 'POST' });
-      localStorage.removeItem('remember-me');
-      
+      await apiRequest<void>("/auth/logout", { method: "POST" });
+      localStorage.removeItem("remember-me");
+
       // Clear any draft data on logout
-      sessionStorage.removeItem('create-project-draft');
-      
-      broadcastAuthEvent('logout', null);
+      sessionStorage.removeItem("create-project-draft");
+
+      broadcastAuthEvent("logout", null);
       return { data: null, error: null };
     } catch (err: any) {
       // Even if backend fails, clear local state
-      localStorage.removeItem('remember-me');
-      sessionStorage.removeItem('create-project-draft');
-      broadcastAuthEvent('logout', null);
-      return { data: null, error: 'Logout failed' };
+      localStorage.removeItem("remember-me");
+      sessionStorage.removeItem("create-project-draft");
+      broadcastAuthEvent("logout", null);
+      return { data: null, error: "Logout failed" };
     }
   }
 
   async getCurrentUser(): Promise<AuthUser | null> {
     try {
-      const user = await apiRequest<AuthUser>('/auth/user');
+      const user = await apiRequest<AuthUser>("/auth/user");
       return user;
     } catch (err) {
       return null;
@@ -126,9 +126,9 @@ class AuthService {
 
   async refreshSession(): Promise<void> {
     try {
-      await apiRequest<void>('/auth/refresh', { method: 'POST' });
+      await apiRequest<void>("/auth/refresh", { method: "POST" });
     } catch (err) {
-      console.error('Session refresh failed:', err);
+      console.error("Session refresh failed:", err);
     }
   }
 
@@ -144,15 +144,15 @@ class AuthService {
 
     const handler = (event: MessageEvent) => {
       const { event: authEvent, user } = event.data;
-      if (authEvent === 'login' || authEvent === 'logout') {
+      if (authEvent === "login" || authEvent === "logout") {
         callback(user);
       }
     };
 
-    authChannel.addEventListener('message', handler);
+    authChannel.addEventListener("message", handler);
 
     return () => {
-      authChannel?.removeEventListener('message', handler);
+      authChannel?.removeEventListener("message", handler);
     };
   }
 }

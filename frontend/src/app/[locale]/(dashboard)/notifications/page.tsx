@@ -100,20 +100,20 @@ export default function NotificationsPage() {
   const getIcon = (type: string) => {
     switch (type) {
       case 'project':
-        return <Bell className="w-5 h-5 text-blue-500" />;
+        return <Bell className="w-5 h-5 text-primary" />;
       case 'review':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return <CheckCircle className="w-5 h-5 text-success" />;
       case 'system':
-        return <AlertCircle className="w-5 h-5 text-orange-500" />;
+        return <AlertCircle className="w-5 h-5 text-warning" />;
       case 'info':
-        return <Info className="w-5 h-5 text-purple-500" />;
+        return <Info className="w-5 h-5 text-accent" />;
       default:
         return <Bell className="w-5 h-5 text-secondary" />;
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-primary mb-2">Notifications</h1>

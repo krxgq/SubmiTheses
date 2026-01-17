@@ -65,7 +65,7 @@ export function Select({
           focus:outline-none focus:ring-2
           ${
             error
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              ? "border-danger focus:border-danger focus:ring-danger/20"
               : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
           }
         `}
@@ -95,18 +95,18 @@ export function Select({
         className={`
           absolute transition-all duration-200 pointer-events-none left-4 text-text-secondary!
           ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
-          ${error ? "text-red-500" : ""}
+          ${error ? "text-danger" : ""}
         `}
       >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-danger ml-1">*</span>}
       </Label>
 
       {/* Helper text or error message */}
       {(helperText || error) && (
         <p
           className={`mt-1.5 text-xs ${
-            error ? "text-red-600" : "text-text-secondary"
+            error ? "text-danger" : "text-text-secondary"
           }`}
         >
           {error || helperText}

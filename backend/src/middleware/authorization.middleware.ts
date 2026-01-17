@@ -321,7 +321,39 @@ export const requireProjectModify = async (
       return;
     }
 
-    // Admin can modify any project
+    // Check if project is locked (fetch lock status for all roles)
+    const { prisma } = await import('../lib/prisma');
+    const project = await prisma.projects.findUnique({
+      where: { id: projectIdBigInt },
+      select: {
+        student_id: true,
+        supervisor_id: true,
+        status: true,
+        locked_by: true,
+      },
+    });
+
+    if (!project) {
+      console.log(`[Auth] Project ${projectId} not found`);
+      res.status(404).json({
+        error: 'Project not found',
+        code: 'PROJECT_NOT_FOUND'
+      });
+      return;
+    }
+
+    // Check if project is locked (only admins can modify locked projects)
+    if (project.status === 'locked' && req.user.role !== 'admin') {
+      console.log(`[Auth] Project ${projectId} is locked, only admin can modify`);
+      res.status(403).json({
+        error: 'Project is locked and cannot be modified',
+        code: 'PROJECT_LOCKED',
+        locked_by: project.locked_by,
+      });
+      return;
+    }
+
+    // Admin can modify any project (even locked)
     if (req.user.role === 'admin') {
       console.log(`[Auth] Admin ${req.user.id} granted modify permission for project ${projectId}`);
       next();
@@ -330,24 +362,6 @@ export const requireProjectModify = async (
 
     // Students can only modify their own draft projects
     if (req.user.role === 'student') {
-      const { prisma } = await import('../lib/prisma');
-      const project = await prisma.projects.findUnique({
-        where: { id: projectIdBigInt },
-        select: {
-          student_id: true,
-          status: true,
-        },
-      });
-
-      if (!project) {
-        console.log(`[Auth] Project ${projectId} not found`);
-        res.status(404).json({
-          error: 'Project not found',
-          code: 'PROJECT_NOT_FOUND'
-        });
-        return;
-      }
-
       // Check ownership
       if (project.student_id !== req.user.id) {
         console.log(`[Auth] Student ${req.user.id} denied modify permission (not owner, owner is ${project.student_id})`);
@@ -376,24 +390,6 @@ export const requireProjectModify = async (
 
     // Teachers can modify projects where they are supervisor AND status allows it
     if (req.user.role === 'teacher') {
-      const { prisma } = await import('../lib/prisma');
-      const project = await prisma.projects.findUnique({
-        where: { id: projectIdBigInt },
-        select: {
-          supervisor_id: true,
-          status: true,
-        },
-      });
-
-      if (!project) {
-        console.log(`[Auth] Project ${projectId} not found`);
-        res.status(404).json({
-          error: 'Project not found',
-          code: 'PROJECT_NOT_FOUND'
-        });
-        return;
-      }
-
       // Check if project has a supervisor assigned
       if (!project.supervisor_id) {
         console.log(`[Auth] Teacher ${req.user.id} denied modify permission (project has no supervisor)`);
@@ -414,14 +410,14 @@ export const requireProjectModify = async (
         return;
       }
 
-      // Check if status allows modification (draft or submitted)
-      if (project.status !== 'draft' && project.status !== 'submitted') {
-        console.log(`[Auth] Teacher ${req.user.id} denied modify permission (status is '${project.status}', only 'draft' and 'submitted' can be modified)`);
+      // Check if status allows modification (draft or locked - supervisors can edit locked projects)
+      if (project.status !== 'draft' && project.status !== 'locked') {
+        console.log(`[Auth] Teacher ${req.user.id} denied modify permission (status is '${project.status}', only 'draft' and 'locked' can be modified)`);
         res.status(403).json({
-          error: `Cannot modify projects with status '${project.status}'. Only 'draft' and 'submitted' projects can be modified.`,
+          error: `Cannot modify projects with status '${project.status}'. Only 'draft' and 'locked' projects can be modified.`,
           code: 'INVALID_PROJECT_STATUS',
           current_status: project.status,
-          allowed_statuses: ['draft', 'submitted']
+          allowed_statuses: ['draft', 'locked']
         });
         return;
       }
@@ -573,6 +569,112 @@ export const requireProjectDelete = async (
     console.error('[Auth] Error in requireProjectDelete:', error);
     res.status(500).json({
       error: 'Internal server error during authorization',
+      code: 'AUTHORIZATION_ERROR'
+    });
+  }
+};
+
+/**
+ * Middleware for checking if user can grade a project
+ * Grading Rules:
+ * - Admin: Can view/modify any grades
+ * - Supervisor/Opponent: Can only view/modify their own grades (blind grading)
+ * - Student: Cannot submit grades
+ */
+export const requireGradingAccess = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        code: 'UNAUTHENTICATED'
+      });
+      return;
+    }
+
+    const projectId = req.params.id;
+    if (!projectId) {
+      res.status(400).json({
+        error: 'Project ID required',
+        code: 'MISSING_PROJECT_ID'
+      });
+      return;
+    }
+
+    let projectIdBigInt: bigint;
+    try {
+      projectIdBigInt = BigInt(projectId);
+    } catch (error) {
+      res.status(400).json({
+        error: 'Invalid project ID',
+        code: 'INVALID_PROJECT_ID'
+      });
+      return;
+    }
+
+    // Admin can access all grades
+    if (req.user.role === 'admin') {
+      console.log(`[Auth] Admin ${req.user.id} granted grading access`);
+      next();
+      return;
+    }
+
+    // Students cannot grade
+    if (req.user.role === 'student') {
+      res.status(403).json({
+        error: 'Students cannot submit grades',
+        code: 'STUDENT_CANNOT_GRADE'
+      });
+      return;
+    }
+
+    // Teachers can only grade projects they're assigned to
+    if (req.user.role === 'teacher') {
+      const { prisma } = await import('../lib/prisma');
+      const project = await prisma.projects.findUnique({
+        where: { id: projectIdBigInt },
+        select: {
+          supervisor_id: true,
+          opponent_id: true,
+        },
+      });
+
+      if (!project) {
+        res.status(404).json({
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND'
+        });
+        return;
+      }
+
+      const isAssigned =
+        project.supervisor_id === req.user.id ||
+        project.opponent_id === req.user.id;
+
+      if (!isAssigned) {
+        res.status(403).json({
+          error: 'Only assigned teachers can grade this project',
+          code: 'NOT_ASSIGNED_TEACHER'
+        });
+        return;
+      }
+
+      console.log(`[Auth] Teacher ${req.user.id} granted grading access`);
+      next();
+      return;
+    }
+
+    res.status(403).json({
+      error: 'Access denied',
+      code: 'ACCESS_DENIED'
+    });
+  } catch (error) {
+    console.error('[Auth] Error in requireGradingAccess:', error);
+    res.status(500).json({
+      error: 'Authorization error',
       code: 'AUTHORIZATION_ERROR'
     });
   }

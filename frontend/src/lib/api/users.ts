@@ -76,7 +76,7 @@ export const usersApi = {
    */
   async updateProfile(
     userId: string,
-    updates: { first_name?: string; last_name?: string; year_id?: number | null; email?: string }
+    updates: { first_name?: string; last_name?: string; year_id?: number | null; email?: string; class?: string }
   ): Promise<UserWithYear> {
     return apiRequest<UserWithYear>(`/users/${userId}`, {
       method: 'PUT',

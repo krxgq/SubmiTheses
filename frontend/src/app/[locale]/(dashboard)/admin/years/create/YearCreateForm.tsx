@@ -202,8 +202,8 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
       {/* Progress Indicator */}
       {scaleSetsToClone.length > 0 && (
         <div className="flex items-center gap-4 mb-8">
-          <div className={`flex items-center gap-2 ${currentStep === 'year-details' ? 'text-primary' : 'text-green-600'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'year-details' ? 'bg-primary text-white' : 'bg-green-600 text-white'}`}>
+          <div className={`flex items-center gap-2 ${currentStep === 'year-details' ? 'text-primary' : 'text-success'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'year-details' ? 'bg-primary text-text-inverse' : 'bg-success text-text-inverse'}`}>
               1
             </div>
             <span className="font-medium">Year Details</span>
@@ -212,7 +212,7 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
           <ChevronRight className="w-5 h-5 text-text-secondary" />
 
           <div className={`flex items-center gap-2 ${currentStep === 'scale-sets-review' ? 'text-primary' : 'text-text-secondary'}`}>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'scale-sets-review' ? 'bg-primary text-white' : 'bg-background-secondary border-2 border-border'}`}>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep === 'scale-sets-review' ? 'bg-primary text-text-inverse' : 'bg-background-secondary border-2 border-border'}`}>
               2
             </div>
             <span className="font-medium">Review Scale Sets</span>
@@ -232,8 +232,8 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
           <h2 className="text-lg font-semibold text-text-primary">Academic Year Information</h2>
 
           {cloneSourceYear && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-sm text-blue-800">
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+              <p className="text-sm text-primary">
                 <strong>Cloning from:</strong> {cloneSourceYear.name}
                 <br />
                 Dates are pre-filled from the source year. You can adjust them as needed.
@@ -280,17 +280,17 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
           />
 
           {error && (
-            <div className="text-danger bg-red-50 border border-red-200 rounded-lg p-3 text-sm flex items-start gap-2">
+            <div className="text-danger bg-danger/10 border border-danger/30 rounded-lg p-3 text-sm flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               {error}
             </div>
           )}
 
           <div className="flex gap-3">
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
               {loading ? 'Creating...' : scaleSetsToClone.length > 0 ? 'Next: Review Scale Sets' : 'Create Year'}
             </Button>
-            <Button color="gray" onClick={() => router.push('/admin')} type="button">
+            <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={() => router.push('/admin')} type="button">
               Cancel
             </Button>
           </div>
@@ -334,12 +334,12 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
                           <div className="flex items-center gap-4 text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               scaleSet.project_role === 'supervisor'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-purple-100 text-purple-800'
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-accent/10 text-accent'
                             }`}>
                               {scaleSet.project_role === 'supervisor' ? 'Supervisor' : 'Opponent'}
                             </span>
-                            <span className={`font-medium ${totalWeight === 100 ? 'text-green-600' : 'text-orange-600'}`}>
+                            <span className={`font-medium ${totalWeight === 100 ? 'text-success' : 'text-warning'}`}>
                               Total Weight: {totalWeight}% {totalWeight !== 100 && '(should be 100%)'}
                             </span>
                           </div>
@@ -382,24 +382,23 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
           </div>
 
           {error && (
-            <div className="text-danger bg-red-50 border border-red-200 rounded-lg p-3 text-sm flex items-start gap-2">
+            <div className="text-danger bg-danger/10 border border-danger/30 rounded-lg p-3 text-sm flex items-start gap-2">
               <AlertCircle className="w-4 h-4 mt-0.5" />
               {error}
             </div>
           )}
 
           <div className="flex gap-3">
-            <Button onClick={handleCloneScaleSets} disabled={loading || scaleSetsToClone.length === 0}>
+            <Button onClick={handleCloneScaleSets} disabled={loading || scaleSetsToClone.length === 0} className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
               {loading ? 'Cloning...' : 'Clone Scale Sets & Finish'}
             </Button>
-            <Button color="gray" onClick={handleSkipCloning} disabled={loading}>
+            <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleSkipCloning} disabled={loading}>
               Skip Cloning & Finish
             </Button>
             <Button
-              color="light"
+              className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all ml-auto"
               onClick={() => setCurrentStep('year-details')}
               disabled={loading}
-              className="ml-auto"
             >
               <ChevronLeft className="w-4 h-4 mr-2" />
               Back to Year Details

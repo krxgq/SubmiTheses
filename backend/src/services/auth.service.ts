@@ -1,5 +1,6 @@
 import bcrypt from 'bcrypt';
 import { prisma } from '../lib/prisma';
+import { cache } from '../lib/cache';
 import { JWTService } from './jwt.service';
 import type { UserRole } from '@sumbi/shared-types';
 
@@ -116,6 +117,14 @@ export class AuthService {
         updated_at: new Date(),
       },
     });
+
+    // Invalidate user-related caches since a new user was created
+    await cache.delete('users:all');
+    await cache.delete(`users:role:${role}`);
+    // If teacher/admin, also invalidate teachers cache
+    if (role === 'teacher' || role === 'admin') {
+      await cache.delete('users:teachers');
+    }
 
     // Return user object without tokens (no automatic login)
     return {

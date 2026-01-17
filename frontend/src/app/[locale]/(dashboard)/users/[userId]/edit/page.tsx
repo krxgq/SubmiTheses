@@ -20,7 +20,7 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
   } catch (error) {
     console.error("[UserEditPage] Error:", error);
     return (
-      <div className="w-full">
+      <div className="max-w-2xl mx-auto px-4 lg:px-8 py-8">
         <h1 className="text-2xl font-bold text-text-primary mb-6">
           User Not Found
         </h1>
@@ -37,6 +37,7 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
     email: string;
     role: UserRole;
     year_id: number | null;
+    class?: string;
   }) {
     'use server';
 
@@ -46,6 +47,7 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
         last_name: formData.last_name,
         email: formData.email,
         year_id: formData.year_id,
+        class: formData.class,
       });
 
       if (formData.role !== user.role) {
@@ -62,13 +64,12 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
   }
 
   return (
-    <div className="w-full">
+    <div className="max-w-2xl mx-auto px-4 lg:px-8 py-8">
       <h1 className="text-2xl font-bold text-text-primary mb-6">
         Edit User
       </h1>
 
-      <div className="max-w-2xl">
-        <div className="bg-background-elevated rounded-xl shadow-sm border border-border p-6">
+      <div className="bg-background-elevated rounded-xl shadow-sm border border-border p-6">
           <UserEditForm
             user={user}
             updateUser={updateUser}
@@ -86,7 +87,6 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
               },
             }}
           />
-        </div>
       </div>
     </div>
   );

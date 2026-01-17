@@ -11,7 +11,7 @@ import { UserStatusIndicator } from '@/components/dashboard/users/UserStatusIndi
 import type { UserWithYear } from '@sumbi/shared-types';
 
 interface UsersTableProps {
-  users: UserWithYear[];
+  users: (UserWithYear & { class?: string | null })[];
 }
 
 export function UsersTable({ users: initialUsers }: UsersTableProps) {
@@ -45,7 +45,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
         </h1>
         <div className="flex items-center gap-3">
           <Link href="/users/create">
-            <Button size="sm">
+            <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
               <Plus className="w-4 h-4 mr-2" />
               Create User
             </Button>
@@ -95,7 +95,9 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                       {t(`roles.${user.role}`)}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
-                      {user.years?.name || user.year_id || 'N/A'}
+                      {user.role === 'student'
+                        ? `${user.years?.name || ''} ${user.class ? `(${user.class})` : ''}`.trim() || 'N/A'
+                        : ''}
                     </td>
                     <td className="px-6 py-4">
                       <UserActionsMenu

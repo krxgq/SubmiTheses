@@ -20,9 +20,9 @@ export function GridItem({project, role}: GridItemProps) {
   const t = useTranslations();
 
   // Format date helper
-  const formatDate = (dateString: string): string => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
+  const formatDate = (date: string | Date): string => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
@@ -30,10 +30,10 @@ export function GridItem({project, role}: GridItemProps) {
   };
 
   return (
-    <Link href={`/projects/${project.id}`}>
-      <div className="border border-border rounded-xl p-6 hover:shadow-md hover:border-border-strong transition-all duration-200 bg-background-elevated cursor-pointer">
+    <Link href={`/projects/${project.id}`} className="block">
+      <div className="border border-border rounded-xl p-3 sm:p-6 hover:shadow-md hover:border-border-strong transition-all duration-200 bg-background-elevated cursor-pointer">
         {/* Top: Badges */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center flex-wrap gap-2 mb-3">
           <Badge variant="primary" size="sm">
             {project.subject}
           </Badge>
@@ -42,12 +42,12 @@ export function GridItem({project, role}: GridItemProps) {
         </div>
 
         {/* Title */}
-        <h2 className="text-xl font-bold text-text-primary mb-2 line-clamp-1" title={project.title}>
+        <h2 className="text-lg sm:text-xl font-bold text-text-primary mb-2 line-clamp-2" title={project.title}>
           {project.title}
         </h2>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary mb-4 line-clamp-2">
+        <p className="text-xs sm:text-sm text-text-secondary mb-4 line-clamp-2">
           {project.description || t('projects.noDescription')}
         </p>
 
@@ -76,7 +76,7 @@ export function GridItem({project, role}: GridItemProps) {
             </span>
             <span className="text-sm font-medium text-text-primary truncate">
               {formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) ||
-               t('common.unknown')}
+               t('common.unassigned')}
             </span>
           </div>
 
@@ -88,7 +88,7 @@ export function GridItem({project, role}: GridItemProps) {
             </span>
             <span className="text-sm font-medium text-text-primary truncate">
               {formatUserName(project.opponent?.first_name, project.opponent?.last_name) ||
-               t('common.unknown')}
+               t('common.unassigned')}
             </span>
           </div>
         </div>

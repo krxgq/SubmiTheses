@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { ProjectScheduleEntry } from "@sumbi/shared-types";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { UserSelect } from "@/components/ui/UserSelect";
 import { SubjectSelect } from "@/components/ui/SubjectSelect";
 import { ArrayInput } from "@/components/ui/ArrayInput";
@@ -23,6 +23,7 @@ export default function CreateProjectModule() {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentYearId, setCurrentYearId] = useState<number | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
     title: "",
@@ -94,79 +95,167 @@ export default function CreateProjectModule() {
 
   // Auto-assign supervisor if user is a teacher (not admin)
   useEffect(() => {
-      user && setFormData(prev => ({ ...prev, supervisor_id: user.id }));
-  }, [user]);
+    if (user && user.role === 'teacher' && !formData.supervisor_id) {
+      setFormData(prev => ({ ...prev, supervisor_id: user.id }));
+    }
+  }, [user, formData.supervisor_id]);
 
   // Update form data without re-rendering slides
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   // Determine if supervisor field is editable (only for admins)
   const isSupervisorEditable = user?.role === 'admin';
 
-  // Validate all required fields before submission
-  const validateForm = () => {
-    const errors: string[] = [];
+  // Validate step-specific fields and return errors object
+  const validateStep = (step: number): Record<string, string> => {
+    const errors: Record<string, string> = {};
 
-    // Step 1: Basic Information
-    if (formData.title.trim() === "") {
-      errors.push("Project title is required");
-    }
-    if (formData.subject_id === null) {
-      errors.push("Subject selection is required");
-    }
+    switch (step) {
+      case 0: // Basic Information
+        if (formData.title.trim() === "") {
+          errors.title = "Project title is required";
+        }
+        if (formData.subject_id === null) {
+          errors.subject_id = "Subject selection is required";
+        }
+        break;
 
-    // Step 2: Topic & Goals
-    if (formData.topic.trim().length < 1) {
-      errors.push("Project topic is required");
-    }
-    if (formData.project_goal.trim().length < 10) {
-      errors.push("Project goal must be at least 10 characters");
-    }
+      case 1: // Topic & Goals
+        if (formData.topic.trim().length < 1) {
+          errors.topic = "Project topic is required";
+        }
+        if (formData.project_goal.trim().length < 10) {
+          errors.project_goal = "Project goal must be at least 10 characters";
+        }
+        break;
 
-    // Step 3: Specification & Outputs
-    if (formData.specification.trim().length < 20) {
-      errors.push("Project specification must be at least 20 characters");
-    }
-    if (formData.needed_output.length < 1 || !formData.needed_output.some(item => item.trim().length >= 3)) {
-      errors.push("At least one required output (minimum 3 characters) is required");
-    }
+      case 2: // Specification & Outputs
+        if (formData.specification.trim().length < 20) {
+          errors.specification = "Project specification must be at least 20 characters";
+        }
+        const validOutputs = formData.needed_output.filter(item => item.trim().length >= 3);
+        if (validOutputs.length < 1) {
+          errors.needed_output = "At least one required output (minimum 3 characters) is required";
+        }
+        break;
 
-    // Step 5: Team Selection
-    if (formData.supervisor_id === null) {
-      errors.push("Supervisor selection is required");
-    }
-    if (formData.opponent_id && formData.supervisor_id === formData.opponent_id) {
-      errors.push("Opponent must be different from supervisor");
+      case 3: // Schedule (optional - no validation needed)
+        break;
+
+      case 4: // Team Selection
+        if (formData.supervisor_id === null) {
+          errors.supervisor_id = "Supervisor selection is required";
+        }
+        if (formData.opponent_id && formData.supervisor_id === formData.opponent_id) {
+          errors.opponent_id = "Opponent must be different from supervisor";
+        }
+        break;
     }
 
     return errors;
   };
 
-  const nextStep = () => {
+  // Validate all required fields before submission
+  const validateForm = () => {
+    const allErrors: Record<string, string> = {};
+
+    // Validate all steps
+    for (let i = 0; i < totalSteps; i++) {
+      Object.assign(allErrors, validateStep(i));
+    }
+
+    return allErrors;
+  };
+
+  const nextStep = (e?: React.MouseEvent) => {
+    // Prevent any accidental form submission
+    e?.preventDefault();
     if (currentStep < totalSteps - 1) {
       setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
+  const prevStep = (e?: React.MouseEvent) => {
+    // Prevent any accidental form submission
+    e?.preventDefault();
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
   };
 
+  // Scroll to top whenever step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [currentStep]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+
+    // Safety check: Prevent submission if not on the final step
+    // This prevents accidental submissions from Enter key presses
+    if (currentStep !== totalSteps - 1) {
+      console.warn('Attempted to submit form while not on final step');
+      return;
+    }
+
+    // Additional safety: Only allow submission if user is actually clicking submit button
+    // Check if the event was triggered by the submit button, not by Enter key
+    const submitter = (e.nativeEvent as SubmitEvent).submitter;
+    if (submitter && submitter.getAttribute('type') !== 'submit') {
+      console.warn('Form submission attempted from non-submit button');
+      return;
+    }
 
     // Validate all required fields
     const errors = validateForm();
-    if (errors.length > 0) {
-      errors.forEach(error => toast.error(error));
+    const errorCount = Object.keys(errors).length;
+    
+    if (errorCount > 0) {
+      // Set all field errors to highlight them
+      setFieldErrors(errors);
+      
+      // Find first step with errors and navigate to it
+      for (let i = 0; i < totalSteps; i++) {
+        const stepErrors = validateStep(i);
+        
+        if (Object.keys(stepErrors).length > 0) {
+          setCurrentStep(i);
+          
+          // Wait for step transition, then scroll to first error field
+          setTimeout(() => {
+            const firstErrorField = Object.keys(stepErrors)[0];
+            const errorElement = document.getElementById(firstErrorField);
+            
+            if (errorElement) {
+              errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              errorElement.focus();
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }, 600); // Wait for slide transition (500ms + buffer)
+          
+          toast.error(`Please fill in all required fields (${errorCount} error${errorCount > 1 ? 's' : ''} found)`);
+          break;
+        }
+      }
       return;
     }
 
     setIsSubmitting(true);
+    setFieldErrors({}); // Clear errors on valid submission
 
     try {
       // Verify we have a current year
@@ -178,10 +267,10 @@ export default function CreateProjectModule() {
 
       const payload = {
         title: formData.title,
-        subject_id: formData.subject_id, // Changed from subject string to subject_id
+        subject_id: formData.subject_id,
         supervisor_id: formData.supervisor_id,
         opponent_id: formData.opponent_id,
-        year_id: currentYearId, // Use fetched current year
+        year_id: currentYearId,
         status: 'draft' as const,
 
         // Nested project description
@@ -197,12 +286,75 @@ export default function CreateProjectModule() {
       const createdProject = await projectsApi.createProject(payload);
 
       toast.success("Project created successfully!");
-      // Clear saved draft after successful submission
-     sessionStorage.removeItem("create-project-draft");
+      sessionStorage.removeItem("create-project-draft");
       router.push(`/projects/${createdProject.id}`);
     } catch (error: any) {
       console.error("Failed to create project:", error);
-      toast.error(error.message || "Failed to create project. Please try again.");
+      
+      // Handle validation errors from backend
+      if (error.statusCode === 400 && error.details) {
+        const backendErrors: Record<string, string> = {};
+        
+        // Map backend validation errors to field names
+        error.details.forEach((detail: { path: string; message: string }) => {
+          // Extract field name from path like "body.project_description.project_goal"
+          const pathParts = detail.path.split('.');
+          const fieldName = pathParts[pathParts.length - 1];
+          
+          // Map to our form field names
+          const fieldMap: Record<string, string> = {
+            'title': 'title',
+            'subject_id': 'subject_id',
+            'topic': 'topic',
+            'project_goal': 'project_goal',
+            'specification': 'specification',
+            'needed_output': 'needed_output',
+            'supervisor_id': 'supervisor_id',
+            'opponent_id': 'opponent_id',
+          };
+          
+          const mappedField = fieldMap[fieldName];
+          if (mappedField) {
+            backendErrors[mappedField] = detail.message;
+          }
+        });
+        
+        // Set field errors
+        setFieldErrors(backendErrors);
+        
+        // Navigate to first error
+        const errorFields = Object.keys(backendErrors);
+        if (errorFields.length > 0) {
+          for (let i = 0; i < totalSteps; i++) {
+            const stepErrors = validateStep(i);
+            const hasBackendError = errorFields.some(field => 
+              Object.keys(stepErrors).includes(field)
+            );
+            
+            if (hasBackendError || Object.keys(stepErrors).length > 0) {
+              setCurrentStep(i);
+              setTimeout(() => {
+                const firstErrorField = errorFields[0];
+                const errorElement = document.getElementById(firstErrorField);
+                if (errorElement) {
+                  errorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  errorElement.focus();
+                } else {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }, 600);
+              break;
+            }
+          }
+        }
+        
+        // Show formatted error message
+        const errorMessages = error.details.map((d: any) => d.message).join(', ');
+        toast.error(`Validation failed: ${errorMessages}`);
+      } else {
+        // Generic error
+        toast.error(error.message || "Failed to create project. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -246,9 +398,9 @@ export default function CreateProjectModule() {
   }
 
   return (
-    <div className="bg-background-elevated w-full max-w-4xl mx-auto p-6 rounded-lg shadow-md">
+    <div className="bg-background-elevated w-full max-w-full sm:max-w-4xl mx-auto p-3 sm:p-6 md:p-8 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary">
+        <h1 className="text-xl sm:text-2xl font-semibold text-text-primary">
           Create New Project
         </h1>
         <button
@@ -267,7 +419,7 @@ export default function CreateProjectModule() {
             className="absolute top-0 left-0 h-full bg-primary transition-all duration-500 ease-out flex items-center justify-end pr-2"
             style={{ width: `${progressPercentage}%` }}
           >
-            <span className="text-xs font-semibold text-white">
+            <span className="text-xs font-semibold text-text-inverse min-w-[2rem] text-center">
               {Math.round(progressPercentage)}%
             </span>
           </div>
@@ -277,42 +429,63 @@ export default function CreateProjectModule() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        {/* Sliding container - uses transform to slide between steps */}
-        <div className="overflow-hidden">
-          <div
-            className="flex items-start transition-transform duration-500 ease-in-out"
-            style={{ transform: `translateX(-${currentStep * 100}%)` }}
-          >
-            {/* Step 1: Basic Information */}
-            <div className="w-full flex-shrink-0 space-y-6 px-1">
-              <h2 className="text-lg font-medium text-text-primary mb-4">
-                Basic Information
-              </h2>
-              <Input
-                label="Project Title"
-                id="title"
-                name="title"
-                value={formData.title}
-                onChange={(e) => updateField("title", e.target.value)}
-                helperText="Enter a descriptive title for your project"
-                maxLength={100}
-                showCharCount
-                required
-              />
-              <SubjectSelect
-                label="Subject"
-                id="subject"
-                value={formData.subject_id}
-                onChange={(subjectId) => updateField("subject_id", subjectId)}
-                helperText="Select the course or subject area for this project"
-                required
-              />
-            </div>
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        onKeyDown={(e) => {
+          // Prevent Enter from submitting form on ALL steps (user must click the submit button)
+          // Allow Enter in textarea elements for multi-line input
+          if (e.key === 'Enter' && e.target instanceof HTMLElement) {
+            const isTextarea = e.target.tagName === 'TEXTAREA';
+            const isInRichTextEditor = e.target.closest('[contenteditable="true"]');
 
-            {/* Step 2: Topic & Goals */}
-            <div className="w-full flex-shrink-0 space-y-6 px-1">
-              <h2 className="text-lg font-medium text-text-primary mb-4">
+            // Allow Enter in textareas and rich text editors, prevent everywhere else
+            if (!isTextarea && !isInRichTextEditor) {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('[CreateProject] Blocked Enter key to prevent form submission');
+              return false;
+            }
+          }
+        }}
+      >
+        {/* Sliding container - uses transform to slide between steps */}
+        <div className="overflow-visible relative">
+          {/* Step 1: Basic Information */}
+          <div 
+            className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 0 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
+          >
+            <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
+              Basic Information
+            </h2>
+            <Input
+              label="Project Title"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={(e) => updateField("title", e.target.value)}
+              helperText="Enter a descriptive title for your project"
+              maxLength={100}
+              showCharCount
+              required
+              error={fieldErrors.title}
+            />
+            <SubjectSelect
+              label="Subject"
+              id="subject"
+              value={formData.subject_id}
+              onChange={(subjectId) => updateField("subject_id", subjectId)}
+              helperText="Select the course or subject area for this project"
+              required
+              error={fieldErrors.subject_id}
+            />
+          </div>
+
+          {/* Step 2: Topic & Goals */}
+          <div 
+            className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 1 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
+          >
+              <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
                 Topic & Goals
               </h2>
               <Input
@@ -325,6 +498,7 @@ export default function CreateProjectModule() {
                 maxLength={150}
                 showCharCount
                 required
+                error={fieldErrors.topic}
               />
               <Textarea
                 label="Project Goal"
@@ -337,15 +511,18 @@ export default function CreateProjectModule() {
                 maxLength={1000}
                 showCharCount
                 required
+                error={fieldErrors.project_goal}
               />
             </div>
 
             {/* Step 3: Specification & Outputs */}
-            <div className="w-full flex-shrink-0 space-y-6 px-1">
-              <h2 className="text-lg font-medium text-text-primary mb-4">
+            <div 
+              className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 2 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
+            >
+              <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
                 Specification & Required Outputs
               </h2>
-              <RichTextEditor
+              <MarkdownEditor
                 label="Project Specification"
                 id="specification"
                 value={formData.specification}
@@ -355,22 +532,26 @@ export default function CreateProjectModule() {
                 showCharCount
                 required
                 minHeight={250}
-                maxHeight="40vh"
+                error={fieldErrors.specification}
               />
               <ArrayInput
                 label="Required Outputs"
                 value={formData.needed_output}
                 onChange={(items) => updateField("needed_output", items)}
-                helperText="List all deliverables you must produce (e.g., 'Working application', 'User documentation')"
+                helperText="List all deliverables you must produce (minimum 3 characters each, e.g., 'Working application', 'User documentation')"
                 placeholder="Enter output item"
                 required
                 minItems={1}
+                minLength={3}
+                error={fieldErrors.needed_output}
               />
             </div>
 
             {/* Step 4: Schedule */}
-            <div className="w-full flex-shrink-0 space-y-6 px-1">
-              <h2 className="text-lg font-medium text-text-primary mb-4">
+            <div 
+              className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 3 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
+            >
+              <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
                 Timeline (Optional)
               </h2>
               <p className="text-sm text-text-secondary mb-4">
@@ -383,8 +564,10 @@ export default function CreateProjectModule() {
             </div>
 
             {/* Step 5: Team Selection */}
-            <div className="w-full flex-shrink-0 space-y-6 px-1">
-              <h2 className="text-lg font-medium text-text-primary mb-4">
+            <div 
+              className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 4 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
+            >
+              <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
                 Team Selection
               </h2>
 
@@ -398,16 +581,20 @@ export default function CreateProjectModule() {
                   helperText="Select the teacher who will supervise this project"
                   excludeUserId={formData.opponent_id || undefined}
                   required
+                  error={fieldErrors.supervisor_id}
                 />
               ) : (
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-text-primary">
-                    Supervisor <span className="text-red-500">*</span>
+                    Supervisor <span className="text-danger">*</span>
                   </label>
                   <div className="border rounded-lg bg-background-secondary p-3 text-text-primary">
                     {formatUserName(user?.first_name, user?.last_name) || user?.email || 'You'}
                   </div>
                   <p className="text-xs text-text-secondary">You are automatically assigned as the supervisor</p>
+                  {fieldErrors.supervisor_id && (
+                    <p className="text-sm text-danger">{fieldErrors.supervisor_id}</p>
+                  )}
                 </div>
               )}
 
@@ -419,25 +606,25 @@ export default function CreateProjectModule() {
                 helperText="Select the teacher who will review this project (optional)"
                 excludeUserId={formData.supervisor_id || undefined}
                 required={false}
+                error={fieldErrors.opponent_id}
               />
               {formData.supervisor_id &&
                 formData.opponent_id &&
                 formData.supervisor_id === formData.opponent_id && (
-                  <p className="text-sm text-red-600 dark:text-red-400">
+                  <p className="text-sm text-danger">
                     ⚠️ Supervisor and opponent must be different people
                   </p>
                 )}
             </div>
-          </div>
         </div>
 
         {/* Navigation buttons */}
-        <div className="flex justify-between mt-8">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-between gap-3 sm:gap-0 mt-8">
           <button
             type="button"
             onClick={prevStep}
             disabled={currentStep === 0}
-            className="px-6 py-2 border border-border rounded-lg text-text-primary hover:bg-background-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto px-6 py-2 border border-border rounded-lg text-text-primary hover:bg-background-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Previous
           </button>
@@ -446,7 +633,7 @@ export default function CreateProjectModule() {
             <button
               type="button"
               onClick={nextStep}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-200"
+              className="w-full sm:w-auto px-6 py-2 bg-primary text-text-inverse rounded-lg hover:bg-primary-dark transition-colors duration-200"
             >
               Next
             </button>
@@ -454,11 +641,11 @@ export default function CreateProjectModule() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary flex items-center gap-2"
+              className="w-full sm:w-auto px-6 py-2 bg-primary text-text-inverse rounded-lg hover:bg-primary-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-primary flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                  <div className="animate-spin h-4 w-4 border-2 border-text-inverse border-t-transparent rounded-full" />
                   Creating...
                 </>
               ) : (

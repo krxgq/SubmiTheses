@@ -121,7 +121,7 @@ export function SubjectsTable({ subjects }: SubjectsTableProps) {
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           subject.is_active
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                            ? 'bg-success/10 text-success dark:bg-success/10 dark:text-success'
                             : 'bg-background-secondary text-text-secondary'
                         }`}
                       >

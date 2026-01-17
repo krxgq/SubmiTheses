@@ -13,5 +13,9 @@ export default async function UsersPage() {
     console.error("[UsersPage] Error fetching users:", error);
   }
 
-  return <UsersTable users={users} />;
+  return (
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+      <UsersTable users={users} />
+    </div>
+  );
 }

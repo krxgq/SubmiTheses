@@ -17,10 +17,9 @@ export function BackButton({ label }: { label: string }) {
   const router = useRouter()
 
   return (
-    <Button 
-      color="gray" 
+    <Button
+      className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary border-border px-6 py-2.5 rounded-lg font-medium transition-all"
       onClick={() => router.back()}
-      className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary border-border"
     >
       <ArrowLeft className="mr-2 h-4 w-4" />
       {label}

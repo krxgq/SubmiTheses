@@ -55,7 +55,7 @@ export function ScalesTable({ scales }: ScalesTableProps) {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">{t('title')}</h1>
         <Link href="/admin/scales/create">
-          <Button size="sm">
+          <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
             <Plus className="w-4 h-4 mr-2" />
             {t('create')}
           </Button>

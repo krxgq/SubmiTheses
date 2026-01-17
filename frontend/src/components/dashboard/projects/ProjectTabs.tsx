@@ -1,35 +1,52 @@
 'use client';
 
 import { useState } from 'react';
+import AttachmentsTab from './AttachmentsTab';
+import GradingForm from './GradingForm';
+import GradesDisplay from './GradesDisplay';
+import { useAuth } from '@/hooks/useAuth';
+import type { ProjectWithRelations } from '@sumbi/shared-types';
+import { useTranslations } from 'next-intl';
 
 type TabKey = 'attachments' | 'links' | 'reviews' | 'grades';
+
+interface ProjectTabsProps {
+  projectId: string;
+  project: ProjectWithRelations;
+}
 
 /**
  * Tab navigation for project detail sections
  * Client component with tab switching functionality
- * Content sections are placeholders for future implementation
+ * Lazy-loads tab content when selected
  */
-export default function ProjectTabs() {
+export default function ProjectTabs({ projectId, project }: ProjectTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('attachments');
+  const { user } = useAuth();
+  const t = useTranslations('projectDetail.tabs');
+
+  const isTeacher = user?.role === 'teacher';
+  const isStudent = user?.role === 'student';
+  const isAdmin = user?.role === 'admin';
 
   const tabs = [
-    { key: 'attachments' as TabKey, label: 'Attachments' },
-    { key: 'links' as TabKey, label: 'External Links' },
-    { key: 'reviews' as TabKey, label: 'Reviews' },
-    { key: 'grades' as TabKey, label: 'Grades' }
+    { key: 'attachments' as TabKey, label: t('attachments') },
+    { key: 'links' as TabKey, label: t('externalLinks') },
+    { key: 'reviews' as TabKey, label: t('reviews') },
+    { key: 'grades' as TabKey, label: t('grades') }
   ];
 
   return (
     <div className="bg-background-elevated rounded-lg border border-border">
       {/* Tab Navigation */}
-      <div className="border-b border-border">
-        <nav className="flex gap-8 px-6" aria-label="Tabs">
+      <div className="border-b border-border overflow-x-auto">
+        <nav className="flex gap-4 sm:gap-6 px-3 sm:px-6" aria-label="Tabs">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`
-                py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
                 ${activeTab === tab.key
                   ? 'border-interactive-primary text-text-accent'
                   : 'border-transparent text-text-secondary hover:text-text-primary hover:border-border-strong'
@@ -43,52 +60,55 @@ export default function ProjectTabs() {
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         {activeTab === 'attachments' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Project Attachments</h3>
-            {/* Placeholder for attachments list */}
-            <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              Attachments section - to be implemented
-              <br />
-              <span className="text-xs">Will display uploaded files, PDFs, documents, etc.</span>
-            </div>
-          </div>
+          <AttachmentsTab projectId={projectId} project={project} />
         )}
 
         {activeTab === 'links' && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">External Links</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">{t('externalLinks')}</h3>
             {/* Placeholder for external links */}
             <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              External links section - to be implemented
+              {t('linksPlaceholder')}
               <br />
-              <span className="text-xs">Will display related URLs, resources, references, etc.</span>
+              <span className="text-xs">{t('linksDescription')}</span>
             </div>
           </div>
         )}
 
         {activeTab === 'reviews' && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Reviews</h3>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">{t('reviews')}</h3>
             {/* Placeholder for reviews */}
             <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              Reviews section - to be implemented
+              {t('reviewsPlaceholder')}
               <br />
-              <span className="text-xs">Will display supervisor and opponent reviews</span>
+              <span className="text-xs">{t('reviewsDescription')}</span>
             </div>
           </div>
         )}
 
         {activeTab === 'grades' && (
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">Grades</h3>
-            {/* Placeholder for grades */}
-            <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              Grades section - to be implemented
-              <br />
-              <span className="text-xs">Will display final grades and evaluation details</span>
-            </div>
+            <h3 className="text-lg font-semibold text-text-primary mb-4">{t('grades')}</h3>
+
+            {/* Teacher grading form - only for assigned teachers */}
+            {isTeacher && project.year_id && (
+              <GradingForm projectId={projectId} yearId={String(project.year_id)} />
+            )}
+
+            {/* Student/admin grade view */}
+            {(isStudent || isAdmin) && (
+              <GradesDisplay projectId={projectId} isStudent={isStudent} />
+            )}
+
+            {/* Fallback for unassigned users */}
+            {!isTeacher && !isStudent && !isAdmin && (
+              <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
+                {t('noGradesAccess')}
+              </div>
+            )}
           </div>
         )}
       </div>

@@ -106,11 +106,11 @@ export function UserSelect({
         className={`
           absolute transition-all duration-200 pointer-events-none left-4 z-10
           ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
-          ${error ? "text-red-500 dark:text-red-400" : "text-text-secondary"}
+          ${error ? "text-danger dark:text-danger" : "text-text-secondary"}
         `}
       >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-danger ml-1">*</span>}
       </Label>
 
       {/* Input field */}
@@ -124,6 +124,16 @@ export function UserSelect({
           setIsOpen(true);
         }}
         onBlur={() => setIsFocused(false)}
+        onKeyDown={(e) => {
+          // Prevent Enter from submitting the parent form
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            // If there's exactly one filtered user, select it
+            if (filteredUsers.length === 1) {
+              handleSelect(filteredUsers[0].id);
+            }
+          }
+        }}
         placeholder={label}
         disabled={isLoading}
         className={`
@@ -136,7 +146,7 @@ export function UserSelect({
           focus:outline-none focus:ring-2
           ${
             error
-              ? "border-red-500 dark:border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              ? "border-danger dark:border-danger focus:border-danger focus:ring-danger/20"
               : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
           }
           ${isLoading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
@@ -149,7 +159,7 @@ export function UserSelect({
         <div className="absolute z-20 w-full mt-1 bg-background-elevated border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
           {filteredUsers.length === 0 ? (
             <div className="px-4 py-3 text-sm text-text-secondary">
-              No teachers found
+              No users found
             </div>
           ) : (
             filteredUsers.map((user) => (
@@ -180,7 +190,7 @@ export function UserSelect({
       {(helperText || error) && (
         <p
           className={`mt-1.5 text-xs ${
-            error ? "text-red-600 dark:text-red-400" : "text-text-secondary"
+            error ? "text-danger dark:text-danger" : "text-text-secondary"
           }`}
         >
           {error || helperText}

@@ -63,7 +63,7 @@ export function UserStatusIndicator({ emailVerified }: UserStatusIndicatorProps)
 
       {showTooltip && tooltipPosition && createPortal(
         <div
-          className="fixed z-50 px-3 py-2 text-xs text-white bg-gray-900 rounded-md shadow-lg whitespace-nowrap pointer-events-none"
+          className="fixed z-50 px-3 py-2 text-xs text-text-inverse bg-background-tertiary rounded-md shadow-lg whitespace-nowrap pointer-events-none"
           style={{
             top: `${tooltipPosition.top}px`,
             left: `${tooltipPosition.left}px`,
@@ -72,7 +72,7 @@ export function UserStatusIndicator({ emailVerified }: UserStatusIndicatorProps)
         >
           {t('pending')}
           <div
-            className="absolute w-2 h-2 bg-gray-900 transform rotate-45"
+            className="absolute w-2 h-2 bg-background-tertiary transform rotate-45"
             style={{
               top: '-4px',
               left: '50%',

@@ -66,17 +66,17 @@ export function ScaleCreateForm() {
       />
 
       {error && (
-        <div className="text-danger bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+        <div className="text-danger bg-danger/10 border border-danger/30 rounded-lg p-3 text-sm">
           {error}
         </div>
       )}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
+        <Button type="submit" disabled={loading} className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
           {loading ? 'Creating...' : 'Create Scale'}
         </Button>
         <Button
-          color="gray"
+          className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all"
           onClick={() => router.push('/admin')}
           type="button"
         >

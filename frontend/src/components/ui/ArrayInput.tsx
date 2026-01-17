@@ -10,6 +10,7 @@ interface ArrayInputProps {
   helperText?: string;
   required?: boolean;
   minItems?: number;
+  minLength?: number;
   placeholder?: string;
 }
 
@@ -22,6 +23,7 @@ export function ArrayInput({
   helperText,
   required = false,
   minItems = 1,
+  minLength = 0,
   placeholder = "Enter item",
 }: ArrayInputProps) {
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
@@ -48,7 +50,7 @@ export function ArrayInput({
       {/* Label */}
       <label className="block text-sm font-medium text-text-primary">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-danger ml-1">*</span>}
       </label>
 
       {/* Items list */}
@@ -68,6 +70,7 @@ export function ArrayInput({
               onFocus={() => setFocusedIndex(index)}
               onBlur={() => setFocusedIndex(null)}
               placeholder={placeholder}
+              minLength={minLength}
               className={`
                 flex-1 px-4 py-2
                 bg-background-elevated
@@ -76,8 +79,8 @@ export function ArrayInput({
                 transition-all duration-200
                 focus:outline-none focus:ring-2
                 ${
-                  error && item.trim().length === 0
-                    ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                  (error && item.trim().length === 0) || (minLength > 0 && item.trim().length > 0 && item.trim().length < minLength)
+                    ? "border-danger focus:border-danger focus:ring-danger/20"
                     : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
                 }
               `}
@@ -88,7 +91,7 @@ export function ArrayInput({
               <button
                 type="button"
                 onClick={() => handleRemoveItem(index)}
-                className="p-2 text-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-200"
+                className="p-2 text-text-secondary hover:text-danger hover:bg-danger/10 dark:hover:bg-danger/10 rounded transition-colors duration-200"
                 aria-label={`Remove item ${index + 1}`}
               >
                 <svg
@@ -134,7 +137,7 @@ export function ArrayInput({
       {(helperText || error) && (
         <p
           className={`text-xs ${
-            error ? "text-red-600 dark:text-red-400" : "text-text-secondary"
+            error ? "text-danger dark:text-danger" : "text-text-secondary"
           }`}
         >
           {error || helperText}

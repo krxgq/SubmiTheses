@@ -121,7 +121,7 @@ export default function SetupPasswordClient() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-md w-full bg-background-elevated rounded-lg shadow-lg p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-text-secondary">Validating your invitation...</p>
         </div>
       </div>
@@ -135,9 +135,9 @@ export default function SetupPasswordClient() {
         <div className="max-w-md w-full bg-background-elevated rounded-lg shadow-lg p-8">
           {/* Error Icon */}
           <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-red-100 dark:bg-red-900/20 p-3">
+            <div className="rounded-full bg-danger/10 dark:bg-danger/10 p-3">
               <svg
-                className="w-12 h-12 text-red-600 dark:text-red-400"
+                className="w-12 h-12 text-danger dark:text-danger"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -161,14 +161,14 @@ export default function SetupPasswordClient() {
           </p>
 
           {/* Instructions */}
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
+          <div className="bg-warning/10 dark:bg-warning/10 border border-warning/30 dark:border-warning/30 rounded-lg p-4 mb-6">
+            <p className="text-sm text-warning dark:text-warning">
               Please contact your administrator to receive a new invitation email.
             </p>
           </div>
 
           {/* Back to Login */}
-          <Button onClick={() => router.push('/auth')} className="w-full">
+          <Button onClick={() => router.push('/auth')} className="w-full bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
             Back to Login
           </Button>
         </div>
@@ -183,9 +183,9 @@ export default function SetupPasswordClient() {
         <div className="max-w-md w-full bg-background-elevated rounded-lg shadow-lg p-8">
           {/* Success Icon */}
           <div className="flex justify-center mb-6">
-            <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3">
+            <div className="rounded-full bg-success/10 dark:bg-success/10 p-3">
               <svg
-                className="w-12 h-12 text-green-600 dark:text-green-400"
+                className="w-12 h-12 text-success dark:text-success"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -259,13 +259,13 @@ export default function SetupPasswordClient() {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
-              <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <div className="bg-danger/10 dark:bg-danger/10 border border-danger/30 dark:border-danger/30 rounded-lg p-3">
+              <p className="text-sm text-danger dark:text-danger">{error}</p>
             </div>
           )}
 
           {/* Submit Button */}
-          <Button type="submit" disabled={loading} className="w-full">
+          <Button type="submit" disabled={loading} className="w-full bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
             {loading ? 'Setting Password...' : 'Set Password'}
           </Button>
         </form>

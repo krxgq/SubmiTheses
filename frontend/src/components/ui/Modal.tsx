@@ -66,12 +66,12 @@ export const Modal = ({
 
   if (!isOpen) return null;
 
-  // Size styles
+  // Size styles - responsive for mobile devices
   const sizeStyles = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
+    sm: 'max-w-[calc(100vw-2rem)] sm:max-w-md',
+    md: 'max-w-[calc(100vw-2rem)] sm:max-w-lg',
+    lg: 'max-w-[calc(100vw-2rem)] sm:max-w-2xl',
+    xl: 'max-w-[calc(100vw-2rem)] sm:max-w-4xl',
   };
 
   return (
@@ -115,7 +115,7 @@ export const Modal = ({
 
         {/* Header */}
         {(title || description) && (
-          <div className="px-6 pt-6 pb-4 border-b border-border">
+          <div className="px-3 sm:px-6 pt-3 sm:pt-6 pb-3 sm:pb-4 border-b border-border">
             {title && (
               <h2
                 id="modal-title"
@@ -136,13 +136,13 @@ export const Modal = ({
         )}
 
         {/* Body */}
-        <div className="px-6 py-6 max-h-[70vh] overflow-y-auto">
+        <div className="px-3 sm:px-6 py-3 sm:py-6 max-h-[80vh] sm:max-h-[70vh] overflow-y-auto">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-border bg-background-secondary rounded-b-xl">
+          <div className="px-3 sm:px-6 py-3 sm:py-4 border-t border-border bg-background-secondary rounded-b-xl">
             {footer}
           </div>
         )}

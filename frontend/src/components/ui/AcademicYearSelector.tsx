@@ -84,7 +84,7 @@ export function AcademicYearSelector({
           transition-all duration-200
           ${
             error
-              ? "border-red-500"
+              ? "border-danger"
               : "border-border hover:border-border-strong"
           }
         `}
@@ -171,18 +171,18 @@ export function AcademicYearSelector({
           absolute transition-all duration-200 pointer-events-none text-text-secondary
           left-4
           ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
-          ${error ? "text-red-500" : ""}
+          ${error ? "text-danger" : ""}
         `}
       >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-danger ml-1">*</span>}
       </Label>
 
       {/* Helper text or error message */}
       {(helperText || error) && (
         <p
           className={`mt-1.5 text-xs ${
-            error ? "text-red-600" : "text-text-secondary"
+            error ? "text-danger" : "text-text-secondary"
           }`}
         >
           {error || helperText}

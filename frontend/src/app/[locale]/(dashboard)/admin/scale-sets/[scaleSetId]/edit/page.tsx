@@ -31,7 +31,7 @@ export default async function EditScaleSetPage({ params }: EditScaleSetPageProps
   }
 
   return (
-    <div className="w-full">
+    <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
       <Link
         href="/admin"
         className="inline-flex items-center text-sm text-text-secondary hover:text-text-primary mb-4"
@@ -39,14 +39,12 @@ export default async function EditScaleSetPage({ params }: EditScaleSetPageProps
         <ChevronLeft className="w-4 h-4 mr-1" />
         Back to Admin Panel
       </Link>
-      <div className="max-w-4xl">
-        <h1 className="text-2xl font-bold text-text-primary mb-6">Edit Scale Set</h1>
-        <ScaleSetEditForm
-          scaleSet={scaleSet}
-          availableScales={availableScales}
-          years={years}
-        />
-      </div>
+      <h1 className="text-2xl font-bold text-text-primary mb-6">Edit Scale Set</h1>
+      <ScaleSetEditForm
+        scaleSet={scaleSet}
+        availableScales={availableScales}
+        years={years}
+      />
     </div>
   );
 }

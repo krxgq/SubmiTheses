@@ -26,9 +26,9 @@ function getYearStatus(year: Year): 'current' | 'past' | 'future' {
 }
 
 // Format date for display
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString();
+function formatDate(date: string | Date | null): string {
+  if (!date) return '-';
+  return new Date(date).toLocaleDateString();
 }
 
 // Client component for years table with actions
@@ -90,7 +90,7 @@ export function YearsTable({ years }: YearsTableProps) {
         <div className="flex items-center gap-3">
           {mostRecentYear && (
             <Link href={`/admin/years/create?cloneFrom=${mostRecentYear.id}`}>
-              <Button size="sm" color="gray" className="flex items-center">
+              <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all flex items-center">
                 <Copy className="w-4 h-4 mr-2" />
                 {t('createNextYear')}
               </Button>
@@ -144,10 +144,10 @@ export function YearsTable({ years }: YearsTableProps) {
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
                             status === 'current'
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                              ? 'bg-success/10 text-success dark:bg-success/10 dark:text-success'
                               : status === 'past'
                               ? 'bg-background-secondary text-text-secondary'
-                              : 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+                              : 'bg-primary/10 text-primary dark:bg-primary/10 dark:text-primary'
                           }`}
                         >
                           {status === 'current' ? 'Active' : status === 'past' ? 'Past' : 'Future'}

@@ -105,7 +105,7 @@ export function ProjectsPageClient({
   const renderProjectsGrid = (projectsList: ProjectWithRelations[]) => {
     if (viewMode === "grid") {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projectsList.map((project) => (
             <GridItem key={project.id} project={project} role={userRole} />
           ))}
@@ -115,7 +115,7 @@ export function ProjectsPageClient({
 
     // List view - horizontal cards
     return (
-      <div className="space-y-4 pb-2">
+      <div className="space-y-4">
         {projectsList.map((project) => (
           <ListItem key={project.id} project={project} role={userRole} />
         ))}
@@ -149,31 +149,21 @@ export function ProjectsPageClient({
   };
 
   return (
-    <div className="w-full">
+    <>
       {/* Modern Page Header with Title/Subtitle and Controls */}
-      <div className="flex items-start justify-between mb-12">
+      <div className="flex flex-wrap items-start justify-between gap-4 mb-8 sm:mb-12">
         {/* Left: Title and Subtitle */}
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary">
+        <div className="space-y-2 min-w-0 flex-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">
             {t("sidebar.projects")}
           </h1>
-          <p className="mt-1 text-base text-text-secondary">
+          <p className="text-sm sm:text-base text-text-secondary">
             {t("projects.manageYourProjects")}
           </p>
         </div>
 
         {/* Right: Controls */}
-        <div className="flex items-center gap-3">
-          {/* View mode toggle with SegmentedControl */}
-          <SegmentedControl
-            options={[
-              { value: "grid", label: "Grid", icon: LayoutGrid },
-              { value: "list", label: "List", icon: LayoutList },
-            ]}
-            value={viewMode}
-            onChange={(value) => setViewMode(value as ViewMode)}
-          />
-
+        <div className="flex flex-wrap items-center gap-3">
           {/* Create project button - only for teachers and admins */}
           {(userRole === "teacher" || userRole === "admin") && (
             <Button
@@ -184,8 +174,22 @@ export function ProjectsPageClient({
             >
               {t("projects.createNewProject")}
             </Button>
+
           )}
+
+          {/* View mode toggle with SegmentedControl */}
+          <SegmentedControl
+            options={[
+              { value: "grid", label: "Grid", icon: LayoutGrid },
+              { value: "list", label: "List", icon: LayoutList },
+            ]}
+            value={viewMode}
+            onChange={(value) => setViewMode(value as ViewMode)}
+          />
+
         </div>
+
+
       </div>
 
       {/* Unified section-based layout for ALL roles */}
@@ -227,6 +231,6 @@ export function ProjectsPageClient({
           />
         </div>
       )}
-    </div>
+    </>
   );
 }

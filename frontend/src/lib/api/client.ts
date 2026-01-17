@@ -21,21 +21,45 @@ export class ApiError extends Error {
 }
 
 /**
+ * BigInt-safe JSON replacer function
+ * Converts BigInt values to strings during JSON serialization
+ */
+const bigIntReplacer = (_key: string, value: any) =>
+  typeof value === 'bigint' ? value.toString() : value;
+
+type ApiRequestOptions = Omit<RequestInit, 'body'> & {
+  body?: RequestInit['body'] | Record<string, any>;
+};
+
+/**
  * Make authenticated API request to backend
  * Uses httpOnly cookies for authentication
  * Works in both Server and Client Components by forwarding cookies appropriately
  */
 export async function apiRequest<T>(
   endpoint: string,
-  options?: RequestInit,
+  options?: ApiRequestOptions
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
   const isServer = typeof window === 'undefined';
 
+  const { body, ...restOptions } = options || {};
+  let processedBody: BodyInit | null | undefined;
+
+  if (body) {
+    // If body is not a string, stringify it with BigInt support
+    if (typeof body !== 'string' && !(body instanceof FormData) && !(body instanceof URLSearchParams)) {
+      processedBody = JSON.stringify(body, bigIntReplacer);
+    } else {
+      // Body is already a string, FormData, or URLSearchParams
+      processedBody = body as BodyInit;
+    }
+  }
+
   // Build headers
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...options?.headers as Record<string, string>,
+    ...(restOptions.headers as Record<string, string>),
   };
 
   // On server-side (Next.js Server Components), forward cookies manually
@@ -74,13 +98,12 @@ export async function apiRequest<T>(
 
   // Make request
   const response = await fetch(url, {
-    ...options,
+    ...restOptions,
+    body: processedBody,
     headers,
     credentials: isServer ? 'omit' : 'include',
-    // Add caching for server-side GET requests
-    ...(isServer && (!options?.method || options.method === 'GET') && !options?.cache
-      ? { next: { revalidate: 10 } } // Cache for 10 seconds on server
-      : {}),
+    // Disable caching for server-side requests to get fresh data
+    ...(isServer ? { cache: 'no-store' } : {}),
   });
 
   // Handle errors - throw ApiError with status code for proper error handling
@@ -105,7 +128,8 @@ export async function apiRequest<T>(
     return null as T;
   }
 
-  return response.json();
+  const responseData = await response.json();
+  return responseData;
 }
 
 export const api = {

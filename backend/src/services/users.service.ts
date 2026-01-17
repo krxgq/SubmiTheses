@@ -45,7 +45,23 @@ export class UserService {
 
     const user = await prisma.public_users.findUnique({
       where: { id: String(id) },
-      include: {
+      select: {
+        id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        avatar_url: true,
+        role: true,
+        year_id: true,
+        created_at: true,
+        updated_at: true,
+        class: true,
+        password_hash: true,
+        email_verified: true,
+        email_verified_at: true,
+        password_reset_token: true,
+        password_reset_expires: true,
+        last_login: true,
         years: true,
       },
     });
@@ -112,7 +128,7 @@ export class UserService {
   /**
    * Update user profile (name, year, etc.)
    */
-  static async updateUser(id: string, data: UpdateUserRequest) {
+  static async updateUser(id: string, data: UpdateUserRequest & { class?: string }) {
     const existingUser = await prisma.public_users.findUnique({
       where: { id: String(id) },
     });
@@ -129,6 +145,7 @@ export class UserService {
         avatar_url: data.avatar_url,
         year_id: data.year_id,
         email: data.email,
+        class: data.class,
       },
       include: {
         years: true,

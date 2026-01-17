@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Status enum schema
-export const StatusSchema = z.enum(['draft', 'submitted', 'locked', 'public']);
+export const StatusSchema = z.enum(['draft', 'locked', 'public']);
 
 // User Role schema
 export const UserRoleSchema = z.object({

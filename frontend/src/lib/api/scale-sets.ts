@@ -86,7 +86,7 @@ export async function getScaleSetById(id: bigint): Promise<ScaleSet> {
 export async function createScaleSet(data: CreateScaleSetRequest): Promise<ScaleSet> {
   return apiRequest<ScaleSet>('/scale-sets', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data,
   });
 }
 
@@ -99,7 +99,7 @@ export async function updateScaleSet(
 ): Promise<ScaleSet> {
   return apiRequest<ScaleSet>(`/scale-sets/${id}`, {
     method: 'PUT',
-    body: JSON.stringify(data),
+    body: data,
   });
 }
 
@@ -121,7 +121,7 @@ export async function addScaleToSet(
 ): Promise<ScaleSetScale> {
   return apiRequest<ScaleSetScale>(`/scale-sets/${scaleSetId}/scales`, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data,
   });
 }
 
@@ -149,7 +149,7 @@ export async function updateScaleInSet(
     `/scale-sets/${scaleSetId}/scales/${scaleId}`,
     {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: data,
     }
   );
 }
@@ -163,6 +163,6 @@ export async function bulkCloneScaleSets(
 ): Promise<ScaleSet[]> {
   return apiRequest<ScaleSet[]>('/scale-sets/bulk-clone', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: data,
   });
 }

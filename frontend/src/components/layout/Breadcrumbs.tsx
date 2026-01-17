@@ -109,7 +109,7 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <div className="bg-background-secondary/30 border-b border-border px-8 py-4 shadow-sm">
+    <div className="bg-background-secondary/30 border-b border-border pl-16 pr-4 lg:px-8 py-4 shadow-sm">
       <div className="flex items-center gap-2 flex-wrap" aria-label="Page navigation">
         {breadcrumbItems.map((item, index) => (
           <div key={index} className="flex items-center gap-2">

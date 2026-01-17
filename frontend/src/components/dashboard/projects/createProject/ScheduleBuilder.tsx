@@ -67,7 +67,7 @@ export function ScheduleBuilder({
           {value.map((entry, index) => (
             <div
               key={index}
-              className="p-4 bg-background-secondary rounded-lg border border-border space-y-3"
+              className="p-2 sm:p-4 bg-background-secondary rounded-lg border border-border space-y-3"
             >
               {/* Entry header */}
               <div className="flex items-center justify-between">
@@ -77,7 +77,7 @@ export function ScheduleBuilder({
                 <button
                   type="button"
                   onClick={() => handleRemoveMonth(index)}
-                  className="p-1 text-text-secondary hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors duration-200"
+                  className="p-1 text-text-secondary hover:text-danger hover:bg-danger/10 dark:hover:bg-danger/10 rounded transition-colors duration-200"
                   aria-label={`Remove month ${index + 1}`}
                 >
                   <svg
@@ -162,7 +162,7 @@ export function ScheduleBuilder({
 
       {/* Error message */}
       {error && (
-        <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-xs text-danger dark:text-danger">{error}</p>
       )}
     </div>
   );

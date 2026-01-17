@@ -49,6 +49,15 @@ export function Input({
     props.onChange?.(e);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevent Enter from submitting the parent form
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+    // Call the parent's onKeyDown if provided
+    props.onKeyDown?.(e);
+  };
+
   const isFloating = isFocused || hasValue;
   const hasLeftIcon = !!leftIcon;
   const hasRightIcon = !!rightIcon;
@@ -78,7 +87,7 @@ export function Input({
           focus:outline-none focus:ring-2
           ${
             error
-              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+              ? "border-danger focus:border-danger focus:ring-danger/20"
               : "border-border hover:border-border-strong focus:border-interactive-primary focus:ring-interactive-primary/20"
           }
         `}
@@ -86,6 +95,7 @@ export function Input({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         required={required}
         {...props}
       />
@@ -103,11 +113,11 @@ export function Input({
           absolute transition-all duration-200 pointer-events-none text-text-secondary!
           ${hasLeftIcon ? "left-10" : "left-4"}
           ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
-          ${error ? "text-red-500" : ""}
+          ${error ? "text-danger" : ""}
         `}
       >
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-danger ml-1">*</span>}
       </Label>
 
       {/* Helper text or error message */}
@@ -115,7 +125,7 @@ export function Input({
         {(helperText || error) && (
           <p
             className={`text-xs ${
-              error ? "text-red-600" : "text-text-secondary"
+              error ? "text-danger" : "text-text-secondary"
             }`}
           >
             {error || helperText}

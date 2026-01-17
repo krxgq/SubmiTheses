@@ -2,15 +2,16 @@ import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { formatUserName } from "@/lib/formatters";
 import { Avatar } from '@/components/ui/Avatar';
 import { FileText, Target, ListChecks, Calendar } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import DOMPurify from 'isomorphic-dompurify';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
+import { getTranslations } from 'next-intl/server';
 
 interface ProjectOverviewProps {
   project: ProjectWithRelations;
 }
 
-export default function ProjectOverview({ project }: ProjectOverviewProps) {
+export default async function ProjectOverview({ project }: ProjectOverviewProps) {
+  const t = await getTranslations('projectDetail');
+  const tProjects = await getTranslations('projects');
   const description = project.project_description;
 
   return (
@@ -22,7 +23,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
             <div className="bg-background-elevated rounded-lg border border-border p-6">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold text-text-primary">Topic</h2>
+                <h2 className="text-xl font-semibold text-text-primary">{t('topic')}</h2>
               </div>
               <p className="text-text-primary leading-relaxed">
                 {description.topic}
@@ -34,7 +35,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
             <div className="bg-background-elevated rounded-lg border border-border p-6">
               <div className="flex items-center gap-2 mb-3">
                 <Target className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold text-text-primary">Project Goal</h2>
+                <h2 className="text-xl font-semibold text-text-primary">{t('projectGoal')}</h2>
               </div>
               <p className="text-text-primary leading-relaxed">
                 {description.project_goal}
@@ -46,26 +47,12 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
             <div className="bg-background-elevated rounded-lg border border-border p-6">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold text-text-primary">Specification</h2>
+                <h2 className="text-xl font-semibold text-text-primary">{t('specification')}</h2>
               </div>
-              <div className="text-text-primary leading-relaxed prose prose-slate dark:prose-invert max-w-none">
-                <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
-                  components={{
-                    // Disable potentially dangerous HTML elements to prevent XSS
-                    script: () => null,
-                    iframe: () => null,
-                    object: () => null,
-                    embed: () => null,
-                  }}
-                >
-                  {DOMPurify.sanitize(description.specification, {
-                    ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'del', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'code', 'pre', 'blockquote', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'hr', 'img'],
-                    ALLOWED_ATTR: ['href', 'title', 'alt', 'src', 'align'],
-                    ALLOW_DATA_ATTR: false,
-                  })}
-                </ReactMarkdown>
-              </div>
+              <MarkdownRenderer
+                content={description.specification}
+                className="text-text-primary leading-relaxed"
+              />
             </div>
           )}
 
@@ -73,10 +60,10 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
             <div className="bg-background-elevated rounded-lg border border-border p-6">
               <div className="flex items-center gap-2 mb-3">
                 <ListChecks className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold text-text-primary">Needed Output</h2>
+                <h2 className="text-xl font-semibold text-text-primary">{t('neededOutput')}</h2>
               </div>
               <ul className="list-disc list-inside space-y-2">
-                {description.needed_output.map((output, index) => (
+                {description.needed_output.map((output: string, index: number) => (
                   <li key={index} className="text-text-primary">
                     {output}
                   </li>
@@ -89,7 +76,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
             <div className="bg-background-elevated rounded-lg border border-border p-6">
               <div className="flex items-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-primary" />
-                <h2 className="text-xl font-semibold text-text-primary">Schedule</h2>
+                <h2 className="text-xl font-semibold text-text-primary">{t('schedule')}</h2>
               </div>
               <div className="space-y-3">
                 {description.schedule.map((item: any, index: number) => (
@@ -100,7 +87,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
                     )}
                     {item.deadline && (
                       <div className="text-xs text-text-tertiary mt-1">
-                        Deadline: {new Date(item.deadline).toLocaleDateString()}
+                        {t('deadline')}: {new Date(item.deadline).toLocaleDateString()}
                       </div>
                     )}
                   </div>
@@ -114,13 +101,13 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
       {/* Fallback if no description */}
       {!description && (
         <div className="bg-background-elevated rounded-lg border border-border p-6">
-          <p className="text-text-secondary text-center">No project description available.</p>
+          <p className="text-text-secondary text-center">{t('noDescription')}</p>
         </div>
       )}
 
       {/* Participants */}
       <div className="bg-background-elevated rounded-lg border border-border p-6">
-        <h2 className="text-xl font-semibold text-text-primary mb-4">Team</h2>
+        <h2 className="text-xl font-semibold text-text-primary mb-4">{t('team')}</h2>
         <div className="space-y-4">
           {/* Supervisor */}
           {project.supervisor && (
@@ -130,7 +117,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
                 <div className="text-sm font-medium text-text-primary">
                   {formatUserName(project.supervisor.first_name, project.supervisor.last_name) || project.supervisor.email}
                 </div>
-                <div className="text-xs text-text-secondary">Supervisor</div>
+                <div className="text-xs text-text-secondary">{tProjects('supervisor')}</div>
               </div>
             </div>
           )}
@@ -143,7 +130,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
                 <div className="text-sm font-medium text-text-primary">
                   {formatUserName(project.opponent.first_name, project.opponent.last_name) || project.opponent.email}
                 </div>
-                <div className="text-xs text-text-secondary">Opponent</div>
+                <div className="text-xs text-text-secondary">{tProjects('opponent')}</div>
               </div>
             </div>
           )}
@@ -156,7 +143,7 @@ export default function ProjectOverview({ project }: ProjectOverviewProps) {
                 <div className="text-sm font-medium text-text-primary">
                   {formatUserName(project.student.first_name, project.student.last_name) || project.student.email}
                 </div>
-                <div className="text-xs text-text-secondary">Student</div>
+                <div className="text-xs text-text-secondary">{tProjects('student')}</div>
               </div>
             </div>
           )}

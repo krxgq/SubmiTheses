@@ -182,7 +182,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ project, options }) => {
         {description?.needed_output && description.needed_output.length > 0 && (
           <View>
             <Text style={styles.subheading}>Požadované výstupy:</Text>
-            {description.needed_output.map((output, index) => (
+            {description.needed_output.map((output: string, index: number) => (
               <Text key={index} style={styles.bulletPoint}>• {output}</Text>
             ))}
           </View>
@@ -193,7 +193,7 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ project, options }) => {
           <View>
             <Text style={styles.subheading}>Hodnocení:</Text>
             <Text style={styles.normalText}>Projekt bude hodnocen na základě:</Text>
-            {description.grading_criteria.map((criterion, index) => (
+            {description.grading_criteria.map((criterion: string, index: number) => (
               <Text key={index} style={styles.bulletPoint}>• {criterion}</Text>
             ))}
             {description?.grading_notes && (

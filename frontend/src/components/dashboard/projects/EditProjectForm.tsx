@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import type { ProjectWithRelations, ProjectScheduleEntry } from "@sumbi/shared-types";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { UserSelect } from "@/components/ui/UserSelect";
 import { SubjectSelect } from "@/components/ui/SubjectSelect";
 import { ArrayInput } from "@/components/ui/ArrayInput";
@@ -61,7 +61,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
           topic: formData.topic,
           project_goal: formData.project_goal,
           specification: formData.specification,
-          needed_output: formData.needed_output.filter(item => item.trim() !== ""),
+          needed_output: formData.needed_output.filter((item: string) => item.trim() !== ""),
           schedule: formData.schedule.length > 0 ? formData.schedule : undefined,
         },
       };
@@ -82,16 +82,16 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
   };
 
   return (
-    <div className="bg-background-elevated w-full max-w-4xl mx-auto p-6 rounded-lg shadow-md">
+    <div className="bg-background-elevated w-full max-w-full sm:max-w-4xl mx-auto p-3 sm:p-6 md:p-8 rounded-lg shadow-md">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary">Edit Project</h1>
+        <h1 className="text-xl sm:text-2xl font-semibold text-text-primary">Edit Project</h1>
         <p className="text-sm text-text-secondary mt-1">Update project details and description</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-text-primary border-b border-border pb-2">
+          <h2 className="text-base sm:text-lg font-medium text-text-primary border-b border-border pb-2">
             Basic Information
           </h2>
           
@@ -115,7 +115,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
 
         {/* Topic & Goals */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-text-primary border-b border-border pb-2">
+          <h2 className="text-base sm:text-lg font-medium text-text-primary border-b border-border pb-2">
             Topic & Goals
           </h2>
 
@@ -139,30 +139,33 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
 
         {/* Specification & Outputs */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-text-primary border-b border-border pb-2">
+          <h2 className="text-base sm:text-lg font-medium text-text-primary border-b border-border pb-2">
             Specification & Required Outputs
           </h2>
 
-          <RichTextEditor
+          <MarkdownEditor
             label="Project Specification"
             id="specification"
             value={formData.specification}
             onChange={(value) => updateField("specification", value)}
             minHeight={250}
+            maxLength={5000}
+            showCharCount
           />
 
           <ArrayInput
             label="Required Outputs"
             value={formData.needed_output}
             onChange={(items) => updateField("needed_output", items)}
-            placeholder="Enter output item"
+            placeholder="Enter output item (minimum 3 characters)"
             minItems={1}
+            minLength={3}
           />
         </div>
 
         {/* Schedule */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-text-primary border-b border-border pb-2">
+          <h2 className="text-base sm:text-lg font-medium text-text-primary border-b border-border pb-2">
             Timeline
           </h2>
 
@@ -174,7 +177,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
 
         {/* Team Selection */}
         <div className="space-y-4">
-          <h2 className="text-lg font-medium text-text-primary border-b border-border pb-2">
+          <h2 className="text-base sm:text-lg font-medium text-text-primary border-b border-border pb-2">
             Team Selection
           </h2>
 
@@ -198,12 +201,12 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+        <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-border">
           <button
             type="button"
             onClick={handleCancel}
             disabled={isSubmitting}
-            className="px-6 py-2 border border-border rounded-lg text-text-primary hover:bg-background-secondary transition-colors duration-200 disabled:opacity-50"
+            className="w-full sm:w-auto px-6 py-2 border border-border rounded-lg text-text-primary hover:bg-background-secondary transition-colors duration-200 disabled:opacity-50"
           >
             Cancel
           </button>
@@ -211,11 +214,11 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors duration-200 disabled:opacity-50 flex items-center gap-2"
+            className="w-full sm:w-auto px-6 py-2 bg-primary text-text-inverse rounded-lg hover:bg-primary-hover transition-colors duration-200 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <>
-                <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                <div className="animate-spin h-4 w-4 border-2 border-text-inverse border-t-transparent rounded-full" />
                 Updating...
               </>
             ) : (

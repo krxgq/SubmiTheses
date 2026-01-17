@@ -26,5 +26,9 @@ export default async function AdminPage() {
     console.error('[AdminPage] Error fetching data:', error);
   }
 
-  return <AdminPageClient subjects={subjects} scales={scales} scaleSets={scaleSets} years={years} />;
+  return (
+    <div className="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+      <AdminPageClient subjects={subjects} scales={scales} scaleSets={scaleSets} years={years} />
+    </div>
+  );
 }

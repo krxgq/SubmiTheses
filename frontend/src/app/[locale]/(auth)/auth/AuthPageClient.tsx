@@ -163,9 +163,9 @@ export default function AuthPageClient() {
 
     const passwordStrength = calculatePasswordStrength(registerForm.password)
     const getPasswordStrengthColor = () => {
-        if (passwordStrength <= 1) return 'bg-red-500 dark:bg-red-400'
-        if (passwordStrength <= 3) return 'bg-yellow-500 dark:bg-yellow-400'
-        return 'bg-green-500 dark:bg-green-400'
+        if (passwordStrength <= 1) return 'bg-danger'
+        if (passwordStrength <= 3) return 'bg-warning'
+        return 'bg-success'
     }
 
     const getPasswordStrengthText = () => {
@@ -193,14 +193,14 @@ export default function AuthPageClient() {
 
                 {/* Global Messages */}
                 {authError && (
-                    <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400">
+                    <div className="mb-4 p-4 bg-danger/10 dark:bg-danger/10 border border-danger/30 dark:border-danger/30 rounded-lg flex items-center gap-2 text-danger dark:text-danger">
                         <XCircle className="w-5 h-5" />
                         {authError}
                     </div>
                 )}
 
                 {successMessage && (
-                    <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <div className="mb-4 p-4 bg-success/10 dark:bg-success/10 border border-success/30 dark:border-success/30 rounded-lg flex items-center gap-2 text-success dark:text-success">
                         <CheckCircle className="w-5 h-5" />
                         {successMessage}
                     </div>
@@ -250,7 +250,7 @@ export default function AuthPageClient() {
                                         />
                                         <span className="ml-2 text-sm text-secondary">Remember me</span>
                                     </label>
-                                    <button type="button" className="text-sm text-primary hover:text-blue-700 dark:hover:text-blue-400">
+                                    <button type="button" className="text-sm text-primary hover:text-primary-hover dark:hover:text-primary">
                                         Forgot password?
                                     </button>
                                 </div>
@@ -258,7 +258,7 @@ export default function AuthPageClient() {
                                 <button
                                     type="submit"
                                     disabled={isLoading || authLoading}
-                                    className="w-full bg-primary hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    className="w-full bg-primary hover:bg-primary-hover dark:hover:bg-primary/100 disabled:opacity-50 disabled:cursor-not-allowed text-text-inverse font-semibold py-3 px-4 rounded-lg transition-colors"
                                 >
                                     {(isLoading || authLoading) ? 'Signing In...' : 'Sign In'}
                                 </button>
@@ -324,8 +324,8 @@ export default function AuthPageClient() {
                                         <div className="mt-2">
                                             <div className="flex items-center justify-between mb-1">
                                                 <span className="text-xs text-text-secondary">Password strength:</span>
-                                                <span className={`text-xs font-medium ${passwordStrength <= 1 ? 'text-red-600 dark:text-red-400' :
-                                                        passwordStrength <= 3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-green-600 dark:text-green-400'
+                                                <span className={`text-xs font-medium ${passwordStrength <= 1 ? 'text-danger' :
+                                                        passwordStrength <= 3 ? 'text-warning' : 'text-success'
                                                     }`}>
                                                     {getPasswordStrengthText()}
                                                 </span>
@@ -370,17 +370,17 @@ export default function AuthPageClient() {
                                         />
                                         <span className="ml-2 text-sm text-secondary">
                                             I agree to the{' '}
-                                            <a href="/terms" className="text-primary hover:text-blue-700 dark:hover:text-blue-400 underline">
+                                            <a href="/terms" className="text-primary hover:text-primary-hover dark:hover:text-primary underline">
                                                 Terms and Conditions
                                             </a>{' '}
                                             and{' '}
-                                            <a href="/privacy" className="text-primary hover:text-blue-700 dark:hover:text-blue-400 underline">
+                                            <a href="/privacy" className="text-primary hover:text-primary-hover dark:hover:text-primary underline">
                                                 Privacy Policy
                                             </a>
                                         </span>
                                     </label>
                                     {registerErrors.acceptTerms && (
-                                        <p className="text-sm text-red-600 dark:text-red-400">{registerErrors.acceptTerms}</p>
+                                        <p className="text-sm text-danger dark:text-danger">{registerErrors.acceptTerms}</p>
                                     )}
 
                                     <label className="flex items-center">
@@ -399,7 +399,7 @@ export default function AuthPageClient() {
                                 <button
                                     type="submit"
                                     disabled={isLoading || authLoading}
-                                    className="w-full bg-primary hover:bg-blue-700 dark:hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors"
+                                    className="w-full bg-primary hover:bg-primary-hover dark:hover:bg-primary/100 disabled:opacity-50 disabled:cursor-not-allowed text-text-inverse font-semibold py-3 px-4 rounded-lg transition-colors"
                                 >
                                     {(isLoading || authLoading) ? 'Creating Account...' : 'Create Account'}
                                 </button>

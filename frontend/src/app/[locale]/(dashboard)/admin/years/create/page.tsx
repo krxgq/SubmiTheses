@@ -24,7 +24,7 @@ export default async function CreateYearPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
+    <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-text-primary mb-8">
         {cloneSourceYear ? `Clone Year: ${cloneSourceYear.name}` : 'Create New Academic Year'}
       </h1>

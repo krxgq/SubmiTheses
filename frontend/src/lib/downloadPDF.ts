@@ -10,8 +10,8 @@ export async function downloadProjectPDF(project: ProjectWithRelations): Promise
   // Generate PDF client-side using @react-pdf/renderer
   const pdfBuffer = await exportProjectToPDF(project, {
     studentName: formatUserName(project.student?.first_name, project.student?.last_name) || 'Not assigned',
-    studentClass: '4. A',
-    schoolYear: '2025/2026',
+    studentClass: project.student?.class || 'Not assigned',
+    schoolYear: project.year?.name || 'Unknown',
     fieldOfStudy: 'Informační technologie 18-20-M/01',
     supervisorName: formatUserName(project.supervisor?.first_name, project.supervisor?.last_name) || 'Unknown',
   });

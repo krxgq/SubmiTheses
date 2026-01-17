@@ -18,6 +18,7 @@ interface ProjectHeaderProps {
 
 export default function ProjectHeader({ project }: ProjectHeaderProps) {
   const t = useTranslations('projects');
+  const tButtons = useTranslations('buttons');
   const { user } = useAuth();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
@@ -86,10 +87,10 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
     setIsExportingPDF(true);
     try {
       await downloadProjectPDF(project);
-      toast.success('PDF exported successfully');
+      toast.success(t('pdfExportSuccess'));
     } catch (error: any) {
       console.error('PDF export error:', error);
-      toast.error(error.message || 'Failed to export PDF');
+      toast.error(error.message || t('pdfExportFailed'));
     } finally {
       setIsExportingPDF(false);
     }
@@ -111,10 +112,10 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
   return (
     <div className="mb-6">
       {/* Title section with status and category */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1">
-          <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-bold text-text-primary">{project.title}</h1>
+      <div className="space-y-4">
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">{project.title}</h1>
             {project.status && (
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[project.status as keyof typeof statusStyles]}`}>
                 {t(`status.${project.status}`)}
@@ -122,7 +123,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
             )}
           </div>
 
-          <div className="flex items-center gap-4 text-sm text-text-secondary">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-text-secondary">
             <span className="px-3 py-1 bg-interactive-secondary text-text-accent rounded-md font-medium">
               {project.subject}
             </span>
@@ -134,7 +135,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
 
         {/* Action buttons (Export PDF, Upload File) - Only for assigned users */}
         {canInteract && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               onClick={handleExportPDF}
               disabled={isExportingPDF}
@@ -147,7 +148,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               )}
-              {isExportingPDF ? 'Exporting...' : t('exportPdf')}
+              {isExportingPDF ? t('exporting') : t('exportPdf')}
             </button>
             <button
               onClick={handleUploadClick}
@@ -165,9 +166,9 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
       {/* Upload File Modal */}
       {/*TODO: remade it to reusable component */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-background-elevated rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop">
+          <div className="bg-background-elevated rounded-lg shadow-xl w-full max-w-[calc(100vw-2rem)] sm:max-w-2xl mx-4 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-border">
               <h3 className="text-xl font-semibold text-text-primary">{t('uploadFiles')}</h3>
               <button
                 onClick={handleCloseModal}
@@ -180,7 +181,7 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-3 sm:p-6 space-y-4">
               <UploadField
                 label={t('chooseFiles')}
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif,.txt,.zip"
@@ -188,22 +189,22 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
                 multiple={true}
                 onChange={handleFilesChange}
                 onError={setUploadError}
-                helperText="Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB per file)"
+                helperText={t('fileFormatsHelper')}
               />
 
               {uploadError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-200">{uploadError}</p>
+                <div className="p-3 bg-danger/10 border border-danger rounded-lg">
+                  <p className="text-sm text-danger">{uploadError}</p>
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button color="gray" onClick={handleCloseModal} disabled={isUploading}>
-                Cancel
+              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseModal} disabled={isUploading}>
+                {tButtons('cancel')}
               </Button>
-              <Button onClick={handleUploadSubmit} disabled={isUploading || uploadedFiles.length === 0}>
-                {isUploading ? t('uploading') : 'Upload'}
+              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleUploadSubmit} disabled={isUploading || uploadedFiles.length === 0}>
+                {isUploading ? t('uploading') : t('uploadButton')}
               </Button>
             </div>
           </div>

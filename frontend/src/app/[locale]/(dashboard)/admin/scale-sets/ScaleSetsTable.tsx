@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link, useRouter } from '@/lib/navigation';
-import { Button } from 'flowbite-react';
+import { Button, Dropdown, DropdownItem } from 'flowbite-react';
 import { Plus, MoreVertical } from 'lucide-react';
 import type { ScaleSet } from '@/lib/api/scale-sets';
 import { deleteScaleSet } from '@/lib/api/scale-sets';
+import { useApi } from '@/hooks/useApi';
+import { toast } from 'sonner';
 
 interface ScaleSetsTableProps {
   scaleSets: ScaleSet[];
 }
 
-// Client component for scale sets table with filtering and actions
 export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
   const t = useTranslations('admin.scaleSets');
   const router = useRouter();
   const [roleFilter, setRoleFilter] = useState<'all' | 'supervisor' | 'opponent'>('all');
-  const [actionMenuOpen, setActionMenuOpen] = useState<bigint | null>(null);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; right: number } | null>(null);
-  const buttonRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
+  const { execute: performDelete, loading: isDeleting } = useApi<[bigint], void>(deleteScaleSet);
 
   const filteredScaleSets = useMemo(() => {
     return scaleSets.filter((scaleSet) => {
@@ -28,33 +28,15 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
     });
   }, [scaleSets, roleFilter]);
 
-  // Calculate menu position when opening
-  const handleMenuToggle = (scaleSetId: bigint) => {
-    if (actionMenuOpen === scaleSetId) {
-      setActionMenuOpen(null);
-      setMenuPosition(null);
-    } else {
-      const button = buttonRefs.current.get(String(scaleSetId));
-      if (button) {
-        const rect = button.getBoundingClientRect();
-        setMenuPosition({
-          top: rect.bottom + 8,
-          right: window.innerWidth - rect.right,
-        });
-      }
-      setActionMenuOpen(scaleSetId);
-    }
-  };
-
   const handleDelete = async (id: bigint, name: string) => {
     if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
 
     try {
-      await deleteScaleSet(id);
+      await performDelete(id);
+      toast.success(`Scale set "${name}" deleted successfully.`);
       router.refresh();
-    } catch (error) {
-      alert('Failed to delete scale set.');
-      console.error(error);
+    } catch (err) {
+      toast.error('Failed to delete scale set.');
     }
   };
 
@@ -63,7 +45,6 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-text-primary">{t('title')}</h1>
         <div className="flex items-center gap-3">
-          {/* Role filter */}
           <select
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value as any)}
@@ -75,7 +56,7 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
           </select>
 
           <Link href="/admin/scale-sets/create">
-            <Button size="sm">
+            <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
               <Plus className="w-4 h-4 mr-2" />
               {t('create')}
             </Button>
@@ -118,8 +99,8 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
                           scaleSet.project_role === 'supervisor'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-purple-100 text-purple-800'
+                            ? 'bg-primary/10 text-primary'
+                            : 'bg-accent/10 text-accent'
                         }`}
                       >
                         {scaleSet.project_role === 'supervisor' ? t('supervisor') : t('opponent')}
@@ -128,53 +109,24 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
                     <td className="px-6 py-4 text-text-secondary">
                       {scaleSet._count?.scale_set_scales || scaleSet.scale_set_scales?.length || 0}
                     </td>
-                    <td className="px-6 py-4">
-                      <button
-                        ref={(el) => {
-                          if (el) buttonRefs.current.set(String(scaleSet.id), el);
-                        }}
-                        onClick={() => handleMenuToggle(scaleSet.id)}
-                        className="p-1 hover:bg-background-hover rounded"
+                    <td className="px-6 py-4 text-right">
+                      <Dropdown
+                        label={<MoreVertical className="w-5 h-5 text-text-secondary" />}
+                        arrowIcon={false}
+                        inline
+                        size="sm"
                       >
-                        <MoreVertical className="w-5 h-5 text-text-secondary" />
-                      </button>
-
-                      {actionMenuOpen === scaleSet.id && menuPosition && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-10"
-                            onClick={() => {
-                              setActionMenuOpen(null);
-                              setMenuPosition(null);
-                            }}
-                          />
-                          <div
-                            className="fixed w-48 bg-background-elevated border border-border rounded-lg shadow-xl z-20"
-                            style={{ top: `${menuPosition.top}px`, right: `${menuPosition.right}px` }}
-                          >
-                            <Link
-                              href={`/admin/scale-sets/${scaleSet.id}/edit`}
-                              className="block px-4 py-2 text-sm text-text-primary hover:bg-background-hover"
-                              onClick={() => {
-                                setActionMenuOpen(null);
-                                setMenuPosition(null);
-                              }}
-                            >
-                              Edit
-                            </Link>
-                            <button
-                              onClick={() => {
-                                handleDelete(scaleSet.id, scaleSet.name);
-                                setActionMenuOpen(null);
-                                setMenuPosition(null);
-                              }}
-                              className="block w-full text-left px-4 py-2 text-sm text-danger hover:bg-danger/10"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </>
-                      )}
+                        <DropdownItem as={Link} href={`/admin/scale-sets/${scaleSet.id}/edit`}>
+                          Edit
+                        </DropdownItem>
+                        <DropdownItem
+                          onClick={() => handleDelete(scaleSet.id, scaleSet.name)}
+                          className="text-danger"
+                          disabled={isDeleting}
+                        >
+                          {isDeleting ? 'Deleting...' : 'Delete'}
+                        </DropdownItem>
+                      </Dropdown>
                     </td>
                   </tr>
                 ))}

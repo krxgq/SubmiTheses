@@ -57,7 +57,7 @@ export function Avatar({
 
   return (
     <div
-      className={`${sizeMap[size]} rounded-full flex items-center justify-center font-semibold text-white overflow-hidden ${className || ''}`}
+      className={`${sizeMap[size]} rounded-full flex items-center justify-center font-semibold text-text-inverse overflow-hidden ${className || ''}`}
       style={{ backgroundColor }}
     >
       {src ? (
