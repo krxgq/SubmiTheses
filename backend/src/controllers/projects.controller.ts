@@ -1,10 +1,9 @@
 import { ProjectService } from '../services/projects.service';
+import { ActivityLogService } from '../services/activity-logs.service';
 import { Request, Response } from 'express';
 import type {
-  Project,
+  ProjectLite,
   ProjectWithRelations,
-  CreateProjectRequest,
-  UpdateProjectRequest
 } from '@sumbi/shared-types';
 
 // Extend BigInt to support JSON serialization
@@ -66,7 +65,7 @@ export async function getProjectById(req: Request, res: Response) {
  */
 export async function createProject(req: Request, res: Response) {
   try {
-    const project = await ProjectService.createProject(req.body);
+    const project = await ProjectService.createProject(req.body, req.user!.id);
     return res.status(201).json(project);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to create project' });
@@ -79,7 +78,7 @@ export async function createProject(req: Request, res: Response) {
 export async function updateProject(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.id);
-    const project = await ProjectService.updateProject(id, req.body);
+    const project = await ProjectService.updateProject(id, req.body, req.user!.id);
 
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
@@ -117,7 +116,7 @@ export async function assignStudentToProject(req: Request, res: Response) {
   try {
     const projectId = BigInt(req.params.id);
     const studentId = req.body.studentId; // UUID string or null
-    const project = await ProjectService.assignStudentToProject(projectId, studentId);
+    const project = await ProjectService.assignStudentToProject(projectId, studentId, req.user!.id);
 
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
@@ -126,5 +125,86 @@ export async function assignStudentToProject(req: Request, res: Response) {
     return res.status(200).json(project);
   } catch (error) {
     return res.status(500).json({ error: 'Failed to assign student to project' });
+  }
+}
+
+/**
+ * Get recent activities for a project
+ * Returns the last N activities (default: 5) with user information
+ */
+export async function getProjectActivities(req: Request, res: Response) {
+  try {
+    const projectId = BigInt(req.params.id);
+    const limit = parseInt(req.query.limit as string) || 5;
+
+    const activities = await ActivityLogService.getRecentActivities(projectId, limit);
+
+    return res.status(200).json({
+      activities,
+      total: activities.length,
+    });
+  } catch (error) {
+    console.error('[ProjectsController] Error fetching activities:', error);
+    return res.status(500).json({ error: 'Failed to fetch activities' });
+  }
+}
+
+/**
+ * Update project status (lock/unlock/publish)
+ * PUT /projects/:id/status
+ * Body: { status: 'draft' | 'locked' | 'public' }
+ */
+export async function updateProjectStatus(req: Request, res: Response) {
+  try {
+    const projectId = BigInt(req.params.id);
+    const { status } = req.body;
+    const userId = req.user!.id;
+
+    if (!['draft', 'locked', 'public'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status. Must be draft, locked, or public' });
+    }
+
+    let project;
+
+    if (status === 'locked') {
+      // Lock project
+      project = await ProjectService.lockProject(projectId, userId, 'manual');
+    } else if (status === 'draft') {
+      // Unlock project (revert to draft)
+      project = await ProjectService.unlockProject(projectId, userId);
+    } else if (status === 'public') {
+      // Publish project
+      project = await ProjectService.publishProject(projectId);
+    }
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    return res.status(200).json({
+      message: `Project status updated to ${status}`,
+      project
+    });
+  } catch (error: any) {
+    console.error('[ProjectsController] Error updating project status:', error);
+    return res.status(500).json({ error: error.message || 'Failed to update project status' });
+  }
+}
+
+/**
+ * Trigger auto-lock check manually (admin only, for testing)
+ * POST /projects/auto-lock
+ */
+export async function triggerAutoLock(req: Request, res: Response) {
+  try {
+    const lockedCount = await ProjectService.autoLockExpiredProjects();
+
+    return res.status(200).json({
+      message: `Auto-locked ${lockedCount} projects`,
+      lockedCount
+    });
+  } catch (error: any) {
+    console.error('[ProjectsController] Error in auto-lock:', error);
+    return res.status(500).json({ error: error.message || 'Failed to auto-lock projects' });
   }
 }

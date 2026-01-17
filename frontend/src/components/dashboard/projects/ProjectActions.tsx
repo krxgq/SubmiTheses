@@ -1,7 +1,7 @@
 'use client';
 import { formatUserName } from "@/lib/formatters";
 
-import { Share2, Printer, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown } from 'lucide-react';
+import { Share2, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown, Lock, Unlock } from 'lucide-react';
 import { Button } from 'flowbite-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -12,13 +12,27 @@ import { projectsApi } from '@/lib/api/projects';
 import { downloadProjectPDF } from '@/lib/downloadPDF';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { useAuth } from '@/hooks/useAuth';
+import { useTranslations } from 'next-intl';
 
 interface ProjectActionsProps {
   project: ProjectWithRelations;
 }
 
 export default function ProjectActions({ project }: ProjectActionsProps) {
-  const { user } = useAuth();
+  const t = useTranslations('projectDetail.actions');
+  const tMessages = useTranslations('projectDetail.messages');
+  const tConfirmations = useTranslations('projectDetail.confirmations');
+  const tButtons = useTranslations('buttons');
+
+  const authState = useAuth();
+  const { user } = authState;
+
+  console.log('[ProjectActions] Auth state:', {
+    user,
+    isLoading: authState.isLoading,
+    isAuthenticated: authState.isAuthenticated
+  });
+
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -32,6 +46,8 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isLocking, setIsLocking] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Permission checks based on user role and project relationship
   const isAdmin = user?.role === 'admin';
@@ -49,8 +65,23 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const canEdit = isAdmin || (isAssignedStudent && project.status === 'draft') || isSupervisor;
   const canDelete = isAdmin || (isSupervisor && project.status === 'draft');
   const canInteract = isAdmin || isAssignedStudent || isAssignedTeacher; // Upload/Export/Share permissions
+  const canLock = (isAdmin || isSupervisor) && project.status !== 'locked';
+  const canUnlock = (isAdmin || isSupervisor) && project.status === 'locked';
+  const canPublish = isAdmin && project.status === 'locked';
 
   const hasStudent = !!project.student_id;
+
+  // Debug: Log lock button conditions
+  console.log('[ProjectActions Debug]', {
+    userId: user?.id,
+    userRole: user?.role,
+    isAdmin,
+    isSupervisor,
+    projectStatus: project.status,
+    canLock,
+    canUnlock,
+    canPublish
+  });
 
   // Check if user has ANY actions available - if not, hide the entire Actions section
   const hasAnyActions = canEdit || canManage || canDelete || canInteract;
@@ -67,10 +98,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     setIsDeleting(true);
     try {
       await projectsApi.deleteProject(String(project.id));
-      toast.success('Project deleted successfully');
+      toast.success(tMessages('projectDeleted'));
       router.push('/projects');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to delete project');
+      toast.error(error.message || tMessages('projectDeleteFailed'));
       console.error('Delete error:', error);
     } finally {
       setIsDeleting(false);
@@ -85,18 +116,18 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
   const handleAssignConfirm = async () => {
     if (!selectedStudentId) {
-      toast.error('Please select a student');
+      toast.error(tMessages('selectStudent'));
       return;
     }
 
     setIsAssigning(true);
     try {
       await projectsApi.assignStudent(String(project.id), selectedStudentId);
-      toast.success('Student assigned successfully');
+      toast.success(tMessages('studentAssigned'));
       setShowAssignModal(false);
       router.refresh();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to assign student');
+      toast.error(error.message || tMessages('studentAssignFailed'));
       console.error('Assign error:', error);
     } finally {
       setIsAssigning(false);
@@ -111,11 +142,11 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     setIsRemoving(true);
     try {
       await projectsApi.removeStudent(String(project.id));
-      toast.success('Student removed successfully');
+      toast.success(tMessages('studentRemoved'));
       setShowRemoveStudentModal(false);
       router.refresh();
     } catch (error: any) {
-      toast.error(error.message || 'Failed to remove student');
+      toast.error(error.message || tMessages('studentRemoveFailed'));
       console.error('Remove error:', error);
     } finally {
       setIsRemoving(false);
@@ -124,11 +155,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
   const handleShare = () => {
     console.log('Share project');
-  };
-
-  const handlePrint = () => {
-    // TODO: Implement print functionality
-    console.log('Print view - to be implemented');
   };
 
   const handleNotifications = () => {
@@ -147,7 +173,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
   const handleUploadSubmit = async () => {
     if (uploadedFiles.length === 0) {
-      setUploadError('Please select at least one file');
+      setUploadError(tMessages('selectFile'));
       return;
     }
 
@@ -166,9 +192,9 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
       setUploadedFiles([]);
       setUploadError('');
 
-      toast.success('Files uploaded successfully');
+      toast.success(tMessages('filesUploaded'));
     } catch (error) {
-      setUploadError('Failed to upload files. Please try again.');
+      setUploadError(tMessages('filesUploadFailed'));
       console.error('Upload error:', error);
     } finally {
       setIsUploading(false);
@@ -198,12 +224,54 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     setIsExportingPDF(true);
     try {
       await downloadProjectPDF(project);
-      toast.success('PDF exported successfully');
+      toast.success(tMessages('pdfExported'));
     } catch (error: any) {
       console.error('PDF export error:', error);
-      toast.error(error.message || 'Failed to export PDF');
+      toast.error(error.message || tMessages('pdfExportFailed'));
     } finally {
       setIsExportingPDF(false);
+    }
+  };
+
+  const handleLock = async () => {
+    setIsLocking(true);
+    try {
+      await projectsApi.lockProject(String(project.id));
+      toast.success(tMessages('projectLocked'));
+      // Force page reload to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || tMessages('projectLockFailed'));
+      console.error('Lock error:', error);
+      setIsLocking(false);
+    }
+  };
+
+  const handleUnlock = async () => {
+    setIsLocking(true);
+    try {
+      await projectsApi.unlockProject(String(project.id));
+      toast.success(tMessages('projectUnlocked'));
+      // Force page reload to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || tMessages('projectUnlockFailed'));
+      console.error('Unlock error:', error);
+      setIsLocking(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      await projectsApi.publishProject(String(project.id));
+      toast.success(tMessages('projectPublished'));
+      // Force page reload to show updated status
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || tMessages('projectPublishFailed'));
+      console.error('Publish error:', error);
+      setIsPublishing(false);
     }
   };
 
@@ -215,7 +283,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   return (
     <>
       <div className="bg-background-elevated rounded-lg border border-border p-6 mb-6">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Actions</h3>
+        <h3 className="text-lg font-semibold text-text-primary mb-4">{t('title')}</h3>
 
         <div className="space-y-2">
           {/* Edit Button - Admin, assigned student (draft only), or supervisor */}
@@ -225,8 +293,52 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
             >
               <Edit className="w-5 h-5 text-primary" />
-              <span>Edit Project</span>
+              <span>{t('editProject')}</span>
             </button>
+          )}
+
+          {/* Lock Button - Admin or supervisor can lock any unlocked project */}
+          {canLock && (
+            <button
+              onClick={handleLock}
+              disabled={isLocking}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
+            >
+              <Lock className="w-5 h-5 text-warning" />
+              <span>{isLocking ? t('locking') : t('lockProject')}</span>
+            </button>
+          )}
+
+          {/* Unlock Button - Admin or supervisor can unlock locked projects */}
+          {canUnlock && (
+            <button
+              onClick={handleUnlock}
+              disabled={isLocking}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
+            >
+              <Unlock className="w-5 h-5 text-success" />
+              <span>{isLocking ? t('unlocking') : t('unlockProject')}</span>
+            </button>
+          )}
+
+          {/* Publish Button - Admin only */}
+          {canPublish && (
+            <button
+              onClick={handlePublish}
+              disabled={isPublishing}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-inverse bg-primary rounded-lg hover:bg-primary-hover transition-colors disabled:opacity-50"
+            >
+              <Share2 className="w-5 h-5" />
+              <span>{isPublishing ? t('publishing') : t('publishProject')}</span>
+            </button>
+          )}
+
+          {/* Locked Indicator */}
+          {project.status === 'locked' && (
+            <div className="p-3 bg-warning/10 border border-warning rounded-lg flex items-center gap-2">
+              <Lock className="w-4 h-4 text-warning flex-shrink-0" />
+              <span className="text-sm text-warning font-medium">{t('projectLocked')}</span>
+            </div>
           )}
 
           {/* Student Assignment - Only for admin/supervisor */}
@@ -238,7 +350,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
                 >
                   <UserPlus className="w-5 h-5 text-success" />
-                  <span>Assign Student</span>
+                  <span>{t('assignStudent')}</span>
                 </button>
               ) : (
                 <button
@@ -246,7 +358,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
                 >
                   <UserMinus className="w-5 h-5 text-warning" />
-                  <span>Remove Student</span>
+                  <span>{t('removeStudent')}</span>
                 </button>
               )}
             </>
@@ -257,10 +369,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
             <>
               <button
                 onClick={handleDeleteClick}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-danger bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-danger bg-danger/10 rounded-lg hover:bg-danger/20 transition-colors"
               >
                 <Trash2 className="w-5 h-5 text-danger" />
-                <span>Delete Project</span>
+                <span>{t('deleteProject')}</span>
               </button>
             </>
           )}
@@ -276,7 +388,7 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                 className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
               >
                 <Upload className="w-5 h-5 text-text-accent" />
-                <span>Upload File</span>
+                <span>{t('uploadFile')}</span>
               </button>
 
               <button
@@ -289,28 +401,20 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
                 ) : (
                   <FileDown className="w-5 h-5 text-text-accent" />
                 )}
-                <span>{isExportingPDF ? 'Exporting...' : 'Export as PDF'}</span>
+                <span>{isExportingPDF ? t('exporting') : t('exportPdf')}</span>
               </button>
             </>
           )}
 
-          {/* Print View - Available to all users with view access */}
-          <button
-            onClick={handlePrint}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors"
-          >
-            <Printer className="w-5 h-5 text-text-secondary" />
-            <span>Print View</span>
-          </button>
         </div>
       </div>
 
       {/* Upload File Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop">
           <div className="bg-background-elevated rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-xl font-semibold text-text-primary">Upload Files</h3>
+              <h3 className="text-xl font-semibold text-text-primary">{t('uploadFile')}</h3>
               <button
                 onClick={handleCloseModal}
                 className="text-text-secondary hover:text-text-primary"
@@ -324,28 +428,28 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
             <div className="p-6 space-y-4">
               <UploadField
-                label="Select files to upload"
+                label={t('selectFiles')}
                 accept=".pdf,.doc,.docx,.txt,.zip"
                 maxSize={20}
                 multiple={true}
                 onChange={handleFilesChange}
                 onError={setUploadError}
-                helperText="Accepted formats: PDF, DOC, DOCX, TXT, ZIP (Max 20MB per file)"
+                helperText={t('acceptedFormats')}
               />
 
               {uploadError && (
-                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                  <p className="text-sm text-red-800 dark:text-red-200">{uploadError}</p>
+                <div className="p-3 bg-danger/10 border border-danger rounded-lg">
+                  <p className="text-sm text-danger">{uploadError}</p>
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button color="gray" onClick={handleCloseModal} disabled={isUploading}>
-                Cancel
+              <Button className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseModal} disabled={isUploading}>
+                {tButtons('cancel')}
               </Button>
-              <Button onClick={handleUploadSubmit} disabled={isUploading || uploadedFiles.length === 0}>
-                {isUploading ? 'Uploading...' : 'Upload'}
+              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleUploadSubmit} disabled={isUploading || uploadedFiles.length === 0}>
+                {isUploading ? t('uploading') : t('upload')}
               </Button>
             </div>
           </div>
@@ -354,10 +458,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
       {/* Assign Student Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop">
           <div className="bg-background-elevated rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-xl font-semibold text-text-primary">Assign Student</h3>
+              <h3 className="text-xl font-semibold text-text-primary">{t('assignStudent')}</h3>
               <button
                 onClick={handleCloseAssignModal}
                 className="text-text-secondary hover:text-text-primary"
@@ -371,22 +475,22 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
             <div className="p-6">
               <UserSelect
-                label="Select Student"
+                label={t('selectStudent')}
                 id="student"
                 value={selectedStudentId}
                 onChange={setSelectedStudentId}
                 role="student"
-                helperText="Choose a student to assign to this project"
+                helperText={t('selectStudentHelper')}
                 required
               />
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button color="gray" onClick={handleCloseAssignModal} disabled={isAssigning}>
-                Cancel
+              <Button className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseAssignModal} disabled={isAssigning}>
+                {tButtons('cancel')}
               </Button>
-              <Button onClick={handleAssignConfirm} disabled={isAssigning || !selectedStudentId}>
-                {isAssigning ? 'Assigning...' : 'Assign Student'}
+              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleAssignConfirm} disabled={isAssigning || !selectedStudentId}>
+                {isAssigning ? t('assigning') : t('assignStudent')}
               </Button>
             </div>
           </div>
@@ -395,10 +499,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
       {/* Remove Student Modal */}
       {showRemoveStudentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop">
           <div className="bg-background-elevated rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-xl font-semibold text-text-primary">Remove Student</h3>
+              <h3 className="text-xl font-semibold text-text-primary">{tConfirmations('removeStudentTitle')}</h3>
               <button
                 onClick={handleCloseRemoveStudentModal}
                 className="text-text-secondary hover:text-text-primary"
@@ -412,19 +516,19 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
             <div className="p-6">
               <p className="text-text-primary mb-2">
-                Are you sure you want to remove <strong>{formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email}</strong> from this project?
+                {tConfirmations('removeStudentMessage', { name: formatUserName(project.student?.first_name, project.student?.last_name) || project.student?.email || '' })}
               </p>
               <p className="text-text-secondary text-sm">
-                The student will no longer be assigned to this project.
+                {tConfirmations('removeStudentDescription')}
               </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button color="gray" onClick={handleCloseRemoveStudentModal} disabled={isRemoving}>
-                Cancel
+              <Button className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseRemoveStudentModal} disabled={isRemoving}>
+                {tButtons('cancel')}
               </Button>
-              <Button color="warning" onClick={handleRemoveStudentConfirm} disabled={isRemoving}>
-                {isRemoving ? 'Removing...' : 'Remove Student'}
+              <Button className="bg-warning hover:bg-warning-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleRemoveStudentConfirm} disabled={isRemoving}>
+                {isRemoving ? t('removing') : t('removeStudent')}
               </Button>
             </div>
           </div>
@@ -433,10 +537,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-backdrop">
           <div className="bg-background-elevated rounded-lg shadow-xl max-w-md w-full mx-4">
             <div className="flex items-center justify-between p-4 border-b border-border">
-              <h3 className="text-xl font-semibold text-text-primary">Delete Project</h3>
+              <h3 className="text-xl font-semibold text-text-primary">{tConfirmations('deleteProjectTitle')}</h3>
               <button
                 onClick={handleCloseDeleteModal}
                 className="text-text-secondary hover:text-text-primary"
@@ -450,19 +554,19 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
             <div className="p-6">
               <p className="text-text-primary mb-2">
-                Are you sure you want to delete <strong>{project.title}</strong>?
+                {tConfirmations('deleteProjectMessage', { title: project.title })}
               </p>
               <p className="text-text-secondary text-sm">
-                This action cannot be undone. All project data, attachments, and related information will be permanently removed.
+                {tConfirmations('deleteProjectDescription')}
               </p>
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button color="gray" onClick={handleCloseDeleteModal} disabled={isDeleting}>
-                Cancel
+              <Button className="bg-interactive-secondary hover:bg-interactive-secondary-hover text-text-primary px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseDeleteModal} disabled={isDeleting}>
+                {tButtons('cancel')}
               </Button>
-              <Button color="failure" onClick={handleDeleteConfirm} disabled={isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Delete Project'}
+              <Button className="bg-danger hover:bg-danger-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleDeleteConfirm} disabled={isDeleting}>
+                {isDeleting ? t('deleting') : t('deleteProject')}
               </Button>
             </div>
           </div>

@@ -5,6 +5,12 @@ import routes from './routes/api';
 
 const app: Express = express();
 
+// Enable BigInt serialization globally
+// This allows Prisma BigInt values to be sent as strings in JSON responses
+(BigInt.prototype as any).toJSON = function() {
+  return this.toString();
+};
+
 // CORS configuration - allow frontend to access API
 const corsOptions = {
   origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000', 'http://localhost:3001'],
