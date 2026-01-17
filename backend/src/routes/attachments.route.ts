@@ -4,13 +4,20 @@ import { requireProjectAccess, requireProjectModify } from '../middleware/author
 import {
   getProjectAttachments,
   getAttachmentById,
-  uploadAttachment,
-  downloadAttachment,
   deleteAttachment,
 } from '../controllers/attachments.controller';
-import { upload } from '../middleware/upload';
+import {
+  requestUploadUrl,
+  confirmUpload,
+  getDownloadUrl,
+} from '../controllers/s3-upload.controller';
 import { validate } from '../middleware/validate';
-import { attachmentIdSchema, projectIdSchema } from '../validation/schemas';
+import {
+  attachmentIdSchema,
+  projectIdSchema,
+  requestUploadUrlSchema,
+  confirmUploadSchema,
+} from '../validation/schemas';
 
 const router = Router();
 
@@ -20,13 +27,17 @@ router.get('/:id/attachments', authenticated, requireProjectAccess, validate(pro
 // Get a specific attachment metadata
 router.get('/:id/attachments/:attachmentId', authenticated, requireProjectAccess, validate(attachmentIdSchema), getAttachmentById);
 
-// Upload new attachments (supports multiple files)
-router.post('/:id/attachments', authenticated, requireProjectModify, validate(projectIdSchema), upload.array('files', 10), uploadAttachment);
+// S3 Direct Upload Flow
+// Step 1: Request pre-signed URL for upload
+router.post('/:id/attachments/request-upload', authenticated, requireProjectModify, validate(requestUploadUrlSchema), requestUploadUrl);
 
-// Download an attachment
-router.get('/:id/attachments/:attachmentId/download', authenticated, requireProjectAccess, validate(attachmentIdSchema), downloadAttachment);
+// Step 2: Confirm upload after file is uploaded to S3
+router.post('/:id/attachments/confirm-upload', authenticated, requireProjectModify, validate(confirmUploadSchema), confirmUpload);
 
-// Delete an attachment
+// Get pre-signed download URL for an attachment
+router.get('/:id/attachments/:attachmentId/download-url', authenticated, requireProjectAccess, validate(attachmentIdSchema), getDownloadUrl);
+
+// Delete an attachment (from S3 and database)
 router.delete('/:id/attachments/:attachmentId', authenticated, requireProjectModify, validate(attachmentIdSchema), deleteAttachment);
 
 export default router

@@ -53,6 +53,7 @@ export const updateUserSchema = z.object({
       .regex(/^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/, 'Last name contains invalid characters')
       .optional(),
     year_id: z.coerce.bigint().nullable().optional(),
+    class: z.string().max(10).optional(),
     raw_user_meta_data: z.record(z.string(), z.unknown()).optional(),
     raw_app_meta_data: z.record(z.string(), z.unknown()).optional(),
   }),
@@ -72,7 +73,7 @@ export const createProjectSchema = z.object({
     opponent_id: z.string().uuid().nullable().optional(), // Make opponent optional
     student_id: z.string().uuid().optional(),
     year_id: z.coerce.bigint(),
-    status: z.enum(['draft', 'submitted', 'locked', 'public']).optional(),
+    status: z.enum(['draft', 'locked', 'public']).optional(),
 
     // Nested project description (optional but recommended)
     project_description: z.object({
@@ -103,8 +104,26 @@ export const updateProjectSchema = z.object({
   body: z.object({
     title: z.string().min(1).max(255).optional(),
     description: z.string().optional(),
-    subject_id: z.coerce.bigint().optional(), // Allow updating subject_id
+    subject_id: z.coerce.bigint().optional(),
+    supervisor_id: z.string().uuid().optional(),
+    opponent_id: z.string().uuid().nullable().optional(),
+    student_id: z.string().uuid().nullable().optional(),
+    main_documentation: z.string().optional(),
+    status: z.enum(['draft', 'locked', 'public']).optional(),
     year_id: z.coerce.bigint().optional(),
+    project_description: z.object({
+      topic: z.string().optional(),
+      project_goal: z.string().optional(),
+      specification: z.string().optional(),
+      needed_output: z.array(z.string().min(3)).optional(),
+      schedule: z.array(z.object({
+        date: z.string(),
+        task: z.string(),
+        completed: z.boolean().optional(),
+      })).optional(),
+      grading_criteria: z.array(z.string()).optional(),
+      grading_notes: z.string().optional(),
+    }).optional(),
   }),
   params: z.object({
     id: z.coerce.bigint(),
@@ -128,7 +147,7 @@ export const createSubjectSchema = z.object({
 export const updateSubjectSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(255).optional(),
-    description: z.string().optional(),
+    description: z.string().nullable().optional(), // Allow null or string
     is_active: z.boolean().optional(),
   }),
   params: z.object({
@@ -144,7 +163,7 @@ export const subjectIdSchema = z.object({
 
 export const addStudentToProjectSchema = z.object({
   body: z.object({
-    student_id: z.string().uuid(),
+    studentId: z.string().uuid().nullable(), // Allow null to unassign student
   }),
   params: z.object({
     id: z.coerce.bigint(),
@@ -444,5 +463,28 @@ export const validateInvitationTokenSchema = z.object({
 export const resendInvitationSchema = z.object({
   params: z.object({
     id: z.string().uuid('Invalid user ID'),
+  }),
+});
+
+// S3 Upload schemas
+export const requestUploadUrlSchema = z.object({
+  body: z.object({
+    filename: z.string().min(1).max(255),
+    contentType: z.string().min(1),
+    fileSize: z.number().int().min(1).max(10 * 1024 * 1024), // Max 10MB
+  }),
+  params: z.object({
+    id: z.coerce.bigint(),
+  }),
+});
+
+export const confirmUploadSchema = z.object({
+  body: z.object({
+    key: z.string().min(1),
+    filename: z.string().min(1).max(255),
+    description: z.string().max(500).optional(),
+  }),
+  params: z.object({
+    id: z.coerce.bigint(),
   }),
 });
