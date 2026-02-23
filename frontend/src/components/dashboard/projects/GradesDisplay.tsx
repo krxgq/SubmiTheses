@@ -5,10 +5,12 @@ import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
 import { Award, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { ProjectWithRelations } from '@sumbi/shared-types';
 
 interface GradesDisplayProps {
   projectId: string;
   isStudent: boolean;
+  project: ProjectWithRelations;  // Needed to determine reviewer's project role
 }
 
 /**
@@ -17,8 +19,9 @@ interface GradesDisplayProps {
  * For admins: Always visible
  * Shows detailed breakdown grouped by reviewer
  */
-export default function GradesDisplay({ projectId, isStudent }: GradesDisplayProps) {
+export default function GradesDisplay({ projectId, isStudent, project }: GradesDisplayProps) {
   const t = useTranslations('projectDetail.grading');
+  const tProjects = useTranslations('projects');
   const [grades, setGrades] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [canView, setCanView] = useState(false);
@@ -87,6 +90,10 @@ export default function GradesDisplay({ projectId, isStudent }: GradesDisplayPro
         const reviewer = reviewerData.reviewer;
         const reviewerGrades = reviewerData.grades;
 
+        // Determine project role by matching reviewer ID to project assignments
+        const isReviewerSupervisor = reviewer.id === project.supervisor_id;
+        const projectRoleLabel = isReviewerSupervisor ? tProjects('supervisor') : tProjects('opponent');
+
         // Calculate weighted average for this reviewer
         // Note: Ideally weight should come from scale_set_scales
         // For now, we'll calculate simple average
@@ -117,7 +124,7 @@ export default function GradesDisplay({ projectId, isStudent }: GradesDisplayPro
                   <h3 className="font-semibold text-text-primary">
                     {reviewer.first_name} {reviewer.last_name}
                   </h3>
-                  <p className="text-sm text-text-secondary capitalize">{reviewer.role}</p>
+                  <p className="text-sm text-text-secondary">{projectRoleLabel}</p>
                 </div>
               </div>
               <div className="text-right">

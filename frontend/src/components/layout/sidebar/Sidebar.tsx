@@ -24,6 +24,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useAuthContext } from "@/components/providers/AuthProvider";
 import { LanguageSwitcher } from "@/components/layout/header/LanguageSwitcher";
 import { useTranslations } from "next-intl";
+import { notificationsApi } from "@/lib/api/notifications";
 
 interface NavItem {
   id: string;
@@ -86,12 +87,28 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const themeMenuRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Poll unread notification count for sidebar dot indicator
+  useEffect(() => {
+    const fetchUnread = async () => {
+      try {
+        const count = await notificationsApi.getUnreadCount();
+        setUnreadCount(count);
+      } catch {
+        // Silently fail — sidebar dot is non-critical
+      }
+    };
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   // Close dropdowns when clicking outside
@@ -203,7 +220,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
                 onClick={() => handleNavigation(item.path)}
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
-                  transition-all duration-200
+                  transition-all duration-200 relative
                   ${
                     isActive
                       ? "bg-primary text-text-inverse shadow-sm"
@@ -213,6 +230,14 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
               >
                 <IconComponent className="w-5 h-5 flex-shrink-0" />
                 <span>{t(item.translationKey)}</span>
+                {/* Unread notification dot */}
+                {item.id === "notifications" && unreadCount > 0 && (
+                  <span
+                    className={`ml-auto w-2 h-2 rounded-full flex-shrink-0 ${
+                      isActive ? "bg-text-inverse" : "bg-accent-danger"
+                    }`}
+                  />
+                )}
               </button>
             );
           })}

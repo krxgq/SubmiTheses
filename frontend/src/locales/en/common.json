@@ -12,6 +12,73 @@
     "cancel": "Cancel",
     "save": "Save"
   },
+  "notifications": {
+    "title": "Notifications",
+    "markAsRead": "Mark as read",
+    "markAllAsRead": "Mark all as read",
+    "deleteNotification": "Delete notification",
+    "clearAll": "Clear all",
+    "clearAllConfirm": "Are you sure you want to clear all notifications?",
+    "unreadCount": "{count} unread notification",
+    "unreadCount_plural": "{count} unread notifications",
+    "allCaughtUp": "You are all caught up!",
+    "loading": "Loading notifications...",
+    "noNotifications": "No notifications",
+    "noNotificationsDescription": "You don't have any notifications yet",
+    "noUnreadNotifications": "You don't have any unread notifications",
+    "viewAll": "View all notifications",
+    "filters": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "types": {
+      "project_assignment": "Project Assignment",
+      "teacher_assigned": "Teacher Assigned",
+      "grade_published": "Grades Available",
+      "grades_submitted": "Grades Submitted",
+      "review_submitted": "Review Submitted",
+      "status_changed": "Status Changed",
+      "project_locked": "Project Submitted",
+      "project_unlocked": "Project Unlocked",
+      "deadline_reminder": "Deadline Reminder",
+      "signup_received": "Student Signup",
+      "system": "System"
+    },
+    "titles_i18n": {
+      "project_assignment": "Project assigned",
+      "project_assignment_teacher": "Student assigned to project",
+      "teacher_assigned_supervisor": "Assigned as supervisor",
+      "teacher_assigned_opponent": "Assigned as opponent",
+      "status_changed": "Project status: {status}",
+      "project_locked": "Project submitted",
+      "project_locked_automatic": "Project automatically locked",
+      "project_unlocked": "Project unlocked",
+      "deadline_reminder": "Project deadline approaching",
+      "review_submitted": "New review submitted",
+      "review_submitted_opponent": "Opponent review submitted",
+      "review_submitted_supervisor": "Supervisor review submitted",
+      "grades_submitted": "Grades submitted",
+      "grade_published": "Grades available",
+      "signup_received": "New project signup"
+    },
+    "messages_i18n": {
+      "project_assignment": "You have been assigned to project \"{projectTitle}\"",
+      "project_assignment_teacher": "{studentName} has been assigned to \"{projectTitle}\"",
+      "teacher_assigned_supervisor": "You have been assigned as supervisor for project \"{projectTitle}\"",
+      "teacher_assigned_opponent": "You have been assigned as opponent for project \"{projectTitle}\"",
+      "status_changed": "Project \"{projectTitle}\" status changed to {status}",
+      "project_locked": "Project \"{projectTitle}\" has been locked",
+      "project_locked_automatic": "Project \"{projectTitle}\" has been automatically locked (deadline reached)",
+      "project_unlocked": "Project \"{projectTitle}\" has been unlocked — you can now edit it",
+      "deadline_reminder": "Reminder: Project \"{projectTitle}\" is due in {days} days",
+      "review_submitted": "{reviewerName} submitted a review for \"{projectTitle}\"",
+      "review_submitted_opponent": "Opponent submitted a review for \"{projectTitle}\"",
+      "review_submitted_supervisor": "Supervisor submitted a review for \"{projectTitle}\"",
+      "grades_submitted": "Grades have been submitted for \"{projectTitle}\"",
+      "grade_published": "Grades are now available for \"{projectTitle}\"",
+      "signup_received": "{studentName} expressed interest in \"{projectTitle}\""
+    }
+  },
   "sidebar": {
     "dashboard": "Dashboard",
     "schools": "Schools",
@@ -174,6 +241,16 @@
     "asSupervisor": "As Supervisor",
     "asOpponent": "As Opponent",
     "createNewProject": "Create New Project",
+    "browseAvailableTopics": "Browse Available Topics",
+    "availableTopics": "Available Topics",
+    "availableTopicsDescription": "Browse and sign up for thesis topics that interest you",
+    "availableTopicsCount": "{count} topics available",
+    "noAvailableTopics": "No Available Topics",
+    "noAvailableTopicsDescription": "There are currently no topics available for signup. Check back later or contact your supervisor.",
+    "backToProjects": "Back to Projects",
+    "alreadyHasProject": "You already have a project",
+    "searchPlaceholder": "Search projects...",
+    "noYearAssigned": "No Year Assigned",
     "sections": {
       "myProjects": "My Projects",
       "supervisor": "As Supervisor",
@@ -257,6 +334,10 @@
       }
     }
   },
+  "errors": {
+    "deadlinePassed": "Submission deadline has passed. You can no longer modify this project.",
+    "deadlinePassedTitle": "Deadline Passed"
+  },
   "projectDetail": {
     "mainDocumentation": "Main Documentation",
     "exporting": "Exporting...",
@@ -307,7 +388,25 @@
       "acceptedFormats": "Accepted formats: PDF, DOC, DOCX, TXT, ZIP (Max 20MB per file)",
       "acceptedFormatsHeader": "Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB per file)",
       "upload": "Upload",
-      "uploading": "Uploading..."
+      "uploading": "Uploading...",
+      "signups": {
+        "signUp": "Sign Up for This Topic",
+        "cancelSignup": "Cancel Sign-Up",
+        "signingUp": "Signing up...",
+        "cancelling": "Cancelling...",
+        "loading": "Loading...",
+        "signupSuccess": "You have signed up for this topic",
+        "signupCancelled": "Sign-up cancelled",
+        "signupFailed": "Failed to sign up",
+        "cancelFailed": "Failed to cancel sign-up",
+        "interestedStudents": "Interested Students",
+        "noSignups": "No students have signed up for this topic yet",
+        "showAllStudents": "Show all students",
+        "showInterestedOnly": "Show interested students only",
+        "interested": "Interested",
+        "orSelectFromAll": "or select from all students",
+        "allStudents": "All Students"
+      }
     },
     "confirmations": {
       "removeStudentTitle": "Remove Student",
@@ -350,7 +449,8 @@
       "linksDescription": "Will display related URLs, resources, references, etc.",
       "reviewsPlaceholder": "Reviews section - to be implemented",
       "reviewsDescription": "Will display supervisor and opponent reviews",
-      "noGradesAccess": "You do not have access to view or submit grades for this project."
+      "noGradesAccess": "You do not have access to view or submit grades for this project.",
+      "notAssignedToGrade": "You are not assigned to grade this project. Only the supervisor and opponent can submit grades."
     },
     "attachments": {
       "uploadTitle": "Upload Attachment",
@@ -381,8 +481,38 @@
         "gb": "GB"
       }
     },
+    "externalLinks": {
+      "title": "External Links",
+      "addLink": "Add Link",
+      "urlPlaceholder": "Enter URL (e.g., https://github.com/...)",
+      "save": "Save",
+      "delete": "Delete",
+      "noLinks": "No external links yet",
+      "noLinksHelper": "Add URLs to related resources, documentation, or references",
+      "deleteTitle": "Delete External Link",
+      "deleteMessage": "Are you sure you want to delete this link?",
+      "descriptionTitle": "Link Description",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Add notes or description for this link (supports Markdown)",
+      "addDescription": "Add description",
+      "editDescription": "Edit description",
+      "openLink": "Open link in new tab",
+      "noUrl": "No URL entered",
+      "linkSaved": "Link saved",
+      "linkDeleted": "Link deleted",
+      "linkSaveFailed": "Failed to save link",
+      "linkDeleteFailed": "Failed to delete link",
+      "loadFailed": "Failed to load external links"
+    },
     "grading": {
       "noScaleSet": "No scale set configured for your role",
+      "gradingAs": "You are grading as",
+      "gradesSubmittedStatus": "Grades saved",
+      "projectNotLocked": "Project not yet submitted",
+      "projectNotLockedDesc": "Grading will be available after the student submits (locks) their project.",
+      "deadlinePassed": "Feedback deadline has passed",
+      "deadlinePassedDesc": "The deadline for submitting grades has expired. Contact an administrator if you need to make changes.",
+      "feedbackDeadline": "Feedback deadline",
       "instructions": "Grade each criterion below. Your grades are private (blind grading). You can modify them anytime before the feedback date.",
       "weight": "Weight: {weight}%",
       "points": "/ {max} points",

@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/Textarea";
 import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { UserSelect } from "@/components/ui/UserSelect";
 import { SubjectSelect } from "@/components/ui/SubjectSelect";
+import { Select } from "@/components/ui/Select";
+import type { SelectOption } from "@/components/ui/Select";
 import { ArrayInput } from "@/components/ui/ArrayInput";
 import { ScheduleBuilder } from "./ScheduleBuilder";
 import { projectsApi } from "@/lib/api/projects";
-import { yearsApi } from "@/lib/api/years";
+import { yearsApi, getAllYears } from "@/lib/api/years";
 
 // Multi-step form for creating comprehensive project with all fields
 export default function CreateProjectModule() {
@@ -22,12 +24,13 @@ export default function CreateProjectModule() {
   const { user, isLoading } = useAuth(); // Get current user for role-based logic
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentYearId, setCurrentYearId] = useState<number | null>(null);
+  const [yearOptions, setYearOptions] = useState<SelectOption[]>([]); // dropdown options for academic years
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
     // Step 1: Basic Info
     title: "",
-    subject_id: null as bigint | null, 
+    subject_id: null as bigint | null,
+    year_id: "" as string, // stored as string for Select component, converted to number on submit
 
     // Step 2: Topic & Goals
     topic: "",
@@ -47,23 +50,38 @@ export default function CreateProjectModule() {
 
   const totalSteps = 5;
 
-  // Fetch current academic year on mount
+  // Fetch all years for dropdown and pre-select the current year
   useEffect(() => {
-    const fetchCurrentYear = async () => {
+    const fetchYears = async () => {
       try {
-        const year = await yearsApi.getCurrent();
-        if (year?.id) {
-          setCurrentYearId(Number(year.id));
+        const [allYears, currentYear] = await Promise.all([
+          getAllYears(),
+          yearsApi.getCurrent(),
+        ]);
+
+        // Build dropdown options from all years
+        // Fallback to "Unnamed" if year.name is null (shouldn't happen in practice)
+        const options = allYears.map((y) => ({
+          value: String(y.id),
+          label: y.name ?? `Year #${y.id}`,
+        }));
+        setYearOptions(options);
+
+        // Pre-select current year if no year was restored from draft
+        if (currentYear?.id) {
+          setFormData((prev) =>
+            prev.year_id === "" ? { ...prev, year_id: String(currentYear.id) } : prev
+          );
         } else {
           toast.warning("No active academic year found. Please contact admin.");
         }
       } catch (error) {
-        console.error("Failed to fetch current year:", error);
-        toast.error("Failed to load academic year. Please try again.");
+        console.error("Failed to fetch years:", error);
+        toast.error("Failed to load academic years. Please try again.");
       }
     };
 
-    fetchCurrentYear();
+    fetchYears();
   }, []);
 
   // Load saved draft from sessionStorage on mount
@@ -127,6 +145,9 @@ export default function CreateProjectModule() {
         }
         if (formData.subject_id === null) {
           errors.subject_id = "Subject selection is required";
+        }
+        if (!formData.year_id) {
+          errors.year_id = "Academic year selection is required";
         }
         break;
 
@@ -258,9 +279,9 @@ export default function CreateProjectModule() {
     setFieldErrors({}); // Clear errors on valid submission
 
     try {
-      // Verify we have a current year
-      if (!currentYearId) {
-        toast.error("No active academic year found. Please contact admin.");
+      // Verify year is selected (should be caught by validation, but double-check)
+      if (!formData.year_id) {
+        toast.error("No academic year selected. Please select a year.");
         setIsSubmitting(false);
         return;
       }
@@ -270,7 +291,7 @@ export default function CreateProjectModule() {
         subject_id: formData.subject_id,
         supervisor_id: formData.supervisor_id,
         opponent_id: formData.opponent_id,
-        year_id: currentYearId,
+        year_id: Number(formData.year_id), // convert string back to number for the API
         status: 'draft' as const,
 
         // Nested project description
@@ -305,6 +326,7 @@ export default function CreateProjectModule() {
           const fieldMap: Record<string, string> = {
             'title': 'title',
             'subject_id': 'subject_id',
+            'year_id': 'year_id',
             'topic': 'topic',
             'project_goal': 'project_goal',
             'specification': 'specification',
@@ -369,7 +391,8 @@ export default function CreateProjectModule() {
       sessionStorage.removeItem("create-project-draft");
       setFormData({
         title: "",
-        subject_id: null, // Fixed: Changed from subject to subject_id
+        subject_id: null,
+        year_id: "",
         topic: "",
         project_goal: "",
         specification: "",
@@ -478,6 +501,17 @@ export default function CreateProjectModule() {
               helperText="Select the course or subject area for this project"
               required
               error={fieldErrors.subject_id}
+            />
+            {/* Academic year selector — pre-filled with current year */}
+            <Select
+              label="Academic Year"
+              id="year_id"
+              options={yearOptions}
+              value={formData.year_id}
+              onChange={(value) => updateField("year_id", value)}
+              helperText="Select the academic year this project belongs to"
+              required
+              error={fieldErrors.year_id}
             />
           </div>
 

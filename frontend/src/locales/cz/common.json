@@ -12,6 +12,73 @@
     "cancel": "Zrušit",
     "save": "Uložit"
   },
+  "notifications": {
+    "title": "Oznámení",
+    "markAsRead": "Označit jako přečtené",
+    "markAllAsRead": "Označit vše jako přečtené",
+    "deleteNotification": "Smazat oznámení",
+    "clearAll": "Smazat vše",
+    "clearAllConfirm": "Opravdu chcete smazat všechna oznámení?",
+    "unreadCount": "{count} nepřečtené oznámení",
+    "unreadCount_plural": "{count} nepřečtených oznámení",
+    "allCaughtUp": "Vše je přečteno!",
+    "loading": "Načítání oznámení...",
+    "noNotifications": "Žádná oznámení",
+    "noNotificationsDescription": "Zatím nemáte žádná oznámení",
+    "noUnreadNotifications": "Nemáte žádná nepřečtená oznámení",
+    "viewAll": "Zobrazit všechna oznámení",
+    "filters": {
+      "all": "Vše",
+      "unread": "Nepřečtené"
+    },
+    "types": {
+      "project_assignment": "Přiřazení projektu",
+      "teacher_assigned": "Přiřazení učitele",
+      "grade_published": "Hodnocení k dispozici",
+      "grades_submitted": "Hodnocení odevzdáno",
+      "review_submitted": "Odevzdaná recenze",
+      "status_changed": "Změna stavu",
+      "project_locked": "Projekt odevzdán",
+      "project_unlocked": "Projekt odemčen",
+      "deadline_reminder": "Připomínka termínu",
+      "signup_received": "Přihláška studenta",
+      "system": "Systémové"
+    },
+    "titles_i18n": {
+      "project_assignment": "Přiřazení k projektu",
+      "project_assignment_teacher": "Student přiřazen k projektu",
+      "teacher_assigned_supervisor": "Přiřazen jako vedoucí",
+      "teacher_assigned_opponent": "Přiřazen jako oponent",
+      "status_changed": "Stav projektu: {status}",
+      "project_locked": "Projekt odevzdán",
+      "project_locked_automatic": "Projekt automaticky uzamčen",
+      "project_unlocked": "Projekt odemčen",
+      "deadline_reminder": "Blíží se termín projektu",
+      "review_submitted": "Nová recenze odevzdána",
+      "review_submitted_opponent": "Oponent odevzdal recenzi",
+      "review_submitted_supervisor": "Vedoucí odevzdal recenzi",
+      "grades_submitted": "Známky odevzdány",
+      "grade_published": "Známky k dispozici",
+      "signup_received": "Nová přihláška k projektu"
+    },
+    "messages_i18n": {
+      "project_assignment": "Byli jste přiřazeni k projektu \"{projectTitle}\"",
+      "project_assignment_teacher": "{studentName} byl přiřazen k projektu \"{projectTitle}\"",
+      "teacher_assigned_supervisor": "Byli jste přiřazeni jako vedoucí projektu \"{projectTitle}\"",
+      "teacher_assigned_opponent": "Byli jste přiřazeni jako oponent projektu \"{projectTitle}\"",
+      "status_changed": "Stav projektu \"{projectTitle}\" byl změněn na {status}",
+      "project_locked": "Projekt \"{projectTitle}\" byl uzamčen",
+      "project_locked_automatic": "Projekt \"{projectTitle}\" byl automaticky uzamčen (termín uplynul)",
+      "project_unlocked": "Projekt \"{projectTitle}\" byl odemčen — nyní ho můžete upravovat",
+      "deadline_reminder": "Připomínka: Projekt \"{projectTitle}\" má termín za {days} dní",
+      "review_submitted": "{reviewerName} odevzdal recenzi k projektu \"{projectTitle}\"",
+      "review_submitted_opponent": "Oponent odevzdal recenzi k projektu \"{projectTitle}\"",
+      "review_submitted_supervisor": "Vedoucí odevzdal recenzi k projektu \"{projectTitle}\"",
+      "grades_submitted": "Známky byly odevzdány pro projekt \"{projectTitle}\"",
+      "grade_published": "Známky jsou nyní k dispozici pro projekt \"{projectTitle}\"",
+      "signup_received": "{studentName} projevil zájem o projekt \"{projectTitle}\""
+    }
+  },
   "sidebar": {
     "dashboard": "Nástěnka",
     "schools": "Školy",
@@ -174,6 +241,16 @@
     "asSupervisor": "Jako Vedoucí",
     "asOpponent": "Jako Oponent",
     "createNewProject": "Vytvořit Nový Projekt",
+    "browseAvailableTopics": "Procházet dostupná témata",
+    "availableTopics": "Dostupná témata",
+    "availableTopicsDescription": "Procházejte a přihlaste se k tématům závěrečných prací, která vás zajímají",
+    "availableTopicsCount": "{count} dostupných témat",
+    "noAvailableTopics": "Žádná dostupná témata",
+    "noAvailableTopicsDescription": "Momentálně nejsou k dispozici žádná témata k přihlášení. Zkuste to později nebo kontaktujte svého vedoucího.",
+    "backToProjects": "Zpět na projekty",
+    "alreadyHasProject": "Již máte přiřazený projekt",
+    "searchPlaceholder": "Hledat projekty...",
+    "noYearAssigned": "Bez přiřazeného ročníku",
     "sections": {
       "myProjects": "Moje Projekty",
       "supervisor": "Jako Vedoucí",
@@ -257,6 +334,10 @@
       }
     }
   },
+  "errors": {
+    "deadlinePassed": "Termín odevzdání uplynul. Již nemůžete upravovat tento projekt.",
+    "deadlinePassedTitle": "Termín uplynul"
+  },
   "projectDetail": {
     "mainDocumentation": "Hlavní dokumentace",
     "exporting": "Exportování...",
@@ -307,7 +388,25 @@
       "acceptedFormats": "Podporované formáty: PDF, DOC, DOCX, TXT, ZIP (Max 20MB na soubor)",
       "acceptedFormatsHeader": "Podporované formáty: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB na soubor)",
       "upload": "Nahrát",
-      "uploading": "Nahrávání..."
+      "uploading": "Nahrávání...",
+      "signups": {
+        "signUp": "Přihlásit se k tomuto tématu",
+        "cancelSignup": "Zrušit přihlášku",
+        "signingUp": "Přihlašování...",
+        "cancelling": "Rušení...",
+        "loading": "Načítání...",
+        "signupSuccess": "Přihlásili jste se k tomuto tématu",
+        "signupCancelled": "Přihláška zrušena",
+        "signupFailed": "Přihlášení se nezdařilo",
+        "cancelFailed": "Zrušení přihlášky se nezdařilo",
+        "interestedStudents": "Zájemci",
+        "noSignups": "K tomuto tématu se zatím nikdo nepřihlásil",
+        "showAllStudents": "Zobrazit všechny studenty",
+        "showInterestedOnly": "Zobrazit pouze zájemce",
+        "interested": "Zájemce",
+        "orSelectFromAll": "nebo vyberte ze všech studentů",
+        "allStudents": "Všichni studenti"
+      }
     },
     "confirmations": {
       "removeStudentTitle": "Odebrat studenta",
@@ -350,7 +449,8 @@
       "linksDescription": "Zobrazí související URL, zdroje, reference atd.",
       "reviewsPlaceholder": "Sekce posudků - bude implementována",
       "reviewsDescription": "Zobrazí posudky vedoucího a oponenta",
-      "noGradesAccess": "Nemáte přístup k zobrazení nebo odevzdání známek pro tento projekt."
+      "noGradesAccess": "Nemáte přístup k zobrazení nebo odevzdání známek pro tento projekt.",
+      "notAssignedToGrade": "Nejste přiřazeni k hodnocení tohoto projektu. Známky mohou odevzdávat pouze vedoucí a oponent."
     },
     "attachments": {
       "uploadTitle": "Nahrát přílohu",
@@ -381,8 +481,38 @@
         "gb": "GB"
       }
     },
+    "externalLinks": {
+      "title": "Externí odkazy",
+      "addLink": "Přidat odkaz",
+      "urlPlaceholder": "Zadejte URL (např. https://github.com/...)",
+      "save": "Uložit",
+      "delete": "Smazat",
+      "noLinks": "Zatím žádné externí odkazy",
+      "noLinksHelper": "Přidejte URL na související zdroje, dokumentaci nebo reference",
+      "deleteTitle": "Smazat externí odkaz",
+      "deleteMessage": "Opravdu chcete smazat tento odkaz?",
+      "descriptionTitle": "Popis odkazu",
+      "descriptionLabel": "Popis",
+      "descriptionPlaceholder": "Přidejte poznámky nebo popis odkazu (podporuje Markdown)",
+      "addDescription": "Přidat popis",
+      "editDescription": "Upravit popis",
+      "openLink": "Otevřít odkaz v nové záložce",
+      "noUrl": "URL nezadáno",
+      "linkSaved": "Odkaz uložen",
+      "linkDeleted": "Odkaz smazán",
+      "linkSaveFailed": "Nepodařilo se uložit odkaz",
+      "linkDeleteFailed": "Nepodařilo se smazat odkaz",
+      "loadFailed": "Nepodařilo se načíst externí odkazy"
+    },
     "grading": {
       "noScaleSet": "Pro vaši roli není nakonfigurována žádná sada škál",
+      "gradingAs": "Hodnotíte jako",
+      "gradesSubmittedStatus": "Známky uloženy",
+      "projectNotLocked": "Projekt ještě nebyl odevzdán",
+      "projectNotLockedDesc": "Hodnocení bude dostupné po odevzdání (uzamčení) projektu studentem.",
+      "deadlinePassed": "Termín zpětné vazby uplynul",
+      "deadlinePassedDesc": "Termín pro odevzdání známek vypršel. Kontaktujte administrátora, pokud potřebujete provést změny.",
+      "feedbackDeadline": "Termín zpětné vazby",
       "instructions": "Ohodnoťte každé kritérium níže. Vaše známky jsou soukromé (slepé hodnocení). Můžete je upravit kdykoli před datem zpětné vazby.",
       "weight": "Váha: {weight}%",
       "points": "/ {max} bodů",

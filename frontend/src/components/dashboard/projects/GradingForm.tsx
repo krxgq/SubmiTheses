@@ -3,12 +3,21 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
-import { Save, Calculator } from 'lucide-react';
+import { Save, Calculator, UserCheck, CheckCircle, AlertCircle, Clock, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+
+// Grading status returned from backend
+interface GradingStatus {
+  canSubmit: boolean;
+  projectStatus: string;
+  feedbackDate: string | null;
+  isBeforeDeadline: boolean;
+}
 
 interface GradingFormProps {
   projectId: string;
   yearId: string;
+  projectRole: 'supervisor' | 'opponent';  // Teacher's role on this specific project
 }
 
 /**
@@ -16,13 +25,16 @@ interface GradingFormProps {
  * Fetches scale set based on teacher's role (supervisor/opponent)
  * Implements blind grading (teacher only sees their own grades)
  */
-export default function GradingForm({ projectId, yearId }: GradingFormProps) {
+export default function GradingForm({ projectId, yearId, projectRole }: GradingFormProps) {
   const t = useTranslations('projectDetail.grading');
+  const tProjects = useTranslations('projects');
   const [scaleSet, setScaleSet] = useState<any>(null);
   const [existingGrades, setExistingGrades] = useState<any[]>([]);
   const [gradeValues, setGradeValues] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasSubmittedGrades, setHasSubmittedGrades] = useState(false);
+  const [gradingStatus, setGradingStatus] = useState<GradingStatus | null>(null);
 
   // Load scale set and existing grades on mount
   useEffect(() => {
@@ -40,12 +52,18 @@ export default function GradingForm({ projectId, yearId }: GradingFormProps) {
       setScaleSet(scaleSetData);
       setExistingGrades(gradesData);
 
-      // Pre-fill existing grades
+      // Extract grading status from scale set response
+      if (scaleSetData?.gradingStatus) {
+        setGradingStatus(scaleSetData.gradingStatus);
+      }
+
+      // Pre-fill existing grades and track if any exist
       const existingValues: Record<string, number> = {};
       gradesData.forEach((grade: any) => {
         existingValues[String(grade.scale_id)] = Number(grade.value);
       });
       setGradeValues(existingValues);
+      setHasSubmittedGrades(gradesData.length > 0);
     } catch (error: any) {
       toast.error(error.message || t('loadFailed'));
       console.error('Load error:', error);
@@ -135,11 +153,67 @@ export default function GradingForm({ projectId, yearId }: GradingFormProps) {
 
   const weightedAvg = calculateWeightedAverage();
 
+  // Role label for display (Supervisor or Opponent)
+  const roleLabel = projectRole === 'supervisor' ? tProjects('supervisor') : tProjects('opponent');
+
+  // Determine if grading is allowed based on backend status
+  const canGrade = gradingStatus?.canSubmit ?? true;
+  const projectNotLocked = gradingStatus?.projectStatus && gradingStatus.projectStatus !== 'locked';
+  const deadlinePassed = gradingStatus && !gradingStatus.isBeforeDeadline;
+
   return (
     <div className="space-y-6">
+      {/* Role indicator and status banner */}
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-primary/10 border border-primary rounded-lg">
+        <div className="flex items-center gap-2">
+          <UserCheck className="w-5 h-5 text-primary" />
+          <span className="text-sm font-medium text-text-primary">
+            {t('gradingAs')}: <span className="text-primary">{roleLabel}</span>
+          </span>
+        </div>
+        {hasSubmittedGrades && (
+          <div className="flex items-center gap-2 text-status-success">
+            <CheckCircle className="w-4 h-4" />
+            <span className="text-sm font-medium">{t('gradesSubmittedStatus')}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Warning: Project not locked yet */}
+      {projectNotLocked && (
+        <div className="flex items-start gap-3 p-4 bg-warning/10 border border-warning rounded-lg">
+          <Lock className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-text-primary">{t('projectNotLocked')}</p>
+            <p className="text-sm text-text-secondary mt-1">{t('projectNotLockedDesc')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Warning: Deadline passed */}
+      {deadlinePassed && (
+        <div className="flex items-start gap-3 p-4 bg-status-error/10 border border-status-error rounded-lg">
+          <Clock className="w-5 h-5 text-status-error flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-text-primary">{t('deadlinePassed')}</p>
+            <p className="text-sm text-text-secondary mt-1">{t('deadlinePassedDesc')}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback deadline info */}
+      {gradingStatus?.feedbackDate && canGrade && (
+        <div className="flex items-center gap-2 p-3 bg-background-secondary border border-border rounded-lg">
+          <Clock className="w-4 h-4 text-text-secondary" />
+          <span className="text-sm text-text-secondary">
+            {t('feedbackDeadline')}: <span className="font-medium text-text-primary">{new Date(gradingStatus.feedbackDate).toLocaleDateString()}</span>
+          </span>
+        </div>
+      )}
+
       {/* Instructions banner */}
-      <div className="p-4 bg-primary/10 border border-primary rounded-lg">
-        <p className="text-sm text-text-primary">
+      <div className="p-4 bg-background-secondary border border-border rounded-lg">
+        <p className="text-sm text-text-secondary">
           {t('instructions')}
         </p>
       </div>
@@ -174,7 +248,8 @@ export default function GradingForm({ projectId, yearId }: GradingFormProps) {
                   step="0.5"
                   value={currentValue}
                   onChange={(e) => handleGradeChange(scaleId, e.target.value)}
-                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary"
+                  disabled={!canGrade}
+                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <span className="text-sm text-text-secondary whitespace-nowrap">
                   {t('points', { max: maxVal })}
@@ -198,7 +273,7 @@ export default function GradingForm({ projectId, yearId }: GradingFormProps) {
       <div className="flex justify-end gap-3">
         <button
           onClick={handleSubmit}
-          disabled={isSaving}
+          disabled={isSaving || !canGrade}
           className="flex items-center gap-2 px-6 py-3 bg-primary text-text-inverse rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSaving ? (

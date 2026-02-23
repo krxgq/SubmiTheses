@@ -37,7 +37,7 @@ router.post('/:id/attachments/confirm-upload', authenticated, requireProjectModi
 // Get pre-signed download URL for an attachment
 router.get('/:id/attachments/:attachmentId/download-url', authenticated, requireProjectAccess, validate(attachmentIdSchema), getDownloadUrl);
 
-// Delete an attachment (from S3 and database)
+// Delete an attachment
 router.delete('/:id/attachments/:attachmentId', authenticated, requireProjectModify, validate(attachmentIdSchema), deleteAttachment);
 
 export default router

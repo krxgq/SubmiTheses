@@ -32,7 +32,7 @@ export class InvitationService {
     const expiresAt = new Date(Date.now() + this.EXPIRY_MS);
 
     // Update user with invitation token and expiry
-    await prisma.public_users.update({
+    await prisma.users.update({
       where: { id: userId },
       data: {
         password_reset_token: token, // Reuse password_reset_token field for invitations
@@ -62,7 +62,7 @@ export class InvitationService {
     }
 
     // Find user by token
-    const user = await prisma.public_users.findFirst({
+    const user = await prisma.users.findFirst({
       where: {
         password_reset_token: token,
       },
@@ -126,7 +126,7 @@ export class InvitationService {
       const passwordHash = await AuthService.hashPassword(password);
 
       // Update user: set password, clear token, mark as verified
-      await prisma.public_users.update({
+      await prisma.users.update({
         where: { id: user.id },
         data: {
           password_hash: passwordHash,
@@ -162,7 +162,7 @@ export class InvitationService {
   static async resendInvitation(userId: string): Promise<{ success: boolean; message: string }> {
     try {
       // Get user details
-      const user = await prisma.public_users.findUnique({
+      const user = await prisma.users.findUnique({
         where: { id: userId },
         select: {
           id: true,

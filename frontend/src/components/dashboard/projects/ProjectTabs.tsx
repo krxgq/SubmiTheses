@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import AttachmentsTab from './AttachmentsTab';
+import ExternalLinksTab from './ExternalLinksTab';
 import GradingForm from './GradingForm';
 import GradesDisplay from './GradesDisplay';
 import { useAuth } from '@/hooks/useAuth';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { useTranslations } from 'next-intl';
 
-type TabKey = 'attachments' | 'links' | 'reviews' | 'grades';
+type TabKey = 'attachments' | 'links' | 'grades';
 
 interface ProjectTabsProps {
   projectId: string;
@@ -29,10 +30,17 @@ export default function ProjectTabs({ projectId, project }: ProjectTabsProps) {
   const isStudent = user?.role === 'student';
   const isAdmin = user?.role === 'admin';
 
+  // Check if user is assigned to this project as supervisor or opponent
+  const isSupervisor = user?.id === project.supervisor_id;
+  const isOpponent = user?.id === project.opponent_id;
+  const isAssignedTeacher = isTeacher && (isSupervisor || isOpponent);
+
+  // Admins can also grade if they're assigned as supervisor/opponent
+  const canGrade = isAssignedTeacher || (isAdmin && (isSupervisor || isOpponent));
+
   const tabs = [
     { key: 'attachments' as TabKey, label: t('attachments') },
     { key: 'links' as TabKey, label: t('externalLinks') },
-    { key: 'reviews' as TabKey, label: t('reviews') },
     { key: 'grades' as TabKey, label: t('grades') }
   ];
 
@@ -66,41 +74,32 @@ export default function ProjectTabs({ projectId, project }: ProjectTabsProps) {
         )}
 
         {activeTab === 'links' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">{t('externalLinks')}</h3>
-            {/* Placeholder for external links */}
-            <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              {t('linksPlaceholder')}
-              <br />
-              <span className="text-xs">{t('linksDescription')}</span>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'reviews' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-4">{t('reviews')}</h3>
-            {/* Placeholder for reviews */}
-            <div className="text-sm text-text-secondary bg-background-secondary rounded-lg p-8 text-center">
-              {t('reviewsPlaceholder')}
-              <br />
-              <span className="text-xs">{t('reviewsDescription')}</span>
-            </div>
-          </div>
+          <ExternalLinksTab projectId={projectId} project={project} />
         )}
 
         {activeTab === 'grades' && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-text-primary mb-4">{t('grades')}</h3>
 
-            {/* Teacher grading form - only for assigned teachers */}
-            {isTeacher && project.year_id && (
-              <GradingForm projectId={projectId} yearId={String(project.year_id)} />
+            {/* Grading form - for assigned teachers or admins who are supervisor/opponent */}
+            {canGrade && project.year_id && (
+              <GradingForm
+                projectId={projectId}
+                yearId={String(project.year_id)}
+                projectRole={isSupervisor ? 'supervisor' : 'opponent'}
+              />
             )}
 
-            {/* Student/admin grade view */}
-            {(isStudent || isAdmin) && (
-              <GradesDisplay projectId={projectId} isStudent={isStudent} />
+            {/* Message for teachers not assigned to this project */}
+            {isTeacher && !isAssignedTeacher && (
+              <div className="p-6 bg-background-secondary rounded-lg text-center">
+                <p className="text-text-secondary">{t('notAssignedToGrade')}</p>
+              </div>
+            )}
+
+            {/* Student view or admin view (when not grading) */}
+            {(isStudent || (isAdmin && !canGrade)) && (
+              <GradesDisplay projectId={projectId} isStudent={isStudent} project={project} />
             )}
 
             {/* Fallback for unassigned users */}

@@ -5,7 +5,9 @@ import {
   requireProjectAccess,
   requireProjectModify,
   requireProjectDelete,
-  requireGradingAccess
+  requireGradingAccess,
+  requireSignupAccess,
+  requireSignupsViewAccess
 } from '../middleware/authorization.middleware'
 import {
   getAllProjects,
@@ -24,6 +26,12 @@ import {
   submitGrades,
   getAllProjectGrades
 } from '../controllers/grading.controller'
+import {
+  signupForProject,
+  cancelSignup,
+  getProjectSignups,
+  getSignupStatus
+} from '../controllers/project-signups.controller'
 import { validate } from '../middleware/validate'
 import {
   createProjectSchema,
@@ -42,19 +50,25 @@ router.post('/', authenticated, validate(createProjectSchema), createProject);
 // Auto-lock trigger (admin only) - must be before /:id
 router.post('/auto-lock', authenticated, requireAdmin, triggerAutoLock);
 
+// Student signup routes (interest expression) - must be before /:id
+router.post('/:id/signup', authenticated, requireSignupAccess, signupForProject);
+router.delete('/:id/signup', authenticated, requireSignupAccess, cancelSignup);
+router.get('/:id/signups', authenticated, requireSignupsViewAccess, getProjectSignups);
+router.get('/:id/signup/status', authenticated, getSignupStatus);
+
 // Get project by ID
 router.get('/:id', authenticated, requireProjectAccess, validate(projectIdSchema), getProjectById);
 
 // Get project activities
 router.get('/:id/activities', authenticated, requireProjectAccess, validate(projectIdSchema), getProjectActivities);
 
-// Student assignment route (replaces old student management routes)
+// Student assignment route
 router.put('/:id/student', authenticated, requireProjectModify, validate(addStudentToProjectSchema), assignStudentToProject);
 
-// Status update route (lock/unlock/publish) - must be before /:id PUT
+// Status update route (lock/unlock/publish)
 router.put('/:id/status', authenticated, requireProjectAccess, updateProjectStatus);
 
-// Update project - generic PUT /:id must come after specific routes
+// Update project
 router.put('/:id', authenticated, requireProjectModify, validate(updateProjectSchema), updateProject);
 
 router.delete('/:id', authenticated, requireProjectDelete, validate(projectIdSchema), deleteProject);

@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { cache } from '../lib/cache';
 import type { CreateYearRequest, UpdateYearRequest } from '@sumbi/shared-types';
+import { DeadlineSchedulerService } from './deadline-scheduler.service';
 
 export class YearService {
   // Cache all years list - rarely changes, accessed frequently
@@ -108,6 +109,15 @@ export class YearService {
   }
 
   static async updateYear(id: bigint, data: UpdateYearRequest) {
+    // Get old year to detect deadline changes
+    const oldYear = await prisma.years.findUnique({
+      where: { id: Number(id) },
+      select: {
+        submission_date: true,
+        deadline_reminder_days: true,
+      },
+    });
+
     const year = await prisma.years.update({
       where: { id: Number(id) },
       data: {
@@ -115,6 +125,7 @@ export class YearService {
         assignment_date: data.assignment_date,
         submission_date: data.submission_date,
         feedback_date: data.feedback_date,
+        // deadline_reminder_days can be updated too if provided in UpdateYearRequest
       },
     });
 
@@ -124,7 +135,51 @@ export class YearService {
     await cache.delete('year:current');
     await cache.delete(`year:${id}:scale-sets`);
 
+    // Check if deadline-related fields changed
+    const deadlineChanged =
+      oldYear?.submission_date?.getTime() !== year.submission_date?.getTime();
+
+    // If deadline changed, reschedule all projects in this year
+    if (deadlineChanged) {
+      console.log(`[YearService] Deadline changed for year ${id}, rescheduling all projects`);
+      await this.rescheduleAllProjectsInYear(id);
+    }
+
     return year;
+  }
+
+  /**
+   * Reschedule deadline jobs for all projects in a year
+   * Called when year's submission_date or deadline_reminder_days changes
+   */
+  static async rescheduleAllProjectsInYear(yearId: bigint): Promise<void> {
+    try {
+      console.log(`[YearService] Rescheduling deadline jobs for all projects in year ${yearId}`);
+
+      // Find all projects in this year that have students assigned
+      const projects = await prisma.projects.findMany({
+        where: {
+          year_id: yearId,
+          student_id: { not: null },
+          status: { not: 'locked' }, // Skip locked projects
+        },
+        select: {
+          id: true,
+          title: true,
+        },
+      });
+
+      console.log(`[YearService] Found ${projects.length} projects to reschedule`);
+
+      // Reschedule each project
+      for (const project of projects) {
+        await DeadlineSchedulerService.rescheduleDeadlineJobs(project.id);
+      }
+
+      console.log(`[YearService] Successfully rescheduled ${projects.length} projects`);
+    } catch (error) {
+      console.error(`[YearService] Error rescheduling projects for year ${yearId}:`, error);
+    }
   }
 
   static async deleteYear(id: bigint) {

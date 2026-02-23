@@ -1,12 +1,13 @@
 'use client';
 import { formatUserName } from "@/lib/formatters";
 
-import { Share2, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown, Lock, Unlock } from 'lucide-react';
+import { Share2, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown, Lock, Unlock, Users } from 'lucide-react';
 import { Button } from 'flowbite-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import UploadField from './UploadField';
+import SignUpButton from './SignUpButton';
 import { UserSelect } from '@/components/ui/UserSelect';
 import { projectsApi } from '@/lib/api/projects';
 import { downloadProjectPDF } from '@/lib/downloadPDF';
@@ -14,12 +15,23 @@ import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslations } from 'next-intl';
 
+// Signup student type from API
+interface SignupStudent {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  class: string | null;
+  signed_up_at: string;
+}
+
 interface ProjectActionsProps {
   project: ProjectWithRelations;
 }
 
 export default function ProjectActions({ project }: ProjectActionsProps) {
   const t = useTranslations('projectDetail.actions');
+  const tSignups = useTranslations('projectDetail.actions.signups');
   const tMessages = useTranslations('projectDetail.messages');
   const tConfirmations = useTranslations('projectDetail.confirmations');
   const tButtons = useTranslations('buttons');
@@ -48,6 +60,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isLocking, setIsLocking] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+
+  // Signup-related state
+  const [signedUpStudents, setSignedUpStudents] = useState<SignupStudent[]>([]);
+  const [isLoadingSignups, setIsLoadingSignups] = useState(false);
 
   // Permission checks based on user role and project relationship
   const isAdmin = user?.role === 'admin';
@@ -109,9 +125,21 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     }
   };
 
-  const handleAssignClick = () => {
+  const handleAssignClick = async () => {
     setSelectedStudentId(null);
     setShowAssignModal(true);
+
+    // Fetch signed-up students when modal opens
+    setIsLoadingSignups(true);
+    try {
+      const { signups } = await projectsApi.getProjectSignups(String(project.id));
+      setSignedUpStudents(signups);
+    } catch (error) {
+      console.error('[ProjectActions] Error fetching signups:', error);
+      setSignedUpStudents([]);
+    } finally {
+      setIsLoadingSignups(false);
+    }
   };
 
   const handleAssignConfirm = async () => {
@@ -179,9 +207,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
     setIsUploading(true);
     try {
-      // TODO: Implement actual file upload logic here
-      // Example: await uploadFiles(projectId, uploadedFiles);
-
       console.log('Uploading files:', uploadedFiles);
 
       // Simulate upload delay
@@ -341,6 +366,9 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
             </div>
           )}
 
+          {/* Student Signup - For students viewing available projects */}
+          <SignUpButton project={project} />
+
           {/* Student Assignment - Only for admin/supervisor */}
           {canManage && (
             <>
@@ -473,16 +501,79 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
               </button>
             </div>
 
-            <div className="p-6">
-              <UserSelect
-                label={t('selectStudent')}
-                id="student"
-                value={selectedStudentId}
-                onChange={setSelectedStudentId}
-                role="student"
-                helperText={t('selectStudentHelper')}
-                required
-              />
+            <div className="p-6  space-y-4">
+              {/* Loading signups */}
+              {isLoadingSignups && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+                </div>
+              )}
+
+              {!isLoadingSignups && (
+                <>
+                  {/* Signed-up students section - always shown at top if any */}
+                  {signedUpStudents.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-text-secondary">
+                        <Users className="w-4 h-4" />
+                        <span>{tSignups('interestedStudents')} ({signedUpStudents.length})</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {signedUpStudents.map((student) => (
+                          <button
+                            key={student.id}
+                            onClick={() => setSelectedStudentId(student.id)}
+                            className={`w-full p-3 rounded-lg border text-left transition-colors ${
+                              selectedStudentId === student.id
+                                ? 'border-primary bg-primary/10'
+                                : 'border-primary/30 bg-primary/5 hover:border-primary/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="font-medium text-text-primary">
+                                {formatUserName(student.first_name, student.last_name) || student.email}
+                              </div>
+                              <span className="px-2 py-0.5 text-xs font-medium bg-primary/20 text-primary rounded-full">
+                                {tSignups('interested')}
+                              </span>
+                            </div>
+                            <div className="text-sm text-text-secondary flex items-center gap-2 mt-1">
+                              <span>{student.email}</span>
+                              {student.class && (
+                                <>
+                                  <span className="text-text-muted">·</span>
+                                  <span>{student.class}</span>
+                                </>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Divider between signed-up and all students */}
+                  {signedUpStudents.length > 0 && (
+                    <div className="flex items-center gap-3 py-2">
+                      <div className="flex-1 border-t border-border"></div>
+                      <span className="text-xs text-text-muted">{tSignups('orSelectFromAll')}</span>
+                      <div className="flex-1 border-t border-border"></div>
+                    </div>
+                  )}
+
+                  {/* Student select for all students */}
+                  <UserSelect
+                    label={signedUpStudents.length > 0 ? tSignups('allStudents') : t('selectStudent')}
+                    id="student"
+                    value={selectedStudentId}
+                    onChange={setSelectedStudentId}
+                    role="student"
+                    helperText={t('selectStudentHelper')}
+                    required
+                  />
+                </>
+              )}
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">

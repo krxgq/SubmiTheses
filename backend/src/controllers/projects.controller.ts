@@ -153,34 +153,70 @@ export async function getProjectActivities(req: Request, res: Response) {
  * Update project status (lock/unlock/publish)
  * PUT /projects/:id/status
  * Body: { status: 'draft' | 'locked' | 'public' }
+ * Permissions:
+ * - Admin: can lock/unlock/publish any project
+ * - Supervisor: can lock/unlock their projects
+ * - Publish: admin only
  */
 export async function updateProjectStatus(req: Request, res: Response) {
   try {
     const projectId = BigInt(req.params.id);
     const { status } = req.body;
     const userId = req.user!.id;
+    const userRole = req.user!.role;
+
+    console.log('[updateProjectStatus] Request:', { projectId: String(projectId), status, userId, userRole });
 
     if (!['draft', 'locked', 'public'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status. Must be draft, locked, or public' });
     }
 
+    // Check permissions based on user role
+    const existingProject = await ProjectService.getProjectById(projectId);
+    if (!existingProject) {
+      console.log('[updateProjectStatus] Project not found');
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    console.log('[updateProjectStatus] Project found:', {
+      projectSupervisorId: existingProject.supervisor_id,
+      projectStatus: existingProject.status
+    });
+
+    const isAdmin = userRole === 'admin';
+    const isSupervisor = userRole === 'teacher' && existingProject.supervisor_id === userId;
+
+    console.log('[updateProjectStatus] Permissions:', { isAdmin, isSupervisor });
+
+    // Permission checks
+    if (status === 'public' && !isAdmin) {
+      return res.status(403).json({ error: 'Only admins can publish projects' });
+    }
+
+    if ((status === 'locked' || status === 'draft') && !isAdmin && !isSupervisor) {
+      return res.status(403).json({ error: 'Only admins or supervisors can lock/unlock projects' });
+    }
+
     let project;
 
+    console.log('[updateProjectStatus] Calling service for status:', status);
+
     if (status === 'locked') {
-      // Lock project
       project = await ProjectService.lockProject(projectId, userId, 'manual');
     } else if (status === 'draft') {
-      // Unlock project (revert to draft)
+      console.log('[updateProjectStatus] Calling unlockProject...');
       project = await ProjectService.unlockProject(projectId, userId);
+      console.log('[updateProjectStatus] unlockProject returned:', project ? 'success' : 'null');
     } else if (status === 'public') {
-      // Publish project
       project = await ProjectService.publishProject(projectId);
     }
 
     if (!project) {
+      console.log('[updateProjectStatus] Project is null after service call');
       return res.status(404).json({ error: 'Project not found' });
     }
 
+    console.log('[updateProjectStatus] Success, returning project with status:', project.status);
     return res.status(200).json({
       message: `Project status updated to ${status}`,
       project

@@ -1,99 +1,121 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, X, CheckCircle, AlertCircle, Info, Trash2 } from 'lucide-react';
+import { notificationsApi } from '@/lib/api/notifications';
+import { formatDistanceToNow } from 'date-fns';
+import { useTranslations } from 'next-intl';
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   time: string;
   unread: boolean;
-  type: 'project' | 'review' | 'system' | 'info';
+  type: string;
   timestamp: Date;
+  metadata?: Record<string, any>;
 }
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: 'New project submitted',
-      message: 'John Doe submitted "AI Research Thesis" for review',
-      time: '2 minutes ago',
-      unread: true,
-      type: 'project',
-      timestamp: new Date(Date.now() - 2 * 60 * 1000),
-    },
-    {
-      id: 2,
-      title: 'Review completed',
-      message: 'Sarah Wilson completed review for "Machine Learning Implementation"',
-      time: '1 hour ago',
-      unread: true,
-      type: 'review',
-      timestamp: new Date(Date.now() - 60 * 60 * 1000),
-    },
-    {
-      id: 3,
-      title: 'System update',
-      message: 'New features have been deployed. Check out the updated project creation wizard.',
-      time: '3 hours ago',
-      unread: false,
-      type: 'system',
-      timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000),
-    },
-    {
-      id: 4,
-      title: 'Grade published',
-      message: 'Your grade for "Data Structures Project" has been published.',
-      time: '1 day ago',
-      unread: false,
-      type: 'info',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    },
-    {
-      id: 5,
-      title: 'Deadline reminder',
-      message: 'Project "Database Design" is due in 3 days.',
-      time: '2 days ago',
-      unread: false,
-      type: 'info',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    },
-  ]);
+  const t = useTranslations('notifications');
 
+  // Resolve translated title/message using type + variant, fallback to raw text for old notifications
+  const getTranslatedTitle = (notification: Notification): string => {
+    if (!notification.metadata?.projectTitle) return notification.title;
+    const variant = notification.metadata?.variant;
+    const key = variant ? `${notification.type}_${variant}` : notification.type;
+    return t(`titles_i18n.${key}`, notification.metadata);
+  };
+
+  const getTranslatedMessage = (notification: Notification): string => {
+    if (!notification.metadata?.projectTitle) return notification.message;
+    const variant = notification.metadata?.variant;
+    const key = variant ? `${notification.type}_${variant}` : notification.type;
+    return t(`messages_i18n.${key}`, notification.metadata);
+  };
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch notifications on mount
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await notificationsApi.getNotifications({ limit: 50 });
+      const formattedNotifications: Notification[] = response.notifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+        unread: !n.read,
+        type: n.type,
+        timestamp: new Date(n.created_at),
+        metadata: n.metadata,
+      }));
+      setNotifications(formattedNotifications);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const unreadCount = notifications.filter((n) => n.unread).length;
-  const filteredNotifications = filter === 'unread' 
+  const filteredNotifications = filter === 'unread'
     ? notifications.filter((n) => n.unread)
     : notifications;
 
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, unread: false }
-          : notification
-      )
-    );
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await notificationsApi.markAsRead(notificationId);
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, unread: false }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, unread: false }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, unread: false }))
+      );
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
   };
 
-  const deleteNotification = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== notificationId)
-    );
+  const deleteNotification = async (notificationId: string) => {
+    try {
+      await notificationsApi.deleteNotification(notificationId);
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId)
+      );
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
   };
 
-  const clearAll = () => {
-    if (confirm('Are you sure you want to clear all notifications?')) {
-      setNotifications([]);
+  const clearAll = async () => {
+    if (confirm(t('clearAllConfirm'))) {
+      try {
+        // Delete all notifications one by one (no batch delete endpoint)
+        await Promise.all(notifications.map(n => notificationsApi.deleteNotification(n.id)));
+        setNotifications([]);
+      } catch (error) {
+        console.error('Failed to clear all notifications:', error);
+      }
     }
   };
 
@@ -112,15 +134,25 @@ export default function NotificationsPage() {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
+        <div className="flex items-center justify-center py-12">
+          <div className="text-secondary">{t('loading')}</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto px-4 lg:px-8 py-8">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-primary mb-2">Notifications</h1>
+        <h1 className="text-3xl font-bold text-primary mb-2">{t('title')}</h1>
         <p className="text-secondary">
-          {unreadCount > 0 
-            ? `You have ${unreadCount} unread notification${unreadCount > 1 ? 's' : ''}`
-            : 'You are all caught up!'
+          {unreadCount > 0
+            ? t('unreadCount', { count: unreadCount })
+            : t('allCaughtUp')
           }
         </p>
       </div>
@@ -137,7 +169,7 @@ export default function NotificationsPage() {
                   : 'bg-background-secondary text-primary hover:bg-background-hover'
               }`}
             >
-              All ({notifications.length})
+              {t('filters.all')} ({notifications.length})
             </button>
             <button
               onClick={() => setFilter('unread')}
@@ -147,7 +179,7 @@ export default function NotificationsPage() {
                   : 'bg-background-secondary text-primary hover:bg-background-hover'
               }`}
             >
-              Unread ({unreadCount})
+              {t('filters.unread')} ({unreadCount})
             </button>
           </div>
 
@@ -157,7 +189,7 @@ export default function NotificationsPage() {
                 onClick={markAllAsRead}
                 className="px-4 py-2 text-sm font-medium text-primary hover:bg-background-hover rounded-lg transition-colors"
               >
-                Mark all as read
+                {t('markAllAsRead')}
               </button>
             )}
             {notifications.length > 0 && (
@@ -166,7 +198,7 @@ export default function NotificationsPage() {
                 className="px-4 py-2 text-sm font-medium text-danger hover:bg-danger/10 rounded-lg transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                Clear all
+                {t('clearAll')}
               </button>
             )}
           </div>
@@ -195,14 +227,14 @@ export default function NotificationsPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="text-base font-semibold text-primary">
-                          {notification.title}
+                          {getTranslatedTitle(notification)}
                         </h3>
                         {notification.unread && (
                           <span className="w-2 h-2 bg-primary rounded-full"></span>
                         )}
                       </div>
                       <p className="text-sm text-secondary mb-2">
-                        {notification.message}
+                        {getTranslatedMessage(notification)}
                       </p>
                       <p className="text-xs text-tertiary">
                         {notification.time}
@@ -215,7 +247,7 @@ export default function NotificationsPage() {
                         <button
                           onClick={() => markAsRead(notification.id)}
                           className="p-2 text-tertiary hover:text-primary hover:bg-background-hover rounded-lg transition-colors"
-                          title="Mark as read"
+                          title={t('markAsRead')}
                         >
                           <CheckCircle className="w-4 h-4" />
                         </button>
@@ -223,7 +255,7 @@ export default function NotificationsPage() {
                       <button
                         onClick={() => deleteNotification(notification.id)}
                         className="p-2 text-tertiary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
-                        title="Delete notification"
+                        title={t('deleteNotification')}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -237,12 +269,12 @@ export default function NotificationsPage() {
           <div className="bg-background-elevated border border-border rounded-lg p-12 text-center">
             <Bell className="w-16 h-16 mx-auto mb-4 text-tertiary" />
             <h3 className="text-lg font-semibold text-primary mb-2">
-              No notifications
+              {t('noNotifications')}
             </h3>
             <p className="text-secondary">
-              {filter === 'unread' 
-                ? "You don't have any unread notifications"
-                : "You don't have any notifications yet"
+              {filter === 'unread'
+                ? t('noUnreadNotifications')
+                : t('noNotificationsDescription')
               }
             </p>
           </div>

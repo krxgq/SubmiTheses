@@ -9,9 +9,12 @@ import { Textarea } from "@/components/ui/Textarea";
 import { MarkdownEditor } from "@/components/ui/MarkdownEditor";
 import { UserSelect } from "@/components/ui/UserSelect";
 import { SubjectSelect } from "@/components/ui/SubjectSelect";
+import { Select } from "@/components/ui/Select";
+import type { SelectOption } from "@/components/ui/Select";
 import { ArrayInput } from "@/components/ui/ArrayInput";
 import { ScheduleBuilder } from "./createProject/ScheduleBuilder";
 import { projectsApi } from "@/lib/api/projects";
+import { getAllYears } from "@/lib/api/years";
 
 interface EditProjectFormProps {
   project: ProjectWithRelations;
@@ -20,13 +23,17 @@ interface EditProjectFormProps {
 export default function EditProjectForm({ project }: EditProjectFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [yearOptions, setYearOptions] = useState<SelectOption[]>([]); // dropdown options for academic years
+
   // @ts-ignore - subject_id exists in DB but not in type yet
   const projectSubjectId = project.subject_id || null;
+  // @ts-ignore - year_id exists in DB but not in type yet
+  const projectYearId = project.year_id ? String(project.year_id) : "";
   
   const [formData, setFormData] = useState({
     title: project.title || "",
     subject_id: projectSubjectId,
+    year_id: projectYearId, // initialized from project's current year
     topic: project.project_description?.topic || "",
     project_goal: project.project_description?.project_goal || "",
     specification: project.project_description?.specification || "",
@@ -35,6 +42,20 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
     supervisor_id: project.supervisor_id,
     opponent_id: project.opponent_id,
   });
+
+  // Fetch all years for the dropdown on mount
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const years = await getAllYears();
+        // Fallback to "Year #id" if year.name is null (shouldn't happen in practice)
+        setYearOptions(years.map((y) => ({ value: String(y.id), label: y.name ?? `Year #${y.id}` })));
+      } catch (error) {
+        console.error("Failed to fetch years:", error);
+      }
+    };
+    fetchYears();
+  }, []);
 
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -54,6 +75,7 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
       const payload = {
         title: formData.title,
         subject_id: formData.subject_id,
+        year_id: formData.year_id ? Number(formData.year_id) : undefined, // convert string to number for API
         supervisor_id: formData.supervisor_id,
         opponent_id: formData.opponent_id,
 
@@ -109,6 +131,16 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
             id="subject"
             value={formData.subject_id}
             onChange={(subjectId) => updateField("subject_id", subjectId)}
+            required
+          />
+          {/* Academic year selector — shows project's current year */}
+          <Select
+            label="Academic Year"
+            id="year_id"
+            options={yearOptions}
+            value={formData.year_id}
+            onChange={(value) => updateField("year_id", value)}
+            helperText="Select the academic year this project belongs to"
             required
           />
         </div>

@@ -5,9 +5,11 @@ import {
   LayoutList,
   LayoutGrid,
   Plus,
-  Folder,
   FolderOpen,
   Search,
+  Heart,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import type { ProjectWithRelations, UserRole } from "@sumbi/shared-types";
 import { GridItem } from "@/components/dashboard/projects/GridItem";
@@ -26,62 +28,113 @@ interface ProjectsPageClientProps {
   userId: string | null;
 }
 
-function useFilteredProjects(
+// Role-filtered projects within a single year
+interface RoleFilteredProjects {
+  myProjects: ProjectWithRelations[];
+  supervisor: ProjectWithRelations[];
+  opponent: ProjectWithRelations[];
+  other: ProjectWithRelations[];
+}
+
+// A year group containing role-filtered sub-sections
+interface YearGroup {
+  yearId: string;
+  yearName: string;
+  total: number;
+  roles: RoleFilteredProjects;
+}
+
+function filterByRole(
   projects: ProjectWithRelations[],
-  userRole: UserRole,
   userId: string | null,
-) {
-  return useMemo(() => {
-    if (!userId)
-      return {
-        myProjects: [],
-        supervisor: [],
-        opponent: [],
-        other: [],
-        all: projects,
-      };
+): RoleFilteredProjects {
+  if (!userId) {
+    return { myProjects: [], supervisor: [], opponent: [], other: projects };
+  }
 
-    const myProjects = projects.filter(
-      (project) => project.student_id === userId,
-    );
+  const myProjects = projects.filter((p) => p.student_id === userId);
+  const supervisor = projects.filter((p) => p.supervisor_id === userId);
+  const opponent = projects.filter((p) => p.opponent_id === userId);
 
-    const supervisor = projects.filter(
-      (project) => project.supervisor_id === userId,
-    );
+  // Collect all project IDs where user has a direct role
+  const involvedIds = new Set([
+    ...myProjects.map((p) => p.id),
+    ...supervisor.map((p) => p.id),
+    ...opponent.map((p) => p.id),
+  ]);
 
-    const opponent = projects.filter(
-      (project) => project.opponent_id === userId,
-    );
+  const other = projects.filter((p) => !involvedIds.has(p.id));
 
-    const involvedProjectIds = new Set([
-      ...myProjects.map((p) => p.id),
-      ...supervisor.map((p) => p.id),
-      ...opponent.map((p) => p.id),
-    ]);
-
-    const other = projects.filter(
-      (project) => !involvedProjectIds.has(project.id),
-    );
-
-    return { myProjects, supervisor, opponent, other, all: projects };
-  }, [projects, userId]);
+  return { myProjects, supervisor, opponent, other };
 }
 
 /**
- * Client component for projects page with unified section-based layout
+ * Groups projects by their academic year.
+ * Returns a Map where key = yearId (or "unassigned"), value = { yearName, projects[] }.
+ * Projects without a year go under the "unassigned" key.
+ * Years are sorted newest first (by year name descending), unassigned goes last.
  *
- * ALL ROLES see the same sections (conditionally rendered):
- * - My Projects (where user is student)
- * - As Supervisor (where user is supervisor)
- * - As Opponent (where user is opponent)
- * - Other Projects (all remaining projects)
- *
- * The ONLY difference between roles is the card styling:
- * - Student role → StudentCard
- * - Teacher role → TeacherCard
- * - Admin role → AdminCard (with gradient accent)
+ * Each project has: project.year?.name (string|null), project.year_id (bigint|null)
  */
+function groupProjectsByYear(
+  projects: ProjectWithRelations[],
+  noYearLabel: string,
+): Map<string, { yearName: string; projects: ProjectWithRelations[] }> {
+  const unsorted = new Map<string, { yearName: string; projects: ProjectWithRelations[] }>();
 
+  for (const project of projects) {
+    const key = project.year_id != null ? String(project.year_id) : "unassigned";
+    const name = project.year?.name ?? noYearLabel;
+
+    if (!unsorted.has(key)) {
+      unsorted.set(key, { yearName: name, projects: [] });
+    }
+    unsorted.get(key)!.projects.push(project);
+  }
+
+  // Sort entries: named years descending (e.g. "2025/2026" before "2024/2025"), unassigned last
+  const sorted = [...unsorted.entries()].sort(([keyA], [keyB]) => {
+    if (keyA === "unassigned") return 1;
+    if (keyB === "unassigned") return -1;
+    return keyB.localeCompare(keyA);
+  });
+
+  return new Map(sorted);
+}
+
+// Groups all projects by year, then applies role filtering within each group
+function useProjectsByYear(
+  projects: ProjectWithRelations[],
+  userId: string | null,
+  noYearLabel: string,
+): YearGroup[] {
+  return useMemo(() => {
+    const yearMap = groupProjectsByYear(projects, noYearLabel);
+
+    // Convert Map entries to YearGroup array with role sub-filtering
+    return Array.from(yearMap.entries()).map(
+      ([yearId, { yearName, projects: yearProjects }]) => ({
+        yearId,
+        yearName,
+        total: yearProjects.length,
+        roles: filterByRole(yearProjects, userId),
+      }),
+    );
+  }, [projects, userId, noYearLabel]);
+}
+
+/**
+ * Client component for projects page with year-grouped, role-filtered layout.
+ *
+ * Structure:
+ * - Collapsible year sections (newest first)
+ *   - My Projects (student)
+ *   - As Supervisor
+ *   - As Opponent
+ *   - Other Projects
+ * - Search bar filters across all years
+ * - Grid/List view toggle
+ */
 export function ProjectsPageClient({
   projects,
   userRole,
@@ -90,18 +143,45 @@ export function ProjectsPageClient({
   const t = useTranslations();
   const router = useRouter();
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [searchQuery, setSearchQuery] = useState("");
+  // Tracks which year sections are collapsed (all expanded by default)
+  const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
 
-  // Filter projects into categories (same for all roles)
-  const filteredProjects = useFilteredProjects(projects, userRole, userId);
+  // Filter projects by search query before grouping
+  const searchedProjects = useMemo(() => {
+    if (!searchQuery.trim()) return projects;
+    const q = searchQuery.toLowerCase();
+    return projects.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description?.toLowerCase().includes(q) ||
+        p.student?.first_name?.toLowerCase().includes(q) ||
+        p.student?.last_name?.toLowerCase().includes(q) ||
+        p.supervisor?.first_name?.toLowerCase().includes(q) ||
+        p.supervisor?.last_name?.toLowerCase().includes(q),
+    );
+  }, [projects, searchQuery]);
 
-  // Check if user has any projects at all
-  const hasAnyProjects =
-    filteredProjects.myProjects.length > 0 ||
-    filteredProjects.supervisor.length > 0 ||
-    filteredProjects.opponent.length > 0 ||
-    filteredProjects.other.length > 0;
+  // Group by year, then filter by role within each year
+  const yearGroups = useProjectsByYear(
+    searchedProjects,
+    userId,
+    t("projects.noYearAssigned"),
+  );
 
-  // Render projects in grid or list view
+  const hasAnyProjects = yearGroups.some((yg) => yg.total > 0);
+
+  // Toggle collapse/expand for a year section
+  const toggleYear = (yearId: string) => {
+    setCollapsedYears((prev) => {
+      const next = new Set(prev);
+      if (next.has(yearId)) next.delete(yearId);
+      else next.add(yearId);
+      return next;
+    });
+  };
+
+  // Renders project cards in grid or list layout
   const renderProjectsGrid = (projectsList: ProjectWithRelations[]) => {
     if (viewMode === "grid") {
       return (
@@ -113,7 +193,6 @@ export function ProjectsPageClient({
       );
     }
 
-    // List view - horizontal cards
     return (
       <div className="space-y-4">
         {projectsList.map((project) => (
@@ -123,26 +202,21 @@ export function ProjectsPageClient({
     );
   };
 
-  // Render a section with header, count badge, and projects
-  // Only renders if there are projects in the list
-  const renderSection = (
+  // Renders a role sub-section within a year group (hidden if empty)
+  const renderRoleSection = (
     title: string,
     projectsList: ProjectWithRelations[],
   ) => {
-    // Don't render section if empty
     if (projectsList.length === 0) return null;
 
     return (
-      <div className="mb-12">
-        {/* Section header with count badge */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-text-primary">{title}</h2>
-          <div className="px-3 py-1 bg-background-tertiary text-text-secondary rounded-full text-sm font-medium">
+      <div className="mb-8 last:mb-0">
+        <div className="flex items-center gap-3 mb-4">
+          <h3 className="text-lg font-medium text-text-secondary">{title}</h3>
+          <span className="px-2.5 py-0.5 bg-background-tertiary text-text-secondary rounded-full text-xs font-medium">
             {projectsList.length}
-          </div>
+          </span>
         </div>
-
-        {/* Projects grid/list */}
         {renderProjectsGrid(projectsList)}
       </div>
     );
@@ -150,9 +224,8 @@ export function ProjectsPageClient({
 
   return (
     <>
-      {/* Modern Page Header with Title/Subtitle and Controls */}
+      {/* Page Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8 sm:mb-12">
-        {/* Left: Title and Subtitle */}
         <div className="space-y-2 min-w-0 flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">
             {t("sidebar.projects")}
@@ -162,9 +235,8 @@ export function ProjectsPageClient({
           </p>
         </div>
 
-        {/* Right: Controls */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Create project button - only for teachers and admins */}
+          {/* Create project - teachers and admins only */}
           {(userRole === "teacher" || userRole === "admin") && (
             <Button
               variant="primary"
@@ -174,10 +246,21 @@ export function ProjectsPageClient({
             >
               {t("projects.createNewProject")}
             </Button>
-
           )}
 
-          {/* View mode toggle with SegmentedControl */}
+          {/* Browse topics - students only */}
+          {userRole === "student" && (
+            <Button
+              variant="primary"
+              size="md"
+              leftIcon={<Heart size={20} />}
+              onClick={() => router.push("/projects/available")}
+            >
+              {t("projects.browseAvailableTopics")}
+            </Button>
+          )}
+
+          {/* Grid/List view toggle */}
           <SegmentedControl
             options={[
               { value: "grid", label: "Grid", icon: LayoutGrid },
@@ -186,29 +269,82 @@ export function ProjectsPageClient({
             value={viewMode}
             onChange={(value) => setViewMode(value as ViewMode)}
           />
-
         </div>
-
-
       </div>
 
-      {/* Unified section-based layout for ALL roles */}
-      {/* Only show sections that have projects */}
-      {renderSection(
-        t("projects.sections.myProjects"),
-        filteredProjects.myProjects,
-      )}
-      {renderSection(
-        t("projects.sections.supervisor"),
-        filteredProjects.supervisor,
-      )}
-      {renderSection(
-        t("projects.sections.opponent"),
-        filteredProjects.opponent,
-      )}
-      {renderSection(t("projects.sections.other"), filteredProjects.other)}
+      {/* Search bar */}
+      <div className="relative mb-8">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary"
+        />
+        <input
+          type="text"
+          placeholder={t("projects.searchPlaceholder")}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 bg-background-secondary border border-border-primary rounded-xl text-sm text-text-primary placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary transition-all"
+        />
+      </div>
 
-      {/* Show enhanced empty state if no projects at all */}
+      {/* Year-grouped sections */}
+      {yearGroups.map((yearGroup) => {
+        const isCollapsed = collapsedYears.has(yearGroup.yearId);
+        const { roles } = yearGroup;
+
+        if (yearGroup.total === 0) return null;
+
+        return (
+          <div
+            key={yearGroup.yearId}
+            className="mb-8 border border-border-primary rounded-2xl overflow-hidden"
+          >
+            {/* Collapsible year header */}
+            <button
+              onClick={() => toggleYear(yearGroup.yearId)}
+              className="w-full flex items-center justify-between px-6 py-4 bg-background-secondary hover:bg-background-tertiary transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                {isCollapsed ? (
+                  <ChevronRight size={20} className="text-text-secondary" />
+                ) : (
+                  <ChevronDown size={20} className="text-text-secondary" />
+                )}
+                <h2 className="text-xl font-semibold text-text-primary">
+                  {yearGroup.yearName}
+                </h2>
+              </div>
+              <span className="px-3 py-1 bg-background-elevated text-text-secondary rounded-full text-sm font-medium">
+                {yearGroup.total}
+              </span>
+            </button>
+
+            {/* Role sub-sections (visible when year is expanded) */}
+            {!isCollapsed && (
+              <div className="px-6 py-6">
+                {renderRoleSection(
+                  t("projects.sections.myProjects"),
+                  roles.myProjects,
+                )}
+                {renderRoleSection(
+                  t("projects.sections.supervisor"),
+                  roles.supervisor,
+                )}
+                {renderRoleSection(
+                  t("projects.sections.opponent"),
+                  roles.opponent,
+                )}
+                {renderRoleSection(
+                  t("projects.sections.other"),
+                  roles.other,
+                )}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      {/* Empty state when no projects match */}
       {!hasAnyProjects && (
         <div className="flex items-center justify-center min-h-[60vh]">
           <EmptyState

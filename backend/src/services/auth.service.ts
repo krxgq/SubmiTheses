@@ -37,7 +37,7 @@ export class AuthService {
     role: UserRole = 'student'
   ) {
     // Check if user already exists
-    const existing = await prisma.public_users.findUnique({
+    const existing = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -49,7 +49,7 @@ export class AuthService {
     const passwordHash = await this.hashPassword(password);
 
     // Create user in public.users table (local authentication)
-    const user = await prisma.public_users.create({
+    const user = await prisma.users.create({
       data: {
         id: crypto.randomUUID(),
         email,
@@ -95,7 +95,7 @@ export class AuthService {
     role: UserRole = 'student'
   ) {
     // Check if user already exists
-    const existing = await prisma.public_users.findUnique({
+    const existing = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -104,7 +104,7 @@ export class AuthService {
     }
 
     // Create user with empty password (will be set via invitation)
-    const user = await prisma.public_users.create({
+    const user = await prisma.users.create({
       data: {
         id: crypto.randomUUID(),
         email,
@@ -143,7 +143,7 @@ export class AuthService {
    */
   static async login(email: string, password: string, rememberMe: boolean) {
     // Find user by email
-    const user = await prisma.public_users.findUnique({
+    const user = await prisma.users.findUnique({
       where: { email },
     });
 
@@ -159,7 +159,7 @@ export class AuthService {
     }
 
     // Update last login timestamp
-    await prisma.public_users.update({
+    await prisma.users.update({
       where: { id: user.id },
       data: { last_login: new Date() },
     });

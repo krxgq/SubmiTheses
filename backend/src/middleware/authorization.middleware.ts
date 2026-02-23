@@ -92,7 +92,7 @@ export const requireAdmin = async (
     }
 
     const { prisma } = await import('../lib/prisma');
-    const dbUser = await prisma.public_users.findUnique({
+    const dbUser = await prisma.users.findUnique({
       where: { id: req.user.id },
       select: { role: true }
     });
@@ -581,6 +581,141 @@ export const requireProjectDelete = async (
  * - Supervisor/Opponent: Can only view/modify their own grades (blind grading)
  * - Student: Cannot submit grades
  */
+/**
+ * Middleware for checking if user can sign up for a project
+ * Only students can sign up (express interest) for projects
+ */
+export const requireSignupAccess = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        code: 'UNAUTHENTICATED'
+      });
+      return;
+    }
+
+    // Only students can sign up for projects
+    if (req.user.role !== 'student') {
+      console.log(`[Auth] ${req.user.role} ${req.user.id} denied signup access (only students can sign up)`);
+      res.status(403).json({
+        error: 'Only students can sign up for projects',
+        code: 'NOT_A_STUDENT'
+      });
+      return;
+    }
+
+    console.log(`[Auth] Student ${req.user.id} granted signup access`);
+    next();
+  } catch (error) {
+    console.error('[Auth] Error in requireSignupAccess:', error);
+    res.status(500).json({
+      error: 'Internal server error during authorization',
+      code: 'AUTHORIZATION_ERROR'
+    });
+  }
+};
+
+/**
+ * Middleware for checking if user can view project signups
+ * Only admin and teachers (supervisor) can view who signed up
+ */
+export const requireSignupsViewAccess = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({
+        error: 'Authentication required',
+        code: 'UNAUTHENTICATED'
+      });
+      return;
+    }
+
+    const projectId = req.params.id;
+    if (!projectId) {
+      res.status(400).json({
+        error: 'Project ID is required',
+        code: 'MISSING_PROJECT_ID'
+      });
+      return;
+    }
+
+    // Admin can view any project's signups
+    if (req.user.role === 'admin') {
+      console.log(`[Auth] Admin ${req.user.id} granted signups view access`);
+      next();
+      return;
+    }
+
+    // Students cannot view signups list
+    if (req.user.role === 'student') {
+      res.status(403).json({
+        error: 'Students cannot view project signups',
+        code: 'STUDENT_CANNOT_VIEW_SIGNUPS'
+      });
+      return;
+    }
+
+    // Teachers can view signups for projects they supervise
+    if (req.user.role === 'teacher') {
+      let projectIdBigInt: bigint;
+      try {
+        projectIdBigInt = BigInt(projectId);
+      } catch (error) {
+        res.status(400).json({
+          error: 'Invalid project ID format',
+          code: 'INVALID_PROJECT_ID'
+        });
+        return;
+      }
+
+      const { prisma } = await import('../lib/prisma');
+      const project = await prisma.projects.findUnique({
+        where: { id: projectIdBigInt },
+        select: { supervisor_id: true },
+      });
+
+      if (!project) {
+        res.status(404).json({
+          error: 'Project not found',
+          code: 'PROJECT_NOT_FOUND'
+        });
+        return;
+      }
+
+      if (project.supervisor_id !== req.user.id) {
+        res.status(403).json({
+          error: 'Only the project supervisor can view signups',
+          code: 'NOT_PROJECT_SUPERVISOR'
+        });
+        return;
+      }
+
+      console.log(`[Auth] Teacher ${req.user.id} granted signups view access as supervisor`);
+      next();
+      return;
+    }
+
+    res.status(403).json({
+      error: 'Access denied',
+      code: 'ACCESS_DENIED'
+    });
+  } catch (error) {
+    console.error('[Auth] Error in requireSignupsViewAccess:', error);
+    res.status(500).json({
+      error: 'Internal server error during authorization',
+      code: 'AUTHORIZATION_ERROR'
+    });
+  }
+};
+
 export const requireGradingAccess = async (
   req: Request,
   res: Response,

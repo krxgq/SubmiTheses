@@ -2,14 +2,18 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Bell, X, ChevronDown } from 'lucide-react';
+import { notificationsApi, type Notification as ApiNotification } from '@/lib/api/notifications';
+import { formatDistanceToNow } from 'date-fns';
+import { useTranslations } from 'next-intl';
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
   message: string;
   time: string;
   unread: boolean;
   type: string;
+  metadata?: Record<string, any>;
 }
 
 interface NotificationsMenuProps {
@@ -17,36 +21,72 @@ interface NotificationsMenuProps {
 }
 
 export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps) {
+  const t = useTranslations('notifications');
+
+  // Resolve translated title/message using type + variant, fallback to raw text for old notifications
+  const getTranslatedTitle = (notification: Notification): string => {
+    if (!notification.metadata?.projectTitle) return notification.title;
+    const variant = notification.metadata?.variant;
+    const key = variant ? `${notification.type}_${variant}` : notification.type;
+    return t(`titles_i18n.${key}`, notification.metadata);
+  };
+
+  const getTranslatedMessage = (notification: Notification): string => {
+    if (!notification.metadata?.projectTitle) return notification.message;
+    const variant = notification.metadata?.variant;
+    const key = variant ? `${notification.type}_${variant}` : notification.type;
+    return t(`messages_i18n.${key}`, notification.metadata);
+  };
+
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: 1,
-      title: 'New project submitted',
-      message: 'John Doe submitted "AI Research Thesis"',
-      time: '2 minutes ago',
-      unread: true,
-      type: 'project',
-    },
-    {
-      id: 2,
-      title: 'Review completed',
-      message: 'Sarah Wilson completed review for "Machine Learning"',
-      time: '1 hour ago',
-      unread: true,
-      type: 'review',
-    },
-    {
-      id: 3,
-      title: 'System update',
-      message: 'New features have been deployed',
-      time: '3 hours ago',
-      unread: false,
-      type: 'system',
-    },
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  // Fetch notifications when menu opens
+  useEffect(() => {
+    if (showMenu && notifications.length === 0) {
+      fetchNotifications();
+    }
+  }, [showMenu]);
+
+  // Poll for unread count every 60 seconds
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 60000); // 60 seconds
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setLoading(true);
+      const response = await notificationsApi.getNotifications({ limit: 10 });
+      const formattedNotifications: Notification[] = response.notifications.map((n) => ({
+        id: n.id,
+        title: n.title,
+        message: n.message,
+        time: formatDistanceToNow(new Date(n.created_at), { addSuffix: true }),
+        unread: !n.read,
+        type: n.type,
+        metadata: n.metadata,
+      }));
+      setNotifications(formattedNotifications);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUnreadCount = async () => {
+    try {
+      const count = await notificationsApi.getUnreadCount();
+      setUnreadCount(count);
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -64,26 +104,51 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
     };
   }, [showMenu]);
 
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, unread: false }
-          : notification
-      )
-    );
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await notificationsApi.markAsRead(notificationId);
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === notificationId
+            ? { ...notification, unread: false }
+            : notification
+        )
+      );
+      // Update unread count
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, unread: false }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      await notificationsApi.markAllAsRead();
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, unread: false }))
+      );
+      setUnreadCount(0);
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
   };
 
-  const clearNotification = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== notificationId)
-    );
+  const clearNotification = async (notificationId: string) => {
+    try {
+      await notificationsApi.deleteNotification(notificationId);
+      // Update local state
+      const wasUnread = notifications.find((n) => n.id === notificationId)?.unread;
+      setNotifications((prev) =>
+        prev.filter((notification) => notification.id !== notificationId)
+      );
+      if (wasUnread) {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+    }
   };
 
   // Sidebar style button
@@ -96,7 +161,7 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
         >
           <div className="flex items-center">
             <Bell className="w-4 h-4" />
-            <span className="ml-3">Notifications</span>
+            <span className="ml-3">{t('title')}</span>
             {unreadCount > 0 && (
               <span className="ml-2 px-1.5 py-0.5 bg-accent-danger text-text-inverse text-xs rounded-full">
                 {unreadCount}
@@ -110,14 +175,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
           <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl max-h-96 overflow-hidden z-50">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
               <h3 className="text-sm font-semibold text-primary">
-                Notifications
+                {t('title')}
               </h3>
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
                   className="text-xs text-interactive-primary hover:text-interactive-primary-hover"
                 >
-                  Mark all as read
+                  {t('markAllAsRead')}
                 </button>
               )}
             </div>
@@ -135,14 +200,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
                           <p className="text-sm font-medium truncate text-primary">
-                            {notification.title}
+                            {getTranslatedTitle(notification)}
                           </p>
                           {notification.unread && (
                             <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
                           )}
                         </div>
                         <p className="text-xs mt-1 text-secondary">
-                          {notification.message}
+                          {getTranslatedMessage(notification)}
                         </p>
                         <p className="text-xs mt-1 text-tertiary">
                           {notification.time}
@@ -153,7 +218,7 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                           <button
                             onClick={() => markAsRead(notification.id)}
                             className="p-1 text-tertiary hover:text-primary transition-colors"
-                            title="Mark as read"
+                            title={t('markAsRead')}
                           >
                             <div className="w-3 h-3 rounded-full border-border border-current"></div>
                           </button>
@@ -161,7 +226,7 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                         <button
                           onClick={() => clearNotification(notification.id)}
                           className="p-1 text-tertiary hover:text-primary transition-colors"
-                          title="Clear notification"
+                          title={t('deleteNotification')}
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -172,14 +237,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
               ) : (
                 <div className="px-4 py-8 text-center text-secondary">
                   <Bell className="w-8 h-8 mx-auto mb-2 text-tertiary" />
-                  <p className="text-sm">No notifications</p>
+                  <p className="text-sm">{t('noNotifications')}</p>
                 </div>
               )}
             </div>
 
             <div className="px-4 py-3 bg-background-secondary border-t border-border">
               <button className="w-full text-center text-sm text-primary hover:text-primary transition-colors">
-                View all notifications
+                {t('viewAll')}
               </button>
             </div>
           </div>
@@ -207,14 +272,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
         <div className="absolute right-0 mt-2 w-80 bg-background-elevated border-border rounded-lg shadow-xl z-50 max-h-96 overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-primary">
-              Notifications
+              {t('title')}
             </h3>
             {unreadCount > 0 && (
               <button
                 onClick={markAllAsRead}
                 className="text-xs text-interactive-primary hover:text-interactive-primary-hover"
               >
-                Mark all as read
+                {t('markAllAsRead')}
               </button>
             )}
           </div>
@@ -232,14 +297,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center space-x-2">
                         <p className="text-sm font-medium truncate text-primary">
-                          {notification.title}
+                          {getTranslatedTitle(notification)}
                         </p>
                         {notification.unread && (
                           <div className="w-2 h-2 bg-primary rounded-full flex-shrink-0"></div>
                         )}
                       </div>
                       <p className="text-xs mt-1 text-secondary">
-                        {notification.message}
+                        {getTranslatedMessage(notification)}
                       </p>
                       <p className="text-xs mt-1 text-tertiary">
                         {notification.time}
@@ -250,7 +315,7 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                         <button
                           onClick={() => markAsRead(notification.id)}
                           className="p-1 text-tertiary hover:text-primary transition-colors"
-                          title="Mark as read"
+                          title={t('markAsRead')}
                         >
                           <div className="w-3 h-3 rounded-full border-border border-current"></div>
                         </button>
@@ -258,7 +323,7 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
                       <button
                         onClick={() => clearNotification(notification.id)}
                         className="p-1 text-tertiary hover:text-primary transition-colors"
-                        title="Clear notification"
+                        title={t('deleteNotification')}
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -269,14 +334,14 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
             ) : (
               <div className="px-4 py-8 text-center text-secondary">
                 <Bell className="w-8 h-8 mx-auto mb-2 text-tertiary" />
-                <p className="text-sm">No notifications</p>
+                <p className="text-sm">{t('noNotifications')}</p>
               </div>
             )}
           </div>
 
           <div className="px-4 py-3 bg-background-secondary border-t border-border">
             <button className="w-full text-center text-sm text-primary hover:text-primary transition-colors">
-              View all notifications
+              {t('viewAll')}
             </button>
           </div>
         </div>

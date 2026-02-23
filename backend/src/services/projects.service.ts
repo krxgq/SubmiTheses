@@ -2,6 +2,9 @@ import { prisma } from '../lib/prisma';
 import { cache } from '../lib/cache';
 import { CreateProjectSchema, UpdateProjectSchema } from '../types';
 import { ActivityLogService } from './activity-logs.service';
+import { ProjectSignupService } from './project-signups.service';
+import { NotificationService } from './notifications.service';
+import { DeadlineSchedulerService } from './deadline-scheduler.service';
 import type {
   Project,
   ProjectWithRelations,
@@ -105,6 +108,11 @@ export class ProjectService {
       'project_created',
       'Project created'
     );
+
+    // Schedule deadline jobs if year is assigned and student is assigned
+    if (data.year_id && data.student_id) {
+      await DeadlineSchedulerService.scheduleDeadlineJobs(project.id);
+    }
 
     return transformPrismaProject(project);
   }
@@ -219,7 +227,9 @@ export class ProjectService {
             first_name: true,
             last_name: true,
           }
-        }
+        },
+        // Include year relation for frontend year-based grouping
+        years: true,
       }
     });
 
@@ -238,7 +248,13 @@ export class ProjectService {
     // Fetch old project to detect changes
     const oldProject = await prisma.projects.findUnique({
       where: { id: Number(id) },
-      select: { status: true },
+      select: {
+        title: true,
+        status: true,
+        supervisor_id: true,
+        opponent_id: true,
+        year_id: true,
+      },
     });
 
     const project = await prisma.projects.update({
@@ -321,6 +337,17 @@ export class ProjectService {
         `Status changed to ${data.status}`,
         { old_status: oldProject?.status, new_status: data.status }
       );
+
+      // Notify student about status change
+      if (project.student_id) {
+        await NotificationService.createNotification({
+          userId: project.student_id,
+          type: 'status_changed',
+          title: `Project status: ${data.status}`,
+          message: `Project "${project.title}" status changed to ${data.status}`,
+          metadata: { project_id: Number(id), old_status: oldProject?.status, new_status: data.status, projectTitle: project.title, status: data.status },
+        });
+      }
     }
 
     // Log general update if other fields changed
@@ -331,6 +358,33 @@ export class ProjectService {
         'project_updated',
         'Project details updated'
       );
+    }
+
+    // Notify newly assigned supervisor
+    if (data.supervisor_id && oldProject?.supervisor_id !== data.supervisor_id) {
+      await NotificationService.createNotification({
+        userId: data.supervisor_id,
+        type: 'teacher_assigned',
+        title: 'Assigned as supervisor',
+        message: `You have been assigned as supervisor for project "${oldProject?.title || project.title}"`,
+        metadata: { project_id: Number(id), role: 'supervisor', variant: 'supervisor', projectTitle: oldProject?.title || project.title },
+      });
+    }
+
+    // Notify newly assigned opponent
+    if (data.opponent_id && oldProject?.opponent_id !== data.opponent_id) {
+      await NotificationService.createNotification({
+        userId: data.opponent_id,
+        type: 'teacher_assigned',
+        title: 'Assigned as opponent',
+        message: `You have been assigned as opponent for project "${oldProject?.title || project.title}"`,
+        metadata: { project_id: Number(id), role: 'opponent', variant: 'opponent', projectTitle: oldProject?.title || project.title },
+      });
+    }
+
+    // Reschedule deadline jobs if year changed
+    if (data.year_id && BigInt(data.year_id) !== oldProject?.year_id) {
+      await DeadlineSchedulerService.rescheduleDeadlineJobs(id);
     }
 
     return transformPrismaProject(project);
@@ -395,13 +449,50 @@ export class ProjectService {
 
     // Log student assignment/removal activity
     if (studentId) {
+      // Cleanup all signups for this project since it's now assigned
+      await ProjectSignupService.cleanupOnAssignment(projectId);
+
       await ActivityLogService.logActivity(
         projectId,
         userId,
         'student_assigned',
         'Student assigned to project'
       );
+
+      // Notify student about assignment
+      await NotificationService.createNotification({
+        userId: studentId,
+        type: 'project_assignment',
+        title: 'Project assigned',
+        message: `You have been assigned to project "${project.title}"`,
+        metadata: { project_id: Number(projectId), projectTitle: project.title },
+      });
+
+      // Notify teachers (supervisor and opponent) about student assignment
+      const studentName = project.users_projects_student_idTousers?.first_name && project.users_projects_student_idTousers?.last_name
+        ? `${project.users_projects_student_idTousers.first_name} ${project.users_projects_student_idTousers.last_name}`
+        : project.users_projects_student_idTousers?.email || 'A student';
+
+      const teacherNotifications: Array<{ userId: string; role: string }> = [];
+      if (project.supervisor_id) teacherNotifications.push({ userId: project.supervisor_id, role: 'supervisor' });
+      if (project.opponent_id) teacherNotifications.push({ userId: project.opponent_id, role: 'opponent' });
+
+      for (const { userId: teacherId } of teacherNotifications) {
+        await NotificationService.createNotification({
+          userId: teacherId,
+          type: 'project_assignment',
+          title: 'Student assigned to project',
+          message: `${studentName} has been assigned to "${project.title}"`,
+          metadata: { project_id: Number(projectId), student_id: studentId, variant: 'teacher', projectTitle: project.title, studentName },
+        });
+      }
+
+      // Schedule deadline jobs (checks if year has submission_date internally)
+      await DeadlineSchedulerService.scheduleDeadlineJobs(projectId);
     } else {
+      // Student removed - cancel any scheduled deadline jobs
+      await DeadlineSchedulerService.cancelDeadlineJobs(projectId);
+
       await ActivityLogService.logActivity(
         projectId,
         userId,
@@ -477,11 +568,26 @@ export class ProjectService {
       { reason, locked_by: userId }
     );
 
+    // Notify teachers (supervisor and opponent) about project lock
+    const teacherNotifications: string[] = [];
+    if (project.supervisor_id) teacherNotifications.push(project.supervisor_id);
+    if (project.opponent_id) teacherNotifications.push(project.opponent_id);
+
+    for (const teacherId of teacherNotifications) {
+      await NotificationService.createNotification({
+        userId: teacherId,
+        type: 'project_locked',
+        title: 'Project submitted',
+        message: `Project "${project.title}" has been ${reason === 'automatic' ? 'automatically ' : ''}locked`,
+        metadata: { project_id: Number(projectId), reason, variant: reason === 'automatic' ? 'automatic' : undefined, projectTitle: project.title },
+      });
+    }
+
     return transformPrismaProject(project);
   }
 
   /**
-   * Unlock a project (admin only)
+   * Unlock a project (admin or supervisor)
    * Allows editing again - reverts to draft
    */
   static async unlockProject(projectId: bigint, userId: string): Promise<ProjectWithRelations | null> {
@@ -538,6 +644,17 @@ export class ProjectService {
       'project_unlocked',
       'Project unlocked by admin'
     );
+
+    // Notify student that project has been unlocked
+    if (project.student_id) {
+      await NotificationService.createNotification({
+        userId: project.student_id,
+        type: 'project_unlocked',
+        title: 'Project unlocked',
+        message: `Project "${project.title}" has been unlocked - you can now edit it`,
+        metadata: { project_id: Number(projectId), projectTitle: project.title },
+      });
+    }
 
     return transformPrismaProject(project);
   }
@@ -628,7 +745,7 @@ export class ProjectService {
     }
 
     // System user ID for automated actions (use first admin or system ID)
-    const systemUser = await prisma.public_users.findFirst({
+    const systemUser = await prisma.users.findFirst({
       where: { role: 'admin' },
       select: { id: true },
     });

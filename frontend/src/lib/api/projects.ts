@@ -180,6 +180,54 @@ export const projectsApi = {
   getAllGrades: async (id: string | number): Promise<any> => {
     return apiRequest<any>(`/projects/${id}/grading/all`);
   },
+
+  // Student signup (interest expression) methods
+  /**
+   * Student signs up (expresses interest) for a project
+   * @param id - Project ID
+   */
+  signupForProject: async (id: string | number): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/projects/${id}/signup`, {
+      method: 'POST',
+    });
+  },
+
+  /**
+   * Student cancels their signup for a project
+   * @param id - Project ID
+   */
+  cancelSignup: async (id: string | number): Promise<{ message: string }> => {
+    return apiRequest<{ message: string }>(`/projects/${id}/signup`, {
+      method: 'DELETE',
+    });
+  },
+
+  /**
+   * Check if current user has signed up for a project
+   * Also returns whether student is assigned to any project
+   * @param id - Project ID
+   */
+  getSignupStatus: async (id: string | number): Promise<{ signedUp: boolean; hasProject?: boolean }> => {
+    return apiRequest<{ signedUp: boolean; hasProject?: boolean }>(`/projects/${id}/signup/status`);
+  },
+
+  /**
+   * Get all students who signed up for a project (teachers/admins only)
+   * @param id - Project ID
+   */
+  getProjectSignups: async (id: string | number): Promise<{
+    signups: Array<{
+      id: string;
+      email: string;
+      first_name: string | null;
+      last_name: string | null;
+      class: string | null;
+      signed_up_at: string;
+    }>;
+    count: number;
+  }> => {
+    return apiRequest(`/projects/${id}/signups`);
+  },
 }
 
 // Alias for server-side usage (maintains compatibility)

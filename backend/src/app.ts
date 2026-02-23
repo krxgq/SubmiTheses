@@ -2,6 +2,10 @@ import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import routes from './routes/api';
+import { createBullBoard } from '@bull-board/api';
+import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
+import { ExpressAdapter } from '@bull-board/express';
+import { deadlineQueue } from './queues/deadline.queue';
 
 const app: Express = express();
 
@@ -23,6 +27,18 @@ app.use(cors(corsOptions));
 app.use(cookieParser()); // Parse cookies from Cookie header
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Bull Board - Queue monitoring UI
+const serverAdapter = new ExpressAdapter();
+serverAdapter.setBasePath('/admin/queues');
+
+createBullBoard({
+  queues: [new BullMQAdapter(deadlineQueue)],
+  serverAdapter: serverAdapter,
+});
+
+// Mount Bull Board UI at /admin/queues
+app.use('/admin/queues', serverAdapter.getRouter());
 
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Backend API is running!' });

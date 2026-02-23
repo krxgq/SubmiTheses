@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import type { CreateReviewRequest, UpdateReviewRequest } from '@sumbi/shared-types';
+import { NotificationService } from './notifications.service';
 
 export class ReviewService {
   static async getReviewsByProjectId(projectId: bigint) {
@@ -44,7 +45,7 @@ export class ReviewService {
   }
 
   static async createReview(data: CreateReviewRequest & { project_id: bigint }) {
-    return await prisma.reviews.create({
+    const review = await prisma.reviews.create({
       data: {
         project_id: Number(data.project_id),
         reviewer_id: data.reviewer_id,
@@ -62,6 +63,55 @@ export class ReviewService {
         },
       },
     });
+
+    // Notify student and supervisor about new review
+    const project = await prisma.projects.findUnique({
+      where: { id: Number(data.project_id) },
+      select: {
+        title: true,
+        student_id: true,
+        supervisor_id: true,
+        opponent_id: true,
+      },
+    });
+
+    if (project) {
+      const reviewerName = review.users.first_name && review.users.last_name
+        ? `${review.users.first_name} ${review.users.last_name}`
+        : review.users.email;
+
+      // Notify student
+      if (project.student_id) {
+        await NotificationService.createNotification({
+          userId: project.student_id,
+          type: 'review_submitted',
+          title: 'New review submitted',
+          message: `${reviewerName} submitted a review for "${project.title}"`,
+          metadata: { project_id: Number(data.project_id), review_id: Number(review.id), projectTitle: project.title, reviewerName },
+        });
+      }
+
+      // Notify supervisor if opponent submitted review (and vice versa)
+      if (data.reviewer_id === project.opponent_id && project.supervisor_id) {
+        await NotificationService.createNotification({
+          userId: project.supervisor_id,
+          type: 'review_submitted',
+          title: 'Opponent review submitted',
+          message: `Opponent submitted a review for "${project.title}"`,
+          metadata: { project_id: Number(data.project_id), review_id: Number(review.id), variant: 'opponent', projectTitle: project.title },
+        });
+      } else if (data.reviewer_id === project.supervisor_id && project.opponent_id) {
+        await NotificationService.createNotification({
+          userId: project.opponent_id,
+          type: 'review_submitted',
+          title: 'Supervisor review submitted',
+          message: `Supervisor submitted a review for "${project.title}"`,
+          metadata: { project_id: Number(data.project_id), review_id: Number(review.id), variant: 'supervisor', projectTitle: project.title },
+        });
+      }
+    }
+
+    return review;
   }
 
   static async updateReview(id: bigint, data: UpdateReviewRequest) {

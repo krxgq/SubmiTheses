@@ -72,7 +72,7 @@ export function UserSelect({
     setFilteredUsers(filtered);
   }, [searchQuery, users]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside the container
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -156,7 +156,7 @@ export function UserSelect({
 
       {/* Dropdown list */}
       {isOpen && !isLoading && (
-        <div className="absolute z-20 w-full mt-1 bg-background-elevated border border-border rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div className="absolute z-[100] w-full mt-1 bg-background-elevated border border-border rounded-lg shadow-xl max-h-60 overflow-y-auto">
           {filteredUsers.length === 0 ? (
             <div className="px-4 py-3 text-sm text-text-secondary">
               No users found

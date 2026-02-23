@@ -1,29 +1,34 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { useTranslations } from 'next-intl';
-import { Link, useRouter } from '@/lib/navigation';
-import { Button, Dropdown, DropdownItem } from 'flowbite-react';
-import { Plus, MoreVertical } from 'lucide-react';
-import type { ScaleSet } from '@/lib/api/scale-sets';
-import { deleteScaleSet } from '@/lib/api/scale-sets';
-import { useApi } from '@/hooks/useApi';
-import { toast } from 'sonner';
+import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/lib/navigation";
+import { Button, Dropdown, DropdownItem } from "flowbite-react";
+import { Plus, MoreVertical } from "lucide-react";
+import type { ScaleSet } from "@/lib/api/scale-sets";
+import { deleteScaleSet } from "@/lib/api/scale-sets";
+import { useApi } from "@/hooks/useApi";
+import { toast } from "sonner";
 
 interface ScaleSetsTableProps {
   scaleSets: ScaleSet[];
 }
 
 export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
-  const t = useTranslations('admin.scaleSets');
+  const t = useTranslations("admin.scaleSets");
   const router = useRouter();
-  const [roleFilter, setRoleFilter] = useState<'all' | 'supervisor' | 'opponent'>('all');
+  const [roleFilter, setRoleFilter] = useState<
+    "all" | "supervisor" | "opponent"
+  >("all");
 
-  const { execute: performDelete, loading: isDeleting } = useApi<[bigint], void>(deleteScaleSet);
+  const { execute: performDelete, loading: isDeleting } = useApi<
+    [bigint],
+    void
+  >(deleteScaleSet);
 
   const filteredScaleSets = useMemo(() => {
     return scaleSets.filter((scaleSet) => {
-      if (roleFilter === 'all') return true;
+      if (roleFilter === "all") return true;
       return scaleSet.project_role === roleFilter;
     });
   }, [scaleSets, roleFilter]);
@@ -36,14 +41,14 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
       toast.success(`Scale set "${name}" deleted successfully.`);
       router.refresh();
     } catch (err) {
-      toast.error('Failed to delete scale set.');
+      toast.error("Failed to delete scale set.");
     }
   };
 
   return (
     <div className="w-full">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-text-primary">{t('title')}</h1>
+        <h1 className="text-2xl font-bold text-text-primary">{t("title")}</h1>
         <div className="flex items-center gap-3">
           <select
             value={roleFilter}
@@ -56,9 +61,12 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
           </select>
 
           <Link href="/admin/scale-sets/create">
-            <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
+            <Button
+              size="sm"
+              className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all"
+            >
               <Plus className="w-4 h-4 mr-2" />
-              {t('create')}
+              {t("create")}
             </Button>
           </Link>
         </div>
@@ -71,15 +79,17 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
               <thead className="text-xs uppercase bg-background-secondary border-b border-border">
                 <tr>
                   <th className="px-6 py-3 text-text-primary font-semibold">
-                    {t('name')}
+                    {t("name")}
                   </th>
                   <th className="px-6 py-3 text-text-primary font-semibold">
-                    {t('year')}
+                    {t("year")}
                   </th>
                   <th className="px-6 py-3 text-text-primary font-semibold">
-                    {t('role')}
+                    {t("role")}
                   </th>
-                  <th className="px-6 py-3 text-text-primary font-semibold"># Scales</th>
+                  <th className="px-6 py-3 text-text-primary font-semibold">
+                    Scales
+                  </th>
                   <th className="px-6 py-3 text-text-primary font-semibold"></th>
                 </tr>
               </thead>
@@ -93,38 +103,49 @@ export function ScaleSetsTable({ scaleSets }: ScaleSetsTableProps) {
                       {scaleSet.name}
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
-                      {scaleSet.years?.name || '-'}
+                      {scaleSet.years?.name || "-"}
                     </td>
                     <td className="px-6 py-4">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          scaleSet.project_role === 'supervisor'
-                            ? 'bg-primary/10 text-primary'
-                            : 'bg-accent/10 text-accent'
+                          scaleSet.project_role === "supervisor"
+                            ? "bg-primary/10 text-primary"
+                            : "bg-accent/10 text-accent"
                         }`}
                       >
-                        {scaleSet.project_role === 'supervisor' ? t('supervisor') : t('opponent')}
+                        {scaleSet.project_role === "supervisor"
+                          ? t("supervisor")
+                          : t("opponent")}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-text-secondary">
-                      {scaleSet._count?.scale_set_scales || scaleSet.scale_set_scales?.length || 0}
+                      {scaleSet._count?.scale_set_scales ||
+                        scaleSet.scale_set_scales?.length ||
+                        0}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <Dropdown
-                        label={<MoreVertical className="w-5 h-5 text-text-secondary" />}
+                        label={
+                          <MoreVertical className="w-5 h-5 text-text-secondary" />
+                        }
                         arrowIcon={false}
                         inline
                         size="sm"
                       >
-                        <DropdownItem as={Link} href={`/admin/scale-sets/${scaleSet.id}/edit`}>
+                        <DropdownItem
+                          as={Link}
+                          href={`/admin/scale-sets/${scaleSet.id}/edit`}
+                        >
                           Edit
                         </DropdownItem>
                         <DropdownItem
-                          onClick={() => handleDelete(scaleSet.id, scaleSet.name)}
+                          onClick={() =>
+                            handleDelete(scaleSet.id, scaleSet.name)
+                          }
                           className="text-danger"
                           disabled={isDeleting}
                         >
-                          {isDeleting ? 'Deleting...' : 'Delete'}
+                          {isDeleting ? "Deleting..." : "Delete"}
                         </DropdownItem>
                       </Dropdown>
                     </td>

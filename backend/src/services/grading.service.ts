@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { cache } from '../lib/cache';
+import { NotificationService } from './notifications.service';
 
 /**
  * GradingService handles all grading operations for projects
@@ -10,6 +11,7 @@ export class GradingService {
   /**
    * Get scale set for teacher's role (supervisor or opponent)
    * Determines which scale set to use based on teacher's assignment
+   * Also returns grading status (canSubmit, projectStatus, feedbackDate)
    */
   static async getScaleSetForTeacher(projectId: bigint, teacherId: string) {
     const project = await prisma.projects.findUnique({
@@ -18,6 +20,10 @@ export class GradingService {
         supervisor_id: true,
         opponent_id: true,
         year_id: true,
+        status: true,
+        years: {
+          select: { feedback_date: true },
+        },
       },
     });
 
@@ -56,7 +62,22 @@ export class GradingService {
       throw new Error(`No scale set found for ${role} in this year`);
     }
 
-    return scaleSet;
+    // Determine if grading is currently allowed
+    const now = new Date();
+    const feedbackDate = project.years?.feedback_date;
+    const isBeforeDeadline = !feedbackDate || now <= feedbackDate;
+    const isProjectLocked = project.status === 'locked';
+    const canSubmit = isProjectLocked && isBeforeDeadline;
+
+    return {
+      ...scaleSet,
+      gradingStatus: {
+        canSubmit,
+        projectStatus: project.status,
+        feedbackDate: feedbackDate?.toISOString() || null,
+        isBeforeDeadline,
+      },
+    };
   }
 
   /**
@@ -87,8 +108,43 @@ export class GradingService {
   }
 
   /**
+   * Check if teacher can submit grades
+   * Conditions: project must be locked AND current date < feedback_date
+   */
+  static async canTeacherSubmitGrades(projectId: bigint): Promise<{ canSubmit: boolean; reason?: string }> {
+    const project = await prisma.projects.findUnique({
+      where: { id: Number(projectId) },
+      include: {
+        years: {
+          select: { feedback_date: true },
+        },
+      },
+    });
+
+    if (!project) {
+      return { canSubmit: false, reason: 'Project not found' };
+    }
+
+    // Project must be locked for grading
+    if (project.status !== 'locked') {
+      return { canSubmit: false, reason: 'Project must be locked before grading' };
+    }
+
+    // Check if before feedback deadline
+    if (project.years?.feedback_date) {
+      const now = new Date();
+      if (now > project.years.feedback_date) {
+        return { canSubmit: false, reason: 'Feedback deadline has passed' };
+      }
+    }
+
+    return { canSubmit: true };
+  }
+
+  /**
    * Submit/update grades for multiple scales at once
    * Uses upsert logic: updates existing grades or creates new ones
+   * Validates: project must be locked AND before feedback_date
    */
   static async submitGrades(
     projectId: bigint,
@@ -96,6 +152,12 @@ export class GradingService {
     yearId: bigint,
     grades: Array<{ scale_id: bigint; value: number }>
   ) {
+    // Check if grading is allowed
+    const { canSubmit, reason } = await this.canTeacherSubmitGrades(projectId);
+    if (!canSubmit) {
+      throw new Error(reason);
+    }
+
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (tx) => {
       const updatedGrades = [];
@@ -140,6 +202,62 @@ export class GradingService {
     // Invalidate caches
     await cache.delete(`grades:project:${projectId}:teacher:${teacherId}`);
     await cache.delete(`grades:project:${projectId}:all`);
+
+    // Notify the other teacher (opponent if supervisor submitted, or vice versa)
+    // Also check if student can see grades (feedback_date passed)
+    const project = await prisma.projects.findUnique({
+      where: { id: Number(projectId) },
+      select: {
+        title: true,
+        student_id: true,
+        supervisor_id: true,
+        opponent_id: true,
+        years: {
+          select: {
+            feedback_date: true,
+          },
+        },
+      },
+    });
+
+    if (project) {
+      let otherTeacherId: string | null = null;
+      let role: string = '';
+
+      if (project.supervisor_id === teacherId && project.opponent_id) {
+        otherTeacherId = project.opponent_id;
+        role = 'Supervisor';
+      } else if (project.opponent_id === teacherId && project.supervisor_id) {
+        otherTeacherId = project.supervisor_id;
+        role = 'Opponent';
+      }
+
+      if (otherTeacherId) {
+        await NotificationService.createNotification({
+          userId: otherTeacherId,
+          type: 'grades_submitted',
+          title: 'Grades submitted',
+          message: `Grades have been submitted for "${project.title}"`,
+          metadata: { project_id: Number(projectId), reviewer_id: teacherId, project_title: project.title, role, projectTitle: project.title },
+        });
+      }
+
+      // Check if student can see grades (feedback_date passed)
+      const now = new Date();
+      const feedbackDate = project.years?.feedback_date;
+      const feedbackPassed = feedbackDate && now > feedbackDate;
+
+      // Notify student if grades are visible now
+      if (feedbackPassed && project.student_id) {
+        await NotificationService.createNotification({
+          userId: project.student_id,
+          type: 'grade_published',
+          title: 'Grades available',
+          message: `Grades are now available for "${project.title}"`,
+          metadata: { project_id: Number(projectId), reviewer_id: teacherId, project_title: project.title, projectTitle: project.title },
+        });
+      }
+    }
 
     return result;
   }

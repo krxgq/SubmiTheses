@@ -218,7 +218,7 @@ export const reviewIdSchema = z.object({
 export const createExternalLinkSchema = z.object({
   body: z.object({
     url: z.string().url(),
-    title: z.string().min(1).max(255),
+    title: z.string().min(1).max(255).optional(),
     description: z.string().optional(),
   }),
   params: z.object({

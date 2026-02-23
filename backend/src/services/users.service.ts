@@ -4,9 +4,7 @@ import type { UserWithYear, UserRole, UpdateUserRequest } from '@sumbi/shared-ty
 import type { Prisma } from '@prisma/client';
 
 /**
- * User Service - handles operations on public.users table
- * Note: Prisma model is named 'public_users' (mapped to 'users' table in DB)
- * Uses shared types from @sumbi/shared-types package
+ * User Service - handles operations on users table
  */
 export class UserService {
   /**
@@ -19,7 +17,7 @@ export class UserService {
     const cached = await cache.get(cacheKey);
     if (cached) return cached;
 
-    const users = await prisma.public_users.findMany({
+    const users = await prisma.users.findMany({
       include: {
         years: true, // Include related year data
       },
@@ -37,13 +35,13 @@ export class UserService {
   /**
    * Get user by ID with year information
    */
-  static async getUserById(id: string): Promise<Prisma.public_usersGetPayload<{ include: { years: true } }> | null> {
+  static async getUserById(id: string): Promise<Prisma.usersGetPayload<{ include: { years: true } }> | null> {
     const cacheKey = `user:${id}`;
 
-    const cached = await cache.get<Prisma.public_usersGetPayload<{ include: { years: true } }>>(cacheKey);
+    const cached = await cache.get<Prisma.usersGetPayload<{ include: { years: true } }>>(cacheKey);
     if (cached) return cached;
 
-    const user = await prisma.public_users.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: String(id) },
       select: {
         id: true,
@@ -83,7 +81,7 @@ export class UserService {
     const cached = await cache.get(cacheKey);
     if (cached) return cached;
 
-    const users = await prisma.public_users.findMany({
+    const users = await prisma.users.findMany({
       where: { role },
       orderBy: {
         created_at: 'desc',
@@ -107,7 +105,7 @@ export class UserService {
     const cached = await cache.get(cacheKey);
     if (cached) return cached;
 
-    const teachers = await prisma.public_users.findMany({
+    const teachers = await prisma.users.findMany({
       where: {
         role: {
           in: ['teacher', 'admin'],
@@ -129,7 +127,7 @@ export class UserService {
    * Update user profile (name, year, etc.)
    */
   static async updateUser(id: string, data: UpdateUserRequest & { class?: string }) {
-    const existingUser = await prisma.public_users.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { id: String(id) },
     });
 
@@ -137,7 +135,7 @@ export class UserService {
       return null;
     }
 
-    const user = await prisma.public_users.update({
+    const user = await prisma.users.update({
       where: { id: String(id) },
       data: {
         first_name: data.first_name,
@@ -168,12 +166,12 @@ export class UserService {
    * Update user role (admin only - handled by middleware)
    */
   static async updateUserRole(id: string, role: 'admin' | 'teacher' | 'student') {
-    const existingUser = await prisma.public_users.findUnique({
+    const existingUser = await prisma.users.findUnique({
       where: { id: String(id) },
       select: { role: true },
     });
 
-    const user = await prisma.public_users.update({
+    const user = await prisma.users.update({
       where: { id: String(id) },
       data: { role },
       include: {
@@ -200,7 +198,7 @@ export class UserService {
    */
   static async deleteUser(id: string) {
     try {
-      const existingUser = await prisma.public_users.findUnique({
+      const existingUser = await prisma.users.findUnique({
         where: { id: String(id) },
         select: { role: true },
       });
@@ -222,7 +220,7 @@ export class UserService {
       });
 
       // Delete the user (grades will cascade delete automatically)
-      const deleted = await prisma.public_users.delete({
+      const deleted = await prisma.users.delete({
         where: { id: String(id) },
       });
 

@@ -10,6 +10,7 @@ import scaleSetRoutes from './scale-sets.route'
 import yearsRoutes from './years.route'
 import attachmentsRoutes from './attachments.route'
 import subjectsRoutes from './subjects.route'
+import notificationsRoutes from './notifications.route'
 
 const apiRouter = Router()
 
@@ -22,6 +23,7 @@ apiRouter.use('/subjects', subjectsRoutes)
 apiRouter.use('/scales', scalesRoutes)
 apiRouter.use('/scale-sets', scaleSetRoutes)
 apiRouter.use('/years', yearsRoutes)
+apiRouter.use('/notifications', notificationsRoutes)
 
 // Project-related nested routes
 apiRouter.use('/projects', reviewRoutes)

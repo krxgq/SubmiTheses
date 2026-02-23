@@ -9,6 +9,10 @@ interface ScheduleBuilderProps {
 }
 
 const CZECH_MONTHS = [
+  "Září",
+  "Říjen",
+  "Listopad",
+  "Prosinec",
   "Leden",
   "Únor",
   "Březen",
@@ -17,10 +21,6 @@ const CZECH_MONTHS = [
   "Červen",
   "Červenec",
   "Srpen",
-  "Září",
-  "Říjen",
-  "Listopad",
-  "Prosinec",
 ];
 
 // Month-by-month schedule builder for project timeline
