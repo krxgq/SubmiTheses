@@ -1,7 +1,7 @@
 'use client';
 import { formatUserName } from "@/lib/formatters";
 
-import { Share2, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown, Lock, Unlock, Users } from 'lucide-react';
+import { Share2, Bell, Upload, Edit, Trash2, UserPlus, UserMinus, FileDown, Lock, Unlock, Users, EyeOff } from 'lucide-react';
 import { Button } from 'flowbite-react';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -81,9 +81,10 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const canEdit = isAdmin || (isAssignedStudent && project.status === 'draft') || isSupervisor;
   const canDelete = isAdmin || (isSupervisor && project.status === 'draft');
   const canInteract = isAdmin || isAssignedStudent || isAssignedTeacher; // Upload/Export/Share permissions
-  const canLock = (isAdmin || isSupervisor) && project.status !== 'locked';
+  const canLock = (isAdmin || isSupervisor) && project.status === 'draft';
   const canUnlock = (isAdmin || isSupervisor) && project.status === 'locked';
   const canPublish = isAdmin && project.status === 'locked';
+  const canUnpublish = isAdmin && project.status === 'public'; // revert public → locked
 
   const hasStudent = !!project.student_id;
 
@@ -291,11 +292,24 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     try {
       await projectsApi.publishProject(String(project.id));
       toast.success(tMessages('projectPublished'));
-      // Force page reload to show updated status
       window.location.reload();
     } catch (error: any) {
       toast.error(error.message || tMessages('projectPublishFailed'));
       console.error('Publish error:', error);
+      setIsPublishing(false);
+    }
+  };
+
+  // Unpublish: revert public → locked (admin only)
+  const handleUnpublish = async () => {
+    setIsPublishing(true);
+    try {
+      await projectsApi.lockProject(String(project.id));
+      toast.success(tMessages('projectUnpublished'));
+      window.location.reload();
+    } catch (error: any) {
+      toast.error(error.message || tMessages('projectUnpublishFailed'));
+      console.error('Unpublish error:', error);
       setIsPublishing(false);
     }
   };
@@ -355,6 +369,18 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
             >
               <Share2 className="w-5 h-5" />
               <span>{isPublishing ? t('publishing') : t('publishProject')}</span>
+            </button>
+          )}
+
+          {/* Unpublish Button - Admin only, when project is public */}
+          {canUnpublish && (
+            <button
+              onClick={handleUnpublish}
+              disabled={isPublishing}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-warning bg-warning/10 rounded-lg hover:bg-warning/20 transition-colors disabled:opacity-50"
+            >
+              <EyeOff className="w-5 h-5" />
+              <span>{isPublishing ? t('unpublishing') : t('unpublishProject')}</span>
             </button>
           )}
 

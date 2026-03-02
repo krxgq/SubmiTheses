@@ -1,4 +1,5 @@
 import { apiRequest } from "./client"
+import { API_BASE_URL } from "./client"
 import type { ProjectWithRelations, RecentActivityResponse } from "@sumbi/shared-types"
 
 /**
@@ -139,6 +140,17 @@ export const projectsApi = {
     }).then(res => res.project);
   },
 
+  /**
+   * Bulk publish multiple locked projects at once (admin only)
+   * @param projectIds - Array of project IDs to publish
+   */
+  bulkPublish: async (projectIds: (string | number)[]): Promise<{ published: number; failed: number; results: { id: number; status: string }[] }> => {
+    return apiRequest<{ published: number; failed: number; results: { id: number; status: string }[] }>('/projects/bulk-publish', {
+      method: 'PUT',
+      body: JSON.stringify({ projectIds }),
+    });
+  },
+
   // Grading methods
   /**
    * Get scale set for teacher's role (supervisor or opponent)
@@ -232,3 +244,37 @@ export const projectsApi = {
 
 // Alias for server-side usage (maintains compatibility)
 export const projectsApiServer = projectsApi;
+
+/**
+ * Public projects API — no auth token needed
+ * Uses plain fetch (no cookie forwarding) for guest access
+ */
+export const publicProjectsApi = {
+  /** Fetch all public projects (status: 'public') */
+  getAll: async (): Promise<ProjectWithRelations[]> => {
+    const res = await fetch(`${API_BASE_URL}/projects/public`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch public projects');
+    return res.json();
+  },
+
+  /** Fetch a single public project by ID */
+  getById: async (id: string | number): Promise<ProjectWithRelations> => {
+    const res = await fetch(`${API_BASE_URL}/projects/public/${id}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Public project not found');
+    return res.json();
+  },
+
+  /** Fetch attachments for a public project */
+  getAttachments: async (id: string | number): Promise<{ id: string; filename: string; description: string | null; uploaded_at: string }[]> => {
+    const res = await fetch(`${API_BASE_URL}/projects/public/${id}/attachments`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch attachments');
+    return res.json();
+  },
+
+  /** Get pre-signed download URL for a public project attachment */
+  getDownloadUrl: async (projectId: string | number, attachmentId: string | number): Promise<{ downloadUrl: string; filename: string }> => {
+    const res = await fetch(`${API_BASE_URL}/projects/public/${projectId}/attachments/${attachmentId}/download-url`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to get download URL');
+    return res.json();
+  },
+};

@@ -97,6 +97,7 @@
     "user": {
       "label": "Uživatel",
       "role": "Role",
+      "signIn": "Přihlásit se",
       "signOut": "Odhlásit se",
       "signingOut": "Odhlašování..."
     }
@@ -275,7 +276,16 @@
     "noFilesSelected": "Vyberte prosím alespoň jeden soubor",
     "uploadButton": "Nahrát",
     "fileFormatsHelper": "Akceptované formáty: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB na soubor)",
-    "category": "Kategorie"
+    "category": "Kategorie",
+    "selectProjects": "Vybrat",
+    "cancelSelection": "Zrušit",
+    "selectedCount": "{count} vybráno",
+    "publishSelected": "Zveřejnit vybrané",
+    "bulkPublishSuccess": "Zveřejněno {count} projektů",
+    "bulkPublishSkippedProject": "\"{name}\" přeskočen — lze zveřejnit pouze uzamčené projekty",
+    "bulkPublishFailedProject": "\"{name}\" se nepodařilo zveřejnit",
+    "alreadyPublished": "\"{name}\" je již zveřejněn",
+    "bulkPublishFailed": "Nepodařilo se zveřejnit projekty"
   },
   "admin": {
     "title": "Administrační Panel",
@@ -373,6 +383,8 @@
       "locking": "Zamykání...",
       "unlocking": "Odemykání...",
       "publishing": "Zveřejňování...",
+      "unpublishProject": "Zrušit zveřejnění",
+      "unpublishing": "Rušení zveřejnění...",
       "projectLocked": "Projekt je uzamčen",
       "assignStudent": "Přiřadit studenta",
       "removeStudent": "Odebrat studenta",
@@ -434,7 +446,9 @@
       "projectUnlocked": "Projekt byl úspěšně odemčen",
       "projectUnlockFailed": "Nepodařilo se odemknout projekt",
       "projectPublished": "Projekt byl úspěšně zveřejněn",
-      "projectPublishFailed": "Nepodařilo se zveřejnit projekt"
+      "projectPublishFailed": "Nepodařilo se zveřejnit projekt",
+      "projectUnpublished": "Zveřejnění projektu bylo zrušeno",
+      "projectUnpublishFailed": "Nepodařilo se zrušit zveřejnění"
     },
     "recentActivity": {
       "title": "Nedávná aktivita",

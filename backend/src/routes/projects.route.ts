@@ -12,13 +12,16 @@ import {
 import {
   getAllProjects,
   getProjectById,
+  getPublicProjects,
+  getPublicProjectById,
   createProject,
   updateProject,
   deleteProject,
   assignStudentToProject,
   getProjectActivities,
   updateProjectStatus,
-  triggerAutoLock
+  triggerAutoLock,
+  bulkPublishProjects
 } from '../controllers/projects.controller'
 import {
   getTeacherScaleSet,
@@ -38,17 +41,33 @@ import {
   updateProjectSchema,
   projectIdSchema,
   addStudentToProjectSchema,
+  bulkPublishSchema,
 } from '../validation/schemas'
+
+import {
+  getPublicProjectAttachments,
+  getPublicAttachmentDownloadUrl
+} from '../controllers/attachments.controller'
 
 const router = Router()
 
-// Project CRUD routes
+// Public routes — no authentication required
+router.get('/public', getPublicProjects);
+router.get('/public/:id', getPublicProjectById);
+// Public attachment routes — only for projects with status 'public'
+router.get('/public/:id/attachments', getPublicProjectAttachments);
+router.get('/public/:id/attachments/:attachmentId/download-url', getPublicAttachmentDownloadUrl);
+
+// Project CRUD routes (authenticated)
 router.get('/', authenticated, getAllProjects);
 
 router.post('/', authenticated, validate(createProjectSchema), createProject);
 
 // Auto-lock trigger (admin only) - must be before /:id
 router.post('/auto-lock', authenticated, requireAdmin, triggerAutoLock);
+
+// Bulk publish (admin only) - must be before /:id to avoid param collision
+router.put('/bulk-publish', authenticated, requireAdmin, validate(bulkPublishSchema), bulkPublishProjects);
 
 // Student signup routes (interest expression) - must be before /:id
 router.post('/:id/signup', authenticated, requireSignupAccess, signupForProject);

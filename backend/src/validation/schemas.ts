@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const loginSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
     remember_me: z.boolean().optional().default(false),
   }),
 });
@@ -12,7 +12,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
   }),
 });
 
@@ -446,11 +446,18 @@ export const bulkCloneScaleSetsSchema = z.object({
   }),
 });
 
+// Bulk publish schema — validates array of project IDs for batch publishing
+export const bulkPublishSchema = z.object({
+  body: z.object({
+    projectIds: z.array(z.coerce.number().int().positive()).min(1, 'At least one project ID is required'),
+  }),
+});
+
 // Invitation schemas
 export const setupPasswordSchema = z.object({
   body: z.object({
     token: z.string().length(64, 'Invalid invitation token'),
-    password: z.string().min(6, 'Password must be at least 6 characters'),
+    password: z.string().min(8, 'Password must be at least 8 characters'),
   }),
 });
 

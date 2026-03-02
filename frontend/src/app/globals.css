@@ -321,6 +321,20 @@ small {
   color: var(--color-text-secondary);
 }
 
+/* Sonner toast overrides — tinted left border + themed backgrounds */
+.toast-success {
+  border-left: 4px solid var(--color-success) !important;
+}
+.toast-error {
+  border-left: 4px solid var(--color-danger) !important;
+}
+.toast-warning {
+  border-left: 4px solid var(--color-warning) !important;
+}
+.toast-info {
+  border-left: 4px solid var(--color-primary) !important;
+}
+
 /* Enhanced form styling */
 input:focus,
 textarea:focus,

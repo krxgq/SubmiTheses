@@ -97,6 +97,7 @@
     "user": {
       "label": "User",
       "role": "Role",
+      "signIn": "Log in",
       "signOut": "Sign out",
       "signingOut": "Signing out..."
     }
@@ -275,7 +276,16 @@
     "noFilesSelected": "Please select at least one file",
     "uploadButton": "Upload",
     "fileFormatsHelper": "Accepted formats: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, JPG, PNG, GIF, TXT, ZIP (Max 10MB per file)",
-    "category": "Category"
+    "category": "Category",
+    "selectProjects": "Select",
+    "cancelSelection": "Cancel",
+    "selectedCount": "{count} selected",
+    "publishSelected": "Publish Selected",
+    "bulkPublishSuccess": "Published {count} projects",
+    "bulkPublishSkippedProject": "\"{name}\" skipped — only locked projects can be published",
+    "bulkPublishFailedProject": "\"{name}\" failed to publish",
+    "alreadyPublished": "\"{name}\" is already published",
+    "bulkPublishFailed": "Failed to publish projects"
   },
   "admin": {
     "title": "Admin Panel",
@@ -373,6 +383,8 @@
       "locking": "Locking...",
       "unlocking": "Unlocking...",
       "publishing": "Publishing...",
+      "unpublishProject": "Unpublish Project",
+      "unpublishing": "Unpublishing...",
       "projectLocked": "Project is locked",
       "assignStudent": "Assign Student",
       "removeStudent": "Remove Student",
@@ -434,7 +446,9 @@
       "projectUnlocked": "Project unlocked successfully",
       "projectUnlockFailed": "Failed to unlock project",
       "projectPublished": "Project published successfully",
-      "projectPublishFailed": "Failed to publish project"
+      "projectPublishFailed": "Failed to publish project",
+      "projectUnpublished": "Project unpublished successfully",
+      "projectUnpublishFailed": "Failed to unpublish project"
     },
     "recentActivity": {
       "title": "Recent Activity",

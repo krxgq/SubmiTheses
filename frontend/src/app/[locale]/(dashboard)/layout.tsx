@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { Toaster } from "sonner";
 import AppSidebar from "@/components/layout/sidebar/Sidebar";
 import Breadcrumbs from "@/components/layout/Breadcrumbs";
 import { AccessDenied } from "@/components/auth/AccessDenied";
@@ -51,6 +52,23 @@ export default async function DashboardLayout({
           <div className="max-w-[1400px] mx-auto">{children}</div>
         </main>
       </div>
+      {/* Toast notifications styled with theme colors */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--color-background-elevated)',
+            color: 'var(--color-text-primary)',
+            border: '1px solid var(--color-border)',
+          },
+          classNames: {
+            success: 'toast-success',
+            error: 'toast-error',
+            warning: 'toast-warning',
+            info: 'toast-info',
+          },
+        }}
+      />
     </div>
   );
 }

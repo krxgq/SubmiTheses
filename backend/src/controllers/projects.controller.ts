@@ -27,6 +27,37 @@ type User = {
 };
 
 /**
+ * Get public projects — no auth required
+ */
+export async function getPublicProjects(req: Request, res: Response) {
+  try {
+    const projects = await ProjectService.getPublicProjects();
+    return res.status(200).json(projects);
+  } catch (error) {
+    console.error('[ProjectsController] Error fetching public projects:', error);
+    return res.status(500).json({ error: 'Failed to fetch public projects' });
+  }
+}
+
+/**
+ * Get a single public project by ID — returns 404 if not public
+ */
+export async function getPublicProjectById(req: Request, res: Response) {
+  try {
+    const id = BigInt(req.params.id);
+    const project = await ProjectService.getPublicProjectById(id);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    return res.status(200).json(project);
+  } catch (error) {
+    return res.status(500).json({ error: 'Failed to fetch project' });
+  }
+}
+
+/**
  * Get all projects with relations
  */
 export async function getAllProjects(req: Request, res: Response) {
@@ -224,6 +255,23 @@ export async function updateProjectStatus(req: Request, res: Response) {
   } catch (error: any) {
     console.error('[ProjectsController] Error updating project status:', error);
     return res.status(500).json({ error: error.message || 'Failed to update project status' });
+  }
+}
+
+/**
+ * Bulk publish multiple locked projects at once (admin only)
+ * PUT /projects/bulk-publish
+ * Body: { projectIds: number[] }
+ */
+export async function bulkPublishProjects(req: Request, res: Response) {
+  try {
+    const { projectIds } = req.body;
+    const result = await ProjectService.bulkPublish(projectIds);
+
+    return res.status(200).json(result);
+  } catch (error: any) {
+    console.error('[ProjectsController] Error in bulk publish:', error);
+    return res.status(500).json({ error: error.message || 'Failed to bulk publish projects' });
   }
 }
 

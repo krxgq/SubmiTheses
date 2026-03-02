@@ -98,8 +98,9 @@ export class ProjectService {
       }
     });
 
-    // Invalidate projects list cache
+    // Invalidate projects list caches
     await cache.delete('projects:all');
+    await cache.delete('projects:public');
 
     // Log project creation activity
     await ActivityLogService.logActivity(
@@ -185,6 +186,67 @@ export class ProjectService {
   }
 
   /**
+   * Get only public (status: 'public') projects — no auth required
+   * Separate cache key so draft/locked projects never leak to guests
+   */
+  static async getPublicProjects(): Promise<ProjectWithRelations[]> {
+    const cacheKey = 'projects:public';
+
+    const cached = await cache.get<ProjectWithRelations[]>(cacheKey);
+    if (cached) {
+      console.log('[ProjectService] Cache HIT for public projects');
+      return cached;
+    }
+
+    console.log('[ProjectService] Cache MISS for public projects, querying database...');
+
+    const projects = await prisma.projects.findMany({
+      where: { status: 'public' },
+      include: {
+        users_projects_student_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true, class: true }
+        },
+        users_projects_supervisor_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true }
+        },
+        users_projects_opponent_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true }
+        },
+        years: true,
+      }
+    });
+
+    const transformed = projects.map(transformPrismaProject);
+    await cache.set(cacheKey, transformed, 30);
+    return transformed;
+  }
+
+  /**
+   * Get a single public project by ID — returns null if not public
+   */
+  static async getPublicProjectById(id: bigint): Promise<ProjectWithRelations | null> {
+    const project = await prisma.projects.findFirst({
+      where: { id: Number(id), status: 'public' },
+      include: {
+        users_projects_student_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true, class: true }
+        },
+        users_projects_supervisor_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true }
+        },
+        users_projects_opponent_idTousers: {
+          select: { id: true, email: true, first_name: true, last_name: true }
+        },
+        project_description: true,
+        subjects: true,
+        years: true,
+      }
+    });
+
+    return project ? transformPrismaProject(project) : null;
+  }
+
+  /**
    * Get all projects with relations including student
    * Uses Redis cache to avoid slow database queries (AWS network latency)
    */
@@ -235,8 +297,8 @@ export class ProjectService {
 
     const transformed = projects.map(transformPrismaProject);
 
-    // Cache for 60 seconds (projects list doesn't change frequently)
-    await cache.set(cacheKey, transformed, 60);
+    // Cache for 30 seconds
+    await cache.set(cacheKey, transformed, 30);
 
     return transformed;
   }
@@ -324,9 +386,10 @@ export class ProjectService {
       }
     });
 
-    // Invalidate cache for this project and the projects list
+    // Invalidate cache for this project and the projects lists
     await cache.delete(`project:${id}`);
     await cache.delete('projects:all');
+    await cache.delete('projects:public');
 
     // Log status change if status was updated
     if (data.status && oldProject?.status !== data.status) {
@@ -398,9 +461,10 @@ export class ProjectService {
       where: { id: Number(id) },
     });
     
-    // Invalidate cache for this project and the projects list
+    // Invalidate cache for this project and the projects lists
     await cache.delete(`project:${id}`);
     await cache.delete('projects:all');
+    await cache.delete('projects:public');
 
     return !!deletedProject;
   }
@@ -443,9 +507,10 @@ export class ProjectService {
       }
     });
 
-    // Invalidate cache for this project and the projects list
+    // Invalidate cache for this project and the projects lists
     await cache.delete(`project:${projectId}`);
     await cache.delete('projects:all');
+    await cache.delete('projects:public');
 
     // Log student assignment/removal activity
     if (studentId) {
@@ -556,7 +621,8 @@ export class ProjectService {
     // Invalidate caches immediately
     await Promise.all([
       cache.delete(`project:${projectId}`),
-      cache.delete('projects:all')
+      cache.delete('projects:all'),
+      cache.delete('projects:public')
     ]);
 
     // Log activity
@@ -634,7 +700,8 @@ export class ProjectService {
     // Invalidate caches immediately
     await Promise.all([
       cache.delete(`project:${projectId}`),
-      cache.delete('projects:all')
+      cache.delete('projects:all'),
+      cache.delete('projects:public')
     ]);
 
     // Log activity
@@ -704,10 +771,65 @@ export class ProjectService {
     // Invalidate caches immediately
     await Promise.all([
       cache.delete(`project:${projectId}`),
-      cache.delete('projects:all')
+      cache.delete('projects:all'),
+      cache.delete('projects:public')
     ]);
 
     return transformPrismaProject(project);
+  }
+
+  /**
+   * Bulk publish locked projects individually.
+   * Each project is updated separately so one failure doesn't block the rest.
+   * Only projects with status 'locked' are eligible; others are skipped.
+   */
+  static async bulkPublish(projectIds: number[]): Promise<{ published: number; failed: number; results: { id: number; status: string }[] }> {
+    // Find which of the requested projects actually exist and are locked
+    const eligibleProjects = await prisma.projects.findMany({
+      where: { id: { in: projectIds }, status: 'locked' },
+      select: { id: true },
+    });
+
+    const eligibleIdSet = new Set(eligibleProjects.map(p => Number(p.id)));
+    const results: { id: number; status: string }[] = [];
+    let publishedCount = 0;
+
+    // Mark non-eligible IDs as skipped (draft, public, or non-existent)
+    for (const id of projectIds) {
+      if (!eligibleIdSet.has(id)) {
+        results.push({ id, status: 'skipped' });
+      }
+    }
+
+    // Update each eligible project individually — one failure won't block others
+    for (const p of eligibleProjects) {
+      const id = Number(p.id);
+      try {
+        await prisma.projects.update({
+          where: { id: p.id },
+          data: { status: 'public' },
+        });
+        results.push({ id, status: 'published' });
+        publishedCount++;
+        // Invalidate individual project cache right after update
+        await cache.delete(`project:${p.id}`);
+      } catch (err) {
+        console.error(`[BulkPublish] Failed to publish project ${id}:`, err);
+        results.push({ id, status: 'failed' });
+      }
+    }
+
+    // Invalidate list caches once after all updates
+    if (publishedCount > 0) {
+      await cache.delete('projects:all');
+      await cache.delete('projects:public');
+    }
+
+    return {
+      published: publishedCount,
+      failed: projectIds.length - publishedCount,
+      results,
+    };
   }
 
   /**
@@ -772,6 +894,7 @@ export class ProjectService {
 
     // Invalidate all project caches
     await cache.delete('projects:all');
+    await cache.delete('projects:public');
     for (const p of projectsToLock) {
       await cache.delete(`project:${p.id}`);
     }

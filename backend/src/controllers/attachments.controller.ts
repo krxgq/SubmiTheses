@@ -1,8 +1,71 @@
 import { Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
 import { AttachmentService } from '../services/attachments.service';
 import { ActivityLogService } from '../services/activity-logs.service';
 import { S3Service } from '../services/s3.service';
 import validator from 'validator';
+
+/**
+ * Get attachments for a public project — no auth required.
+ * Returns 404 if the project doesn't exist or isn't public.
+ */
+export async function getPublicProjectAttachments(req: Request, res: Response) {
+  try {
+    const projectId = BigInt(req.params.id);
+
+    // Verify project exists and is public
+    const project = await prisma.projects.findFirst({
+      where: { id: Number(projectId), status: 'public' },
+      select: { id: true },
+    });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const attachments = await AttachmentService.getAttachmentsByProjectId(projectId);
+    return res.status(200).json(attachments);
+  } catch (error) {
+    console.error('[Attachments] Public fetch error:', error);
+    return res.status(500).json({ error: 'Failed to fetch attachments' });
+  }
+}
+
+/**
+ * Get download URL for an attachment on a public project — no auth required.
+ * Verifies the attachment belongs to a public project before generating a pre-signed URL.
+ */
+export async function getPublicAttachmentDownloadUrl(req: Request, res: Response) {
+  try {
+    const projectId = BigInt(req.params.id);
+    const attachmentId = BigInt(req.params.attachmentId);
+
+    // Verify project is public
+    const project = await prisma.projects.findFirst({
+      where: { id: Number(projectId), status: 'public' },
+      select: { id: true },
+    });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Get attachment and verify it belongs to this project
+    const attachment = await AttachmentService.getAttachmentById(attachmentId);
+    if (!attachment || Number(attachment.project_id) !== Number(projectId)) {
+      return res.status(404).json({ error: 'Attachment not found' });
+    }
+
+    // Generate pre-signed download URL
+    const downloadUrl = await S3Service.generateDownloadUrl(attachment.storage_path);
+    return res.status(200).json({
+      downloadUrl,
+      filename: attachment.filename,
+      expiresIn: 3600,
+    });
+  } catch (error) {
+    console.error('[Attachments] Public download URL error:', error);
+    return res.status(500).json({ error: 'Failed to generate download URL' });
+  }
+}
 
 /**
  * Get all attachments for a project

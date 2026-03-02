@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   LayoutList,
   LayoutGrid,
@@ -10,6 +10,10 @@ import {
   Heart,
   ChevronDown,
   ChevronRight,
+  CheckSquare,
+  X,
+  Send,
+  Loader2,
 } from "lucide-react";
 import type { ProjectWithRelations, UserRole } from "@sumbi/shared-types";
 import { GridItem } from "@/components/dashboard/projects/GridItem";
@@ -19,6 +23,8 @@ import { useRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { projectsApi } from "@/lib/api/projects";
+import { toast } from "sonner";
 
 type ViewMode = "list" | "grid";
 
@@ -142,16 +148,94 @@ export function ProjectsPageClient({
 }: ProjectsPageClientProps) {
   const t = useTranslations();
   const router = useRouter();
+  // Local copy of projects so we can update statuses without full page reload
+  const [localProjects, setLocalProjects] = useState(projects);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [searchQuery, setSearchQuery] = useState("");
   // Tracks which year sections are collapsed (all expanded by default)
   const [collapsedYears, setCollapsedYears] = useState<Set<string>>(new Set());
+  // Selection mode state (admin only)
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [isPublishing, setIsPublishing] = useState(false);
+
+  // Toggle a single project in/out of the selection set
+  const toggleSelect = useCallback((id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // Exit select mode and clear selection
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  // Bulk publish: validates on frontend first, then calls API for eligible projects
+  const handleBulkPublish = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+
+    // Split selected projects by current status before calling the API
+    const selectedProjects = localProjects.filter(p => selectedIds.has(Number(p.id)));
+    const lockedIds: number[] = [];
+
+    for (const p of selectedProjects) {
+      const id = Number(p.id);
+      if (p.status === 'public') {
+        // Already published — toast and skip
+        toast.info(t('projects.alreadyPublished', { name: p.title }));
+      } else if (p.status !== 'locked') {
+        // Draft or other — can't publish
+        toast.warning(t('projects.bulkPublishSkippedProject', { name: p.title }));
+      } else {
+        lockedIds.push(id);
+      }
+    }
+
+    // Nothing eligible — just exit select mode
+    if (lockedIds.length === 0) {
+      exitSelectMode();
+      return;
+    }
+
+    setIsPublishing(true);
+    try {
+      const result = await projectsApi.bulkPublish(lockedIds);
+
+      if (result.published > 0) {
+        toast.success(t('projects.bulkPublishSuccess', { count: result.published }));
+        // Update local project statuses so badges reflect the change instantly
+        const publishedIds = new Set(
+          result.results.filter(r => r.status === 'published').map(r => r.id)
+        );
+        setLocalProjects(prev =>
+          prev.map(p => publishedIds.has(Number(p.id)) ? { ...p, status: 'public' } : p)
+        );
+      }
+
+      // Show toast for any that failed on the backend side
+      for (const r of result.results.filter(r => r.status === 'failed')) {
+        const proj = localProjects.find(p => Number(p.id) === r.id);
+        toast.error(t('projects.bulkPublishFailedProject', { name: proj?.title ?? `#${r.id}` }));
+      }
+
+      exitSelectMode();
+    } catch {
+      toast.error(t('projects.bulkPublishFailed'));
+    } finally {
+      setIsPublishing(false);
+    }
+  }, [selectedIds, t, exitSelectMode, localProjects]);
 
   // Filter projects by search query before grouping
   const searchedProjects = useMemo(() => {
-    if (!searchQuery.trim()) return projects;
+    if (!searchQuery.trim()) return localProjects;
     const q = searchQuery.toLowerCase();
-    return projects.filter(
+    return localProjects.filter(
       (p) =>
         p.title.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
@@ -160,7 +244,7 @@ export function ProjectsPageClient({
         p.supervisor?.first_name?.toLowerCase().includes(q) ||
         p.supervisor?.last_name?.toLowerCase().includes(q),
     );
-  }, [projects, searchQuery]);
+  }, [localProjects, searchQuery]);
 
   // Group by year, then filter by role within each year
   const yearGroups = useProjectsByYear(
@@ -181,13 +265,20 @@ export function ProjectsPageClient({
     });
   };
 
-  // Renders project cards in grid or list layout
+  // Renders project cards in grid or list layout, with optional selection props
   const renderProjectsGrid = (projectsList: ProjectWithRelations[]) => {
     if (viewMode === "grid") {
       return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {projectsList.map((project) => (
-            <GridItem key={project.id} project={project} role={userRole} />
+            <GridItem
+              key={project.id}
+              project={project}
+              role={userRole}
+              selectable={selectMode}
+              selected={selectedIds.has(Number(project.id))}
+              onSelect={toggleSelect}
+            />
           ))}
         </div>
       );
@@ -196,7 +287,14 @@ export function ProjectsPageClient({
     return (
       <div className="space-y-4">
         {projectsList.map((project) => (
-          <ListItem key={project.id} project={project} role={userRole} />
+          <ListItem
+            key={project.id}
+            project={project}
+            role={userRole}
+            selectable={selectMode}
+            selected={selectedIds.has(Number(project.id))}
+            onSelect={toggleSelect}
+          />
         ))}
       </div>
     );
@@ -236,8 +334,31 @@ export function ProjectsPageClient({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* Select mode toggle — admin only */}
+          {userRole === "admin" && (
+            selectMode ? (
+              <Button
+                variant="outline"
+                size="md"
+                leftIcon={<X size={20} />}
+                onClick={exitSelectMode}
+              >
+                {t("projects.cancelSelection")}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="md"
+                leftIcon={<CheckSquare size={20} />}
+                onClick={() => setSelectMode(true)}
+              >
+                {t("projects.selectProjects")}
+              </Button>
+            )
+          )}
+
           {/* Create project - teachers and admins only */}
-          {(userRole === "teacher" || userRole === "admin") && (
+          {(userRole === "teacher" || userRole === "admin") && !selectMode && (
             <Button
               variant="primary"
               size="md"
@@ -365,6 +486,24 @@ export function ProjectsPageClient({
             }
             className="max-w-md"
           />
+        </div>
+      )}
+
+      {/* Floating action bar — visible when projects are selected */}
+      {selectMode && selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-background-elevated border border-border-strong rounded-2xl shadow-lg px-6 py-3 flex items-center gap-4">
+          <span className="text-sm font-medium text-text-primary">
+            {t("projects.selectedCount", { count: selectedIds.size })}
+          </span>
+          <Button
+            variant="primary"
+            size="sm"
+            leftIcon={isPublishing ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            onClick={handleBulkPublish}
+            disabled={isPublishing}
+          >
+            {t("projects.publishSelected")}
+          </Button>
         </div>
       )}
     </>
