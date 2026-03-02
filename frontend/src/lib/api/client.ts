@@ -56,9 +56,11 @@ export async function apiRequest<T>(
     }
   }
 
-  // Build headers
+  // Build headers — X-Requested-With acts as CSRF protection (browsers block
+  // cross-origin custom headers unless explicitly allowed by CORS)
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
+    "X-Requested-With": "XMLHttpRequest",
     ...(restOptions.headers as Record<string, string>),
   };
 

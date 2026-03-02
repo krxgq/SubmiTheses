@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/users.service";
 import { JWTService } from "../services/jwt.service";
-import jwt from "jsonwebtoken";
 
 /**
  * Auth Controller - Local Password-Based Authentication
@@ -160,24 +159,11 @@ export async function getSession(req: Request, res: Response) {
     // Fetch fresh user profile from database
     const userProfile = await getUserProfile(req.user.id);
 
-    // Extract token from header
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.substring(7); // Remove "Bearer "
-
-    if (!token) {
-      return res.status(401).json({
-        error: "No token provided",
-      });
-    }
-
-    // Decode token to get expiration
-    const decoded = jwt.decode(token) as any;
-
+    // Return user profile only — token stays in httpOnly cookie
     return res.status(200).json({
       user: userProfile,
       session: {
-        access_token: token,
-        expires_at: decoded?.exp,
+        expires_at: req.user.exp,
       },
     });
   } catch (err) {
@@ -346,8 +332,8 @@ function getAuthErrorMessage(message: string): string {
       return "Please confirm your email address before signing in.";
     case "User already registered":
       return "An account with this email already exists.";
-    case "Password should be at least 6 characters":
-      return "Password must be at least 6 characters long.";
+    case "Password should be at least 8 characters":
+      return "Password must be at least 8 characters long.";
     case "Unable to validate email address: invalid format":
       return "Please enter a valid email address.";
     case "Signup is disabled":

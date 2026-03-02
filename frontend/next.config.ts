@@ -6,7 +6,8 @@ import path from 'path';
 const withNextIntl = createNextIntlPlugin('./src/i18n.ts');
 
 const nextConfig: NextConfig = {
-  // Tell Next.js that this is the actual project root for middleware
+  // Standalone output for Docker deployment – bundles only needed files
+  output: "standalone",
   serverExternalPackages: [],
   
   // Expose environment variables to Edge Runtime (middleware)

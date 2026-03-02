@@ -44,19 +44,12 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Fetch notifications when menu opens
+  // Fetch notifications every time menu opens (no polling — Sidebar handles background polling)
   useEffect(() => {
-    if (showMenu && notifications.length === 0) {
+    if (showMenu) {
       fetchNotifications();
     }
   }, [showMenu]);
-
-  // Poll for unread count every 60 seconds
-  useEffect(() => {
-    fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 60000); // 60 seconds
-    return () => clearInterval(interval);
-  }, []);
 
   const fetchNotifications = async () => {
     try {
@@ -72,19 +65,12 @@ export function NotificationsMenu({ inSidebar = false }: NotificationsMenuProps)
         metadata: n.metadata,
       }));
       setNotifications(formattedNotifications);
+      // Derive unread count from fetched notifications instead of a separate API call
+      setUnreadCount(formattedNotifications.filter((n) => n.unread).length);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUnreadCount = async () => {
-    try {
-      const count = await notificationsApi.getUnreadCount();
-      setUnreadCount(count);
-    } catch (error) {
-      console.error('Failed to fetch unread count:', error);
     }
   };
 

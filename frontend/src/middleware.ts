@@ -42,6 +42,14 @@ export async function middleware(request: NextRequest) {
 
     const accessToken = request.cookies.get('sb-access-token')?.value;
 
+    // Allow /gallery (public project browsing) without authentication
+    const strippedPath = pathname.replace(new RegExp(`^/${locale}`), '');
+    const isGalleryRoute = strippedPath === '/gallery' || strippedPath.startsWith('/gallery/');
+
+    if (!accessToken && isGalleryRoute) {
+      return NextResponse.next();
+    }
+
     if (!accessToken && !pathname.includes("/auth")) {
       return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
     }

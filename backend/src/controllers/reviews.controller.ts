@@ -47,13 +47,18 @@ export async function updateReview(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.reviewId);
 
+    // Ownership check: only the reviewer or an admin can update
+    const existing = await ReviewService.getReviewById(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+    if (existing.reviewer_id !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this review' });
+    }
+
     const review = await ReviewService.updateReview(id, {
       comments: req.body.comments,
     });
-
-    if (!review) {
-      return res.status(404).json({ error: 'Review not found' });
-    }
 
     return res.status(200).json(review);
   } catch (error) {
@@ -64,12 +69,17 @@ export async function updateReview(req: Request, res: Response) {
 export async function deleteReview(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.reviewId);
-    const deleted = await ReviewService.deleteReview(id);
 
-    if (!deleted) {
+    // Ownership check: only the reviewer or an admin can delete
+    const existing = await ReviewService.getReviewById(id);
+    if (!existing) {
       return res.status(404).json({ error: 'Review not found' });
     }
+    if (existing.reviewer_id !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this review' });
+    }
 
+    await ReviewService.deleteReview(id);
     return res.status(204).send();
   } catch (error) {
     return res.status(500).json({ error: 'Failed to delete review' });

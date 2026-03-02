@@ -582,12 +582,126 @@ Tokeny jsou uloženy v httpOnly cookies, což chrání před XSS útoky – Java
 
 // TODO: Napsat návod k použití aplikace
 
-== Instalace
-// TODO: Návod k instalaci (lokální, nasazení na server)
+== Nasazení na server
+
+Systém SubmiTheses je kontejnerizován pomocí Dockeru, což umožňuje konzistentní nasazení na libovolný server s podporou Docker Engine. Nasazení lze provést manuálně nebo automatizovaně prostřednictvím CI/CD pipeline.
+
+=== Docker konfigurace
+
+Backend aplikace využívá vícefázový (multi-stage) Dockerfile pro optimalizaci velikosti výsledného obrazu:
+
+- *Build fáze* – nainstaluje závislosti, vygeneruje Prisma klienta a zkompiluje TypeScript do JavaScriptu. Jako základní obraz slouží `node:latest` (Alpine varianta).
+- *Produkční fáze* – obsahuje pouze produkční závislosti a zkompilovaný kód. Výsledný obraz je výrazně menší než vývojový.
+
+Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který orchestruje čtyři služby:
+
+#figure(
+  table(
+    columns: (auto, 1fr, auto),
+    inset: 6pt,
+    align: (left, left, center),
+    table.header([*Služba*], [*Popis*], [*Port*]),
+    [PostgreSQL 15], [Relační databáze pro ukládání dat], [5432],
+    [Redis 7], [Cache a message broker pro BullMQ fronty], [6379],
+    [Backend API], [Express.js server s REST API], [5000],
+    [Frontend], [Next.js server (standalone režim)], [3000],
+  ),
+  caption: [Služby v Docker Compose konfiguraci]
+) <fig:docker-services>
+
+Všechny služby mají nakonfigurované health checky, které zajišťují, že se backend spustí až po úspěšné inicializaci databáze a Redis. Data databáze a Redis jsou perzistentní díky Docker volumes.
+
+Pro produkční nasazení je nutné nastavit proměnné prostředí – zejména `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (vygenerované pomocí `openssl rand -base64 64`), připojení k databázi, SMTP server a konfiguraci AWS S3 pro ukládání souborů.
+
+=== Manuální nasazení
+
+Postup manuálního nasazení na server:
+
++ Naklonovat repozitář: `git clone <repo-url>`
++ Vytvořit soubor `.env` s produkčními proměnnými prostředí
++ Spustit aplikaci: `docker compose -f docker-compose.prod.yml up -d --build`
++ Provést databázové migrace: `docker exec submitheses-backend npx prisma migrate deploy`
+
+Pro aktualizaci aplikace stačí stáhnout nové změny (`git pull`), přestavět obrazy a restartovat služby.
+
+=== CI/CD pomocí GitHub Actions
+
+Pro automatizované nasazení lze využít GitHub Actions workflow, který po každém push do hlavní větve provede:
+
++ *Build a testy* – zkompiluje kód, spustí validaci typů a testy
++ *Sestavení Docker obrazu* – vytvoří produkční obraz a nahraje ho do container registry (např. GitHub Container Registry)
++ *Nasazení na server* – připojí se k serveru přes SSH a aktualizuje běžící kontejnery
+
+Tento přístup zajišťuje, že na server se dostane pouze kód, který prošel všemi kontrolami, a minimalizuje riziko lidské chyby při manuálním nasazení.
 
 == Použití aplikace
 // TODO: Popis práce s aplikací, screenshoty
 
+
+
+= Bezpečnost
+
+Bezpečnost webové aplikace je klíčovým aspektem návrhu systému SubmiTheses. Aplikace implementuje vícevrstvou ochranu proti nejčastějším typům útoků definovaným v OWASP Top 10.
+
+== SQL Injection
+
+SQL injection je technika, při které útočník vkládá škodlivý SQL kód do vstupních polí aplikace s cílem manipulovat databázové dotazy. Systém SubmiTheses je proti tomuto útoku chráněn použitím *Prisma ORM*, který automaticky parametrizuje všechny databázové dotazy. To znamená, že uživatelský vstup nikdy není přímo vkládán do SQL řetězce – místo toho je předán jako parametr, čímž je znemožněno jeho interpretování jako SQL příkazu.
+
+== Cross-Site Scripting (XSS)
+
+XSS útoky spočívají ve vložení škodlivého JavaScriptu do webové stránky, který se poté spustí v prohlížeči ostatních uživatelů. Ochrana je zajištěna na několika úrovních:
+
+- *Helmet.js* – middleware, který nastavuje bezpečnostní HTTP hlavičky včetně Content Security Policy (CSP), X-Content-Type-Options, X-Frame-Options a dalších. Tyto hlavičky instruují prohlížeč, aby omezil spouštění neautorizovaných skriptů.
+- *httpOnly cookies* – JWT tokeny jsou uloženy v cookies s příznakem `httpOnly`, který zabraňuje přístupu k nim z JavaScriptu. I v případě úspěšného XSS útoku tak útočník nemůže získat autentizační tokeny.
+- *SameSite cookies* – atribut `sameSite: 'lax'` omezuje odesílání cookies při požadavcích z jiných domén.
+
+== Cross-Site Request Forgery (CSRF)
+
+CSRF útok nutí přihlášeného uživatele nechtěně provést akci na webové aplikaci. Systém implementuje ochranu pomocí vlastního CSRF middleware, který u všech stavově měnících požadavků (POST, PUT, DELETE, PATCH) na API endpointy vyžaduje přítomnost hlavičky `X-Requested-With: XMLHttpRequest`. Prohlížeče neumožňují cizím webům nastavovat vlastní hlavičky při cross-origin požadavcích, čímž je útok znemožněn.
+
+== Ochrana hesel
+
+Uživatelská hesla jsou hashována algoritmem *bcrypt* s 10 rundami solení. Bcrypt je záměrně pomalý algoritmus navržený pro hashování hesel – i při úniku databáze je zpětné získání hesel výpočetně nereálné. Systém nikdy neukládá hesla v čitelné podobě.
+
+== Rate Limiting
+
+Pro ochranu proti útokům hrubou silou (brute-force) jsou citlivé endpointy chráněny rate limiterem (knihovna `express-rate-limit`):
+
+#figure(
+  table(
+    columns: (auto, auto, auto),
+    inset: 6pt,
+    align: (left, center, center),
+    table.header([*Endpoint*], [*Limit*], [*Časové okno*]),
+    [Přihlášení], [10 pokusů], [15 minut],
+    [Registrace], [5 pokusů], [1 hodina],
+    [Obnovení tokenu], [30 pokusů], [15 minut],
+  ),
+  caption: [Konfigurace rate limitingu pro autentizační endpointy]
+) <fig:rate-limits>
+
+Po dosažení limitu server vrací chybový kód 429 (Too Many Requests) a uživatel musí vyčkat do uplynutí časového okna.
+
+== Validace vstupních dat
+
+Veškerá vstupní data z HTTP požadavků jsou validována pomocí knihovny *Zod* ještě před zpracováním v aplikační logice. Validační schémata definují přesný formát očekávaných dat – typy, délky řetězců, formáty e-mailů, rozsahy čísel a povolené hodnoty výčtových typů. Nevalidní požadavky jsou okamžitě odmítnuty s chybovým kódem 400 a popisem chyby.
+
+== CORS (Cross-Origin Resource Sharing)
+
+CORS politika omezuje, z jakých domén může frontend komunikovat s backendem. Povolené origin adresy jsou konfigurovány prostřednictvím proměnné prostředí `CORS_ORIGIN`. V produkci je povolen přístup pouze z domény frontendu, čímž se zabraňuje neoprávněným požadavkům z jiných webů.
+
+== Bezpečnost souborů
+
+Nahrávání souborů je zabezpečeno na několika úrovních:
+
+- *Whitelist MIME typů* – povoleny jsou pouze definované typy souborů (PDF, Word, Excel, obrázky, ZIP). Ostatní typy jsou odmítnuty.
+- *Omezení velikosti* – přílohy max. 10 MB, profilové obrázky max. 2 MB.
+- *Sanitizace názvů* – názvy souborů jsou zpracovány funkcí `path.basename()`, která odstraní cestu a zabrání útokům typu directory traversal.
+- *Pre-signed URL* – soubory se nahrávají přímo do AWS S3 přes dočasné URL s platností 5 minut, čímž se zamezuje přímému průchodu souborů přes server.
+
+== Autorizace a řízení přístupu
+
+Systém implementuje role-based access control (RBAC) prostřednictvím sady autorizačních middleware. Každý API endpoint má přiřazeny povolené role (admin, teacher, student) a volitelně kontrolu vlastnictví zdroje – například student může upravovat pouze svůj vlastní profil a projekt. Middleware navíc detekuje zastaralé JWT tokeny porovnáním role v tokenu s aktuální rolí v databázi.
 
 
 = Výsledky

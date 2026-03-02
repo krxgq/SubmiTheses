@@ -48,14 +48,19 @@ export async function updateGrade(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.gradeId);
 
+    // Ownership check: only the reviewer who created it or an admin can update
+    const existing = await GradeService.getGradeById(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Grade not found' });
+    }
+    if (existing.reviewer_id !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to update this grade' });
+    }
+
     const grade = await GradeService.updateGrade(id, {
       value: BigInt(req.body.value),
       scale_id: req.body.scale_id ? BigInt(req.body.scale_id) : undefined,
     });
-
-    if (!grade) {
-      return res.status(404).json({ error: 'Grade not found' });
-    }
 
     return res.status(200).json(grade);
   } catch (error) {
@@ -66,12 +71,17 @@ export async function updateGrade(req: Request, res: Response) {
 export async function deleteGrade(req: Request, res: Response) {
   try {
     const id = BigInt(req.params.gradeId);
-    const deleted = await GradeService.deleteGrade(id);
 
-    if (!deleted) {
+    // Ownership check: only the reviewer who created it or an admin can delete
+    const existing = await GradeService.getGradeById(id);
+    if (!existing) {
       return res.status(404).json({ error: 'Grade not found' });
     }
+    if (existing.reviewer_id !== req.user!.id && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to delete this grade' });
+    }
 
+    await GradeService.deleteGrade(id);
     return res.status(204).send();
   } catch (error) {
     return res.status(500).json({ error: 'Failed to delete grade' });

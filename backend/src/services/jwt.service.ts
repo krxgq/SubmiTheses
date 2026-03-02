@@ -111,7 +111,8 @@ export class JWTService {
   static verifyAccessToken(token: string): JWTPayload {
     try {
       const decoded = jwt.verify(token, this.ACCESS_TOKEN_SECRET, {
-        issuer: this.ISSUER, // Prevent token substitution attacks
+        issuer: this.ISSUER,
+        algorithms: ['HS256'], // Pin algorithm to prevent confusion attacks
       }) as JWTPayload;
 
       return decoded;
@@ -133,7 +134,8 @@ export class JWTService {
   static verifyRefreshToken(token: string): JWTPayload {
     try {
       const decoded = jwt.verify(token, this.REFRESH_TOKEN_SECRET, {
-        issuer: this.ISSUER, // Prevent token substitution attacks
+        issuer: this.ISSUER,
+        algorithms: ['HS256'], // Pin algorithm to prevent confusion attacks
       }) as JWTPayload & { type?: string };
 
       // Verify this is actually a refresh token (prevent access tokens from being used as refresh tokens)

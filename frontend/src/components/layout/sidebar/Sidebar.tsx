@@ -15,6 +15,7 @@ import {
   Monitor,
   ChevronDown,
   LogOut,
+  LogIn,
   Bell,
   FileSliders,
 } from "lucide-react";
@@ -73,10 +74,11 @@ const allNavItems: NavItem[] = [
 ];
 
 interface AppSidebarProps {
-  userRole: UserRole;
+  userRole: UserRole | string;
+  isPublic?: boolean;
 }
 
-export default function AppSidebar({ userRole }: AppSidebarProps) {
+export default function AppSidebar({ userRole, isPublic = false }: AppSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -96,8 +98,9 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
     setMounted(true);
   }, []);
 
-  // Poll unread notification count for sidebar dot indicator
+  // Poll unread notification count for sidebar dot indicator (skip for guests)
   useEffect(() => {
+    if (isPublic) return;
     const fetchUnread = async () => {
       try {
         const count = await notificationsApi.getUnreadCount();
@@ -109,7 +112,7 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
     fetchUnread();
     const interval = setInterval(fetchUnread, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isPublic]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -132,9 +135,10 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const navItems = allNavItems.filter((item) =>
-    item.allowedRoles.includes(userRole),
-  );
+  // Guests only see a "Projects" link pointing to /gallery
+  const navItems = isPublic
+    ? [{ ...allNavItems.find((item) => item.id === "projects")!, path: "/gallery" }]
+    : allNavItems.filter((item) => item.allowedRoles.includes(userRole as UserRole));
 
   const isActiveItem = (itemPath: string) => {
     return pathname === itemPath || pathname.startsWith(`${itemPath}/`);
@@ -298,58 +302,69 @@ export default function AppSidebar({ userRole }: AppSidebarProps) {
           {/* Language Switcher */}
           <LanguageSwitcher />
 
-          {/* User Menu */}
-          <div className="relative" ref={userMenuRef}>
+          {/* Guest: show login button instead of user menu */}
+          {isPublic ? (
             <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="w-full flex items-center justify-between px-3 py-2 hover:bg-background-hover rounded-lg transition-colors"
+              onClick={() => router.push("/auth")}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-primary text-text-inverse rounded-xl text-sm font-medium hover:bg-primary/90 transition-colors"
             >
-              <div className="flex items-center min-w-0">
-                <Avatar
-                  src={user?.avatar_url}
-                  name={formatUserName(user?.first_name, user?.last_name)}
-                  size="sm"
-                />
-                <div className="ml-3 text-left min-w-0 flex-1">
-                  <p className="text-sm font-medium text-primary truncate">
-                    {formatUserName(user?.first_name, user?.last_name) ||
-                      t("user.label")}
-                  </p>
-                  <p className="text-xs text-secondary truncate">
-                    {user?.role || t("user.role")}
-                  </p>
-                </div>
-              </div>
-              <ChevronDown className="w-4 h-4 flex-shrink-0" />
+              <LogIn className="w-4 h-4" />
+              {t("user.signIn")}
             </button>
-            {showUserMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl overflow-hidden z-50">
-                <button
-                  onClick={() => {
-                    handleNavigation("/settings");
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
-                >
-                  <Settings className="w-4 h-4 mr-3" />
-                  {t("settings")}
-                </button>
-                <div className="border-t border-border"></div>
-                <button
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                  className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 transition-colors flex items-center disabled:opacity-50"
-                >
-                  {isLoggingOut ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-danger mr-3"></div>
-                  ) : (
-                    <LogOut className="w-4 h-4 mr-3" />
-                  )}
-                  {isLoggingOut ? t("user.signingOut") : t("user.signOut")}
-                </button>
-              </div>
-            )}
-          </div>
+          ) : (
+            /* User Menu (authenticated) */
+            <div className="relative" ref={userMenuRef}>
+              <button
+                onClick={() => setShowUserMenu(!showUserMenu)}
+                className="w-full flex items-center justify-between px-3 py-2 hover:bg-background-hover rounded-lg transition-colors"
+              >
+                <div className="flex items-center min-w-0">
+                  <Avatar
+                    src={user?.avatar_url}
+                    name={formatUserName(user?.first_name, user?.last_name)}
+                    size="sm"
+                  />
+                  <div className="ml-3 text-left min-w-0 flex-1">
+                    <p className="text-sm font-medium text-primary truncate">
+                      {formatUserName(user?.first_name, user?.last_name) ||
+                        t("user.label")}
+                    </p>
+                    <p className="text-xs text-secondary truncate">
+                      {user?.role || t("user.role")}
+                    </p>
+                  </div>
+                </div>
+                <ChevronDown className="w-4 h-4 shrink-0" />
+              </button>
+              {showUserMenu && (
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-background-elevated border border-border rounded-lg shadow-xl overflow-hidden z-50">
+                  <button
+                    onClick={() => {
+                      handleNavigation("/settings");
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full px-3 py-2 text-left text-sm text-text-primary hover:bg-background-hover transition-colors flex items-center"
+                  >
+                    <Settings className="w-4 h-4 mr-3" />
+                    {t("settings")}
+                  </button>
+                  <div className="border-t border-border"></div>
+                  <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 transition-colors flex items-center disabled:opacity-50"
+                  >
+                    {isLoggingOut ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-danger mr-3"></div>
+                    ) : (
+                      <LogOut className="w-4 h-4 mr-3" />
+                    )}
+                    {isLoggingOut ? t("user.signingOut") : t("user.signOut")}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </>

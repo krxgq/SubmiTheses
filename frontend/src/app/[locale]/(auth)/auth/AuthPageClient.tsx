@@ -1,7 +1,7 @@
 'use client'
 import { TabItem, Tabs } from "flowbite-react"
 import { useState } from 'react'
-import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle, GraduationCap } from 'lucide-react'
+import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle, GraduationCap, Folder } from 'lucide-react'
 import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
 import { Input } from '@/components/ui/Input'
@@ -263,6 +263,18 @@ export default function AuthPageClient() {
                                     {(isLoading || authLoading) ? 'Signing In...' : 'Sign In'}
                                 </button>
                             </form>
+
+                        {/* Browse public projects link */}
+                        <div className="mt-6 pt-4 border-t border-border">
+                            <button
+                                type="button"
+                                onClick={() => router.push('/gallery')}
+                                className="w-full flex items-center justify-center gap-2 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-background-hover rounded-lg transition-colors"
+                            >
+                                <Folder className="w-4 h-4" />
+                                Browse Public Projects
+                            </button>
+                        </div>
 
                         {/* Public registration disabled - can be re-enabled via REGISTRATION_ENABLED flag */}
                         {REGISTRATION_ENABLED && (

@@ -53,14 +53,16 @@ export default async function UserEditPage({ params }: UserEditPageProps) {
       if (formData.role !== user.role) {
         await usersApiServer.updateRole(userId, formData.role);
       }
-
-      revalidatePath(`/users/${userId}`);
-      revalidatePath(`/users/${userId}/edit`);
-      redirect({ href: `/users/${userId}`, locale });
-    } catch (error) {
-      console.error("[updateUser] Error:", error);
+    } catch (error: any) {
+      // Log full error details including API status and response
+      console.error("[updateUser] Error:", error?.message, "Status:", error?.statusCode, "Details:", JSON.stringify(error?.details));
       throw new Error("Failed to update user");
     }
+
+    // redirect() throws internally — must be outside try/catch
+    revalidatePath(`/users/${userId}`);
+    revalidatePath(`/users/${userId}/edit`);
+    redirect({ href: `/users/${userId}`, locale });
   }
 
   return (

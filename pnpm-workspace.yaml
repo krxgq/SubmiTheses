@@ -1,7 +1,18 @@
-# pnpm workspace configuration
-# Defines which directories are part of the monorepo
-
 packages:
-  - 'frontend'
-  - 'backend'
-  - 'packages/*'
+  - frontend
+  - backend
+  - packages/*
+
+ignoredBuiltDependencies:
+  - msgpackr-extract
+
+overrides:
+  fast-xml-parser@>=4.1.3 <5.3.5: '>=5.3.5'
+  fast-xml-parser@>=4.1.3 <5.3.6: '>=5.3.6'
+  fast-xml-parser@>=5.0.9 <=5.3.3: '>=5.3.4'
+  lodash@>=4.0.0 <=4.17.22: '>=4.17.23'
+  minimatch@<10.2.1: '>=10.2.1'
+  next@>=15.6.0-canary.0 <16.1.5: '>=16.1.5'
+  next@>=16.0.0-beta.0 <16.1.5: '>=16.1.5'
+  next@>=16.1.0-canary.0 <16.1.5: '>=16.1.5'
+  qs@>=6.7.0 <=6.14.1: '>=6.14.2'
