@@ -12,6 +12,12 @@ import {
   updateScaleInSetSchema,
   bulkCloneScaleSetsSchema,
 } from '../validation/schemas';
+import {
+  bulkOperationRateLimiter,
+  destructiveActionRateLimiter,
+  sensitiveWriteRateLimiter,
+  writeRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -33,6 +39,7 @@ router.get(
 router.post(
   '/',
   authenticated,
+  writeRateLimiter,
   requireRoles(['admin']),
   validate(createScaleSetSchema),
   ScaleSetsController.createScaleSet
@@ -42,6 +49,7 @@ router.post(
 router.post(
   '/bulk-clone',
   authenticated,
+  bulkOperationRateLimiter,
   requireRoles(['admin']),
   validate(bulkCloneScaleSetsSchema),
   ScaleSetsController.bulkCloneScaleSets
@@ -50,6 +58,7 @@ router.post(
 router.put(
   '/:id',
   authenticated,
+  writeRateLimiter,
   requireRoles(['admin']),
   validate(updateScaleSetSchema),
   ScaleSetsController.updateScaleSet
@@ -58,6 +67,7 @@ router.put(
 router.delete(
   '/:id',
   authenticated,
+  destructiveActionRateLimiter,
   requireRoles(['admin']),
   validate(scaleSetIdSchema),
   ScaleSetsController.deleteScaleSet
@@ -67,6 +77,7 @@ router.delete(
 router.post(
   '/:id/scales',
   authenticated,
+  sensitiveWriteRateLimiter,
   requireRoles(['admin']),
   validate(addScaleToSetSchema),
   ScaleSetsController.addScaleToSet
@@ -75,6 +86,7 @@ router.post(
 router.delete(
   '/:id/scales/:scaleId',
   authenticated,
+  destructiveActionRateLimiter,
   requireRoles(['admin']),
   validate(removeScaleFromSetSchema),
   ScaleSetsController.removeScaleFromSet
@@ -83,6 +95,7 @@ router.delete(
 router.patch(
   '/:id/scales/:scaleId',
   authenticated,
+  sensitiveWriteRateLimiter,
   requireRoles(['admin']),
   validate(updateScaleInSetSchema),
   ScaleSetsController.updateScaleInSet

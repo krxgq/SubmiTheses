@@ -8,6 +8,11 @@ import {
   updateSubjectSchema,
   subjectIdSchema,
 } from '../validation/schemas';
+import {
+  destructiveActionRateLimiter,
+  sensitiveWriteRateLimiter,
+  writeRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -26,6 +31,7 @@ router.get(
 router.post(
   '/',
   authenticated,
+  writeRateLimiter,
   requireRoles(['admin']),
   validate(createSubjectSchema),
   SubjectsController.createSubject
@@ -34,6 +40,7 @@ router.post(
 router.patch(
   '/:id',
   authenticated,
+  writeRateLimiter,
   requireRoles(['admin']),
   validate(updateSubjectSchema),
   SubjectsController.updateSubject
@@ -42,6 +49,7 @@ router.patch(
 router.delete(
   '/:id',
   authenticated,
+  destructiveActionRateLimiter,
   requireRoles(['admin']),
   validate(subjectIdSchema),
   SubjectsController.deleteSubject
@@ -50,6 +58,7 @@ router.delete(
 router.post(
   '/:id/deactivate',
   authenticated,
+  sensitiveWriteRateLimiter,
   requireRoles(['admin']),
   validate(subjectIdSchema),
   SubjectsController.deactivateSubject

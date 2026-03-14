@@ -18,6 +18,11 @@ import {
   requestUploadUrlSchema,
   confirmUploadSchema,
 } from '../validation/schemas';
+import {
+  destructiveActionRateLimiter,
+  uploadRateLimiter,
+  writeRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -29,15 +34,15 @@ router.get('/:id/attachments/:attachmentId', authenticated, requireProjectAccess
 
 // S3 Direct Upload Flow
 // Step 1: Request pre-signed URL for upload
-router.post('/:id/attachments/request-upload', authenticated, requireProjectModify, validate(requestUploadUrlSchema), requestUploadUrl);
+router.post('/:id/attachments/request-upload', authenticated, uploadRateLimiter, requireProjectModify, validate(requestUploadUrlSchema), requestUploadUrl);
 
 // Step 2: Confirm upload after file is uploaded to S3
-router.post('/:id/attachments/confirm-upload', authenticated, requireProjectModify, validate(confirmUploadSchema), confirmUpload);
+router.post('/:id/attachments/confirm-upload', authenticated, writeRateLimiter, requireProjectModify, validate(confirmUploadSchema), confirmUpload);
 
 // Get pre-signed download URL for an attachment
 router.get('/:id/attachments/:attachmentId/download-url', authenticated, requireProjectAccess, validate(attachmentIdSchema), getDownloadUrl);
 
 // Delete an attachment
-router.delete('/:id/attachments/:attachmentId', authenticated, requireProjectModify, validate(attachmentIdSchema), deleteAttachment);
+router.delete('/:id/attachments/:attachmentId', authenticated, destructiveActionRateLimiter, requireProjectModify, validate(attachmentIdSchema), deleteAttachment);
 
 export default router

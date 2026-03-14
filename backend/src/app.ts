@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { csrfProtection } from './middleware/csrf';
+import { apiRateLimiter } from './middleware/rate-limit';
 import routes from './routes/api';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
@@ -30,6 +31,7 @@ app.use(helmet());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.json());
+app.use('/api', apiRateLimiter);
 // CSRF: reject state-changing requests without X-Requested-With header
 app.use('/api', csrfProtection);
 app.use(express.urlencoded({ extended: true }));

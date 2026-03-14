@@ -48,6 +48,12 @@ import {
   getPublicProjectAttachments,
   getPublicAttachmentDownloadUrl
 } from '../controllers/attachments.controller'
+import {
+  bulkOperationRateLimiter,
+  sensitiveWriteRateLimiter,
+  writeRateLimiter,
+  destructiveActionRateLimiter,
+} from '../middleware/rate-limit'
 
 const router = Router()
 
@@ -61,17 +67,17 @@ router.get('/public/:id/attachments/:attachmentId/download-url', getPublicAttach
 // Project CRUD routes (authenticated)
 router.get('/', authenticated, getAllProjects);
 
-router.post('/', authenticated, validate(createProjectSchema), createProject);
+router.post('/', authenticated, writeRateLimiter, validate(createProjectSchema), createProject);
 
 // Auto-lock trigger (admin only) - must be before /:id
-router.post('/auto-lock', authenticated, requireAdmin, triggerAutoLock);
+router.post('/auto-lock', authenticated, bulkOperationRateLimiter, requireAdmin, triggerAutoLock);
 
 // Bulk publish (admin only) - must be before /:id to avoid param collision
-router.put('/bulk-publish', authenticated, requireAdmin, validate(bulkPublishSchema), bulkPublishProjects);
+router.put('/bulk-publish', authenticated, bulkOperationRateLimiter, requireAdmin, validate(bulkPublishSchema), bulkPublishProjects);
 
 // Student signup routes (interest expression) - must be before /:id
-router.post('/:id/signup', authenticated, requireSignupAccess, signupForProject);
-router.delete('/:id/signup', authenticated, requireSignupAccess, cancelSignup);
+router.post('/:id/signup', authenticated, writeRateLimiter, requireSignupAccess, signupForProject);
+router.delete('/:id/signup', authenticated, sensitiveWriteRateLimiter, requireSignupAccess, cancelSignup);
 router.get('/:id/signups', authenticated, requireSignupsViewAccess, getProjectSignups);
 router.get('/:id/signup/status', authenticated, getSignupStatus);
 
@@ -82,20 +88,20 @@ router.get('/:id', authenticated, requireProjectAccess, validate(projectIdSchema
 router.get('/:id/activities', authenticated, requireProjectAccess, validate(projectIdSchema), getProjectActivities);
 
 // Student assignment route
-router.put('/:id/student', authenticated, requireProjectModify, validate(addStudentToProjectSchema), assignStudentToProject);
+router.put('/:id/student', authenticated, sensitiveWriteRateLimiter, requireProjectModify, validate(addStudentToProjectSchema), assignStudentToProject);
 
 // Status update route (lock/unlock/publish)
-router.put('/:id/status', authenticated, requireProjectAccess, updateProjectStatus);
+router.put('/:id/status', authenticated, sensitiveWriteRateLimiter, requireProjectAccess, updateProjectStatus);
 
 // Update project
-router.put('/:id', authenticated, requireProjectModify, validate(updateProjectSchema), updateProject);
+router.put('/:id', authenticated, writeRateLimiter, requireProjectModify, validate(updateProjectSchema), updateProject);
 
-router.delete('/:id', authenticated, requireProjectDelete, validate(projectIdSchema), deleteProject);
+router.delete('/:id', authenticated, destructiveActionRateLimiter, requireProjectDelete, validate(projectIdSchema), deleteProject);
 
 // Grading routes
 router.get('/:id/grading/scale-set', authenticated, requireGradingAccess, getTeacherScaleSet);
 router.get('/:id/grading/my-grades', authenticated, requireGradingAccess, getMyGrades);
-router.post('/:id/grading/submit', authenticated, requireGradingAccess, submitGrades);
+router.post('/:id/grading/submit', authenticated, sensitiveWriteRateLimiter, requireGradingAccess, submitGrades);
 router.get('/:id/grading/all', authenticated, requireProjectAccess, getAllProjectGrades);
 
 export default router

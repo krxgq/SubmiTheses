@@ -15,6 +15,10 @@ import {
   externalLinkIdSchema,
   projectIdSchema,
 } from '../validation/schemas';
+import {
+  destructiveActionRateLimiter,
+  writeRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -25,12 +29,12 @@ router.get('/:id/links', authenticated, requireProjectAccess, validate(projectId
 router.get('/:id/links/:linkId', authenticated, requireProjectAccess, validate(externalLinkIdSchema), getExternalLinkById);
 
 // Create a new external link
-router.post('/:id/links', authenticated, requireProjectModify, validate(createExternalLinkSchema), createExternalLink);
+router.post('/:id/links', authenticated, writeRateLimiter, requireProjectModify, validate(createExternalLinkSchema), createExternalLink);
 
 // Update an external link
-router.put('/:id/links/:linkId', authenticated, requireProjectModify, validate(updateExternalLinkSchema), updateExternalLink);
+router.put('/:id/links/:linkId', authenticated, writeRateLimiter, requireProjectModify, validate(updateExternalLinkSchema), updateExternalLink);
 
 // Delete an external link
-router.delete('/:id/links/:linkId', authenticated, requireProjectModify, validate(externalLinkIdSchema), deleteExternalLink);
+router.delete('/:id/links/:linkId', authenticated, destructiveActionRateLimiter, requireProjectModify, validate(externalLinkIdSchema), deleteExternalLink);
 
 export default router;

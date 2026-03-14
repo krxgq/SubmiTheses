@@ -15,6 +15,10 @@ import {
   reviewIdSchema,
   projectIdSchema,
 } from '../validation/schemas';
+import {
+  destructiveActionRateLimiter,
+  sensitiveWriteRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -25,12 +29,12 @@ router.get('/:id/reviews', authenticated, requireAdminOrTeacher, validate(projec
 router.get('/:id/reviews/:reviewId', authenticated, requireAdminOrTeacher, validate(reviewIdSchema), getReviewById);
 
 // Create a new review (ADMIN/TEACHER ONLY)
-router.post('/:id/reviews', authenticated, requireAdminOrTeacher, validate(createReviewSchema), createReview);
+router.post('/:id/reviews', authenticated, sensitiveWriteRateLimiter, requireAdminOrTeacher, validate(createReviewSchema), createReview);
 
 // Update a review (ADMIN/TEACHER ONLY)
-router.put('/:id/reviews/:reviewId', authenticated, requireAdminOrTeacher, validate(updateReviewSchema), updateReview);
+router.put('/:id/reviews/:reviewId', authenticated, sensitiveWriteRateLimiter, requireAdminOrTeacher, validate(updateReviewSchema), updateReview);
 
 // Delete a review (ADMIN ONLY)
-router.delete('/:id/reviews/:reviewId', authenticated, requireAdmin, validate(reviewIdSchema), deleteReview);
+router.delete('/:id/reviews/:reviewId', authenticated, destructiveActionRateLimiter, requireAdmin, validate(reviewIdSchema), deleteReview);
 
 export default router;

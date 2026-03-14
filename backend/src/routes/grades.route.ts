@@ -15,6 +15,10 @@ import {
   gradeIdSchema,
   projectIdSchema,
 } from '../validation/schemas';
+import {
+  destructiveActionRateLimiter,
+  sensitiveWriteRateLimiter,
+} from '../middleware/rate-limit';
 
 const router = Router();
 
@@ -25,12 +29,12 @@ router.get('/:id/grades', authenticated, requireAdminOrTeacher, validate(project
 router.get('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(gradeIdSchema), getGradeById);
 
 // Create a new grade (ADMIN/TEACHER ONLY)
-router.post('/:id/grades', authenticated, requireAdminOrTeacher, validate(createGradeSchema), createGrade);
+router.post('/:id/grades', authenticated, sensitiveWriteRateLimiter, requireAdminOrTeacher, validate(createGradeSchema), createGrade);
 
 // Update a grade (ADMIN/TEACHER ONLY)
-router.put('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(updateGradeSchema), updateGrade);
+router.put('/:id/grades/:gradeId', authenticated, sensitiveWriteRateLimiter, requireAdminOrTeacher, validate(updateGradeSchema), updateGrade);
 
 // Delete a grade (ADMIN/TEACHER ONLY)
-router.delete('/:id/grades/:gradeId', authenticated, requireAdminOrTeacher, validate(gradeIdSchema), deleteGrade);
+router.delete('/:id/grades/:gradeId', authenticated, destructiveActionRateLimiter, requireAdminOrTeacher, validate(gradeIdSchema), deleteGrade);
 
 export default router;
