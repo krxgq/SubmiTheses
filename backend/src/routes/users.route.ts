@@ -15,7 +15,8 @@ import {
   deleteUser,
   validateInvitationToken,
   setupPassword,
-  resendInvitation
+  resendInvitation,
+  resetPassword
 } from '../controllers/users.controller'
 import { validate } from '../middleware/validate'
 import {
@@ -70,5 +71,8 @@ router.delete('/:id', authenticated, requireAdmin, validate(userIdSchema), delet
 
 // Resend invitation email (admin only)
 router.post('/:id/resend-invitation', authenticated, requireAdmin, validate(resendInvitationSchema), resendInvitation)
+
+// Admin-initiated password reset — sends password setup email to user
+router.post('/:id/reset-password', authenticated, requireAdmin, validate(resendInvitationSchema), resetPassword)
 
 export default router

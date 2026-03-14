@@ -51,7 +51,7 @@ export async function submitGrades(req: Request, res: Response) {
   try {
     const projectId = BigInt(req.params.id);
     const teacherId = req.user!.id;
-    const { year_id, grades } = req.body;
+    const { year_id, grades, posudek } = req.body;
 
     if (!year_id || !grades || !Array.isArray(grades)) {
       return res.status(400).json({
@@ -59,11 +59,13 @@ export async function submitGrades(req: Request, res: Response) {
       });
     }
 
+    // Pass optional posudek (written evaluation) to the service
     const result = await GradingService.submitGrades(
       projectId,
       teacherId,
       BigInt(year_id),
-      grades
+      grades,
+      posudek
     );
 
     return res.status(200).json({

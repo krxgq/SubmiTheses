@@ -1,56 +1,72 @@
-import { z } from 'zod';
+import { z } from "zod";
 
 // Auth schemas
 export const loginSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    email: z.string().email("Invalid email address"),
+    password: z.string(), //.min(8, 'Password must be at least 8 characters'),
     remember_me: z.boolean().optional().default(false),
   }),
 });
 
 export const registerSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email address'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
   }),
 });
 
 export const refreshSchema = z.object({
   body: z.object({
-    refresh_token: z.string().min(1, 'Refresh token is required'),
+    refresh_token: z.string().min(1, "Refresh token is required"),
   }),
 });
 
 // User schemas
 export const createUserSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email address'),
-    first_name: z.string()
-      .min(1, 'First name is required')
-      .max(100, 'First name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/, 'First name contains invalid characters'),
-    last_name: z.string()
-      .min(1, 'Last name is required')
-      .max(100, 'Last name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/, 'Last name contains invalid characters'),
-    role: z.enum(['admin', 'teacher', 'student']).optional(),
+    email: z.string().email("Invalid email address"),
+    first_name: z
+      .string()
+      .min(1, "First name is required")
+      .max(100, "First name must be less than 100 characters")
+      .regex(
+        /^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/,
+        "First name contains invalid characters",
+      ),
+    last_name: z
+      .string()
+      .min(1, "Last name is required")
+      .max(100, "Last name must be less than 100 characters")
+      .regex(
+        /^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/,
+        "Last name contains invalid characters",
+      ),
+    role: z.enum(["admin", "teacher", "student"]).optional(),
     year_id: z.coerce.bigint().optional(),
   }),
 });
 
 export const updateUserSchema = z.object({
   body: z.object({
-    email: z.string().email('Invalid email address').optional(),
-    first_name: z.string()
-      .min(1, 'First name must not be empty')
-      .max(100, 'First name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/, 'First name contains invalid characters')
+    email: z.string().email("Invalid email address").optional(),
+    first_name: z
+      .string()
+      .min(1, "First name must not be empty")
+      .max(100, "First name must be less than 100 characters")
+      .regex(
+        /^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/,
+        "First name contains invalid characters",
+      )
       .optional(),
-    last_name: z.string()
-      .min(1, 'Last name must not be empty')
-      .max(100, 'Last name must be less than 100 characters')
-      .regex(/^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/, 'Last name contains invalid characters')
+    last_name: z
+      .string()
+      .min(1, "Last name must not be empty")
+      .max(100, "Last name must be less than 100 characters")
+      .regex(
+        /^[a-zA-Z\s\-\.'\u00C0-\u017F]+$/,
+        "Last name contains invalid characters",
+      )
       .optional(),
     year_id: z.coerce.bigint().nullable().optional(),
     class: z.string().max(10).optional(),
@@ -64,40 +80,51 @@ export const updateUserSchema = z.object({
 
 // Project schemas
 export const createProjectSchema = z.object({
-  body: z.object({
-    // Basic project fields
-    title: z.string().min(1).max(255),
-    subject_id: z.coerce.bigint(), // Changed from subject string to subject_id bigint
-    description: z.string().optional(),
-    supervisor_id: z.string().uuid(),
-    opponent_id: z.string().uuid().nullable().optional(), // Make opponent optional
-    student_id: z.string().uuid().optional(),
-    year_id: z.coerce.bigint(),
-    status: z.enum(['draft', 'locked', 'public']).optional(),
+  body: z
+    .object({
+      // Basic project fields
+      title: z.string().min(1).max(255),
+      subject_id: z.coerce.bigint(), // Changed from subject string to subject_id bigint
+      description: z.string().optional(),
+      supervisor_id: z.string().uuid(),
+      opponent_id: z.string().uuid().nullable().optional(), // Make opponent optional
+      student_id: z.string().uuid().optional(),
+      year_id: z.coerce.bigint(),
+      status: z.enum(["draft", "locked", "public"]).optional(),
 
-    // Nested project description (optional but recommended)
-    project_description: z.object({
-      topic: z.string().min(1),
-      project_goal: z.string().min(10),
-      specification: z.string().min(20),
-      needed_output: z.array(z.string().min(3)).min(1),
-      schedule: z.array(z.object({
-        date: z.string(),
-        task: z.string(),
-        completed: z.boolean().optional()
-      })).optional(),
-      grading_criteria: z.array(z.string()).optional(),
-      grading_notes: z.string().optional(),
-    }).optional(),
-  }).refine(data => {
-    // If opponent is provided, must be different from supervisor
-    if (data.opponent_id && data.supervisor_id === data.opponent_id) {
-      return false;
-    }
-    return true;
-  }, {
-    message: "Supervisor and opponent must be different people"
-  }),
+      // Nested project description (optional but recommended)
+      project_description: z
+        .object({
+          topic: z.string().min(1),
+          project_goal: z.string().min(10),
+          specification: z.string().min(20),
+          needed_output: z.array(z.string().min(3)).min(1),
+          schedule: z
+            .array(
+              z.object({
+                date: z.string(),
+                task: z.string(),
+                completed: z.boolean().optional(),
+              }),
+            )
+            .optional(),
+          grading_criteria: z.array(z.string()).optional(),
+          grading_notes: z.string().optional(),
+        })
+        .optional(),
+    })
+    .refine(
+      (data) => {
+        // If opponent is provided, must be different from supervisor
+        if (data.opponent_id && data.supervisor_id === data.opponent_id) {
+          return false;
+        }
+        return true;
+      },
+      {
+        message: "Supervisor and opponent must be different people",
+      },
+    ),
 });
 
 export const updateProjectSchema = z.object({
@@ -109,21 +136,27 @@ export const updateProjectSchema = z.object({
     opponent_id: z.string().uuid().nullable().optional(),
     student_id: z.string().uuid().nullable().optional(),
     main_documentation: z.string().optional(),
-    status: z.enum(['draft', 'locked', 'public']).optional(),
+    status: z.enum(["draft", "locked", "public"]).optional(),
     year_id: z.coerce.bigint().optional(),
-    project_description: z.object({
-      topic: z.string().optional(),
-      project_goal: z.string().optional(),
-      specification: z.string().optional(),
-      needed_output: z.array(z.string().min(3)).optional(),
-      schedule: z.array(z.object({
-        date: z.string(),
-        task: z.string(),
-        completed: z.boolean().optional(),
-      })).optional(),
-      grading_criteria: z.array(z.string()).optional(),
-      grading_notes: z.string().optional(),
-    }).optional(),
+    project_description: z
+      .object({
+        topic: z.string().optional(),
+        project_goal: z.string().optional(),
+        specification: z.string().optional(),
+        needed_output: z.array(z.string().min(3)).optional(),
+        schedule: z
+          .array(
+            z.object({
+              date: z.string(),
+              task: z.string(),
+              completed: z.boolean().optional(),
+            }),
+          )
+          .optional(),
+        grading_criteria: z.array(z.string()).optional(),
+        grading_notes: z.string().optional(),
+      })
+      .optional(),
   }),
   params: z.object({
     id: z.coerce.bigint(),
@@ -367,7 +400,10 @@ export const uploadAttachmentSchema = z.object({
     id: z.coerce.bigint(),
   }),
   body: z.object({
-    description: z.string().max(500, 'Description must be less than 500 characters').optional(),
+    description: z
+      .string()
+      .max(500, "Description must be less than 500 characters")
+      .optional(),
   }),
 });
 
@@ -376,7 +412,7 @@ export const createScaleSetSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(255),
     year_id: z.coerce.bigint(),
-    project_role: z.enum(['supervisor', 'opponent']),
+    project_role: z.enum(["supervisor", "opponent"]),
   }),
 });
 
@@ -384,7 +420,7 @@ export const updateScaleSetSchema = z.object({
   body: z.object({
     name: z.string().min(1).max(255).optional(),
     year_id: z.coerce.bigint().optional(),
-    project_role: z.enum(['supervisor', 'opponent']).optional(),
+    project_role: z.enum(["supervisor", "opponent"]).optional(),
   }),
   params: z.object({
     id: z.coerce.bigint(),
@@ -433,15 +469,15 @@ export const bulkCloneScaleSetsSchema = z.object({
     scaleSetsData: z.array(
       z.object({
         name: z.string().min(1).max(255),
-        project_role: z.enum(['supervisor', 'opponent']),
+        project_role: z.enum(["supervisor", "opponent"]),
         scales: z.array(
           z.object({
             scale_id: z.coerce.bigint(),
             weight: z.number().int().min(0).max(100),
             display_order: z.number().int().optional(),
-          })
+          }),
         ),
-      })
+      }),
     ),
   }),
 });
@@ -449,27 +485,29 @@ export const bulkCloneScaleSetsSchema = z.object({
 // Bulk publish schema — validates array of project IDs for batch publishing
 export const bulkPublishSchema = z.object({
   body: z.object({
-    projectIds: z.array(z.coerce.number().int().positive()).min(1, 'At least one project ID is required'),
+    projectIds: z
+      .array(z.coerce.number().int().positive())
+      .min(1, "At least one project ID is required"),
   }),
 });
 
 // Invitation schemas
 export const setupPasswordSchema = z.object({
   body: z.object({
-    token: z.string().length(64, 'Invalid invitation token'),
-    password: z.string().min(8, 'Password must be at least 8 characters'),
+    token: z.string().length(64, "Invalid invitation token"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
   }),
 });
 
 export const validateInvitationTokenSchema = z.object({
   query: z.object({
-    token: z.string().length(64, 'Invalid invitation token'),
+    token: z.string().length(64, "Invalid invitation token"),
   }),
 });
 
 export const resendInvitationSchema = z.object({
   params: z.object({
-    id: z.string().uuid('Invalid user ID'),
+    id: z.string().uuid("Invalid user ID"),
   }),
 });
 
@@ -478,7 +516,11 @@ export const requestUploadUrlSchema = z.object({
   body: z.object({
     filename: z.string().min(1).max(255),
     contentType: z.string().min(1),
-    fileSize: z.number().int().min(1).max(10 * 1024 * 1024), // Max 10MB
+    fileSize: z
+      .number()
+      .int()
+      .min(1)
+      .max(10 * 1024 * 1024), // Max 10MB
   }),
   params: z.object({
     id: z.coerce.bigint(),

@@ -541,7 +541,11 @@
       "gradesAvailableAfter": "Grades will be available after the feedback date",
       "noGrades": "No grades submitted yet",
       "gradesLoadFailed": "Failed to load grades",
-      "average": "Average"
+      "average": "Average",
+      "posudekLabel": "Written Evaluation (Posudek)",
+      "posudekHint": "Write your comprehensive evaluation of the thesis. Visible to the student after the feedback date.",
+      "posudekPlaceholder": "Enter your written evaluation here...",
+      "posudekTitle": "Written Evaluation"
     }
   }
 }

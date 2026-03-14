@@ -259,6 +259,31 @@ export async function setupPassword(req: Request, res: Response) {
 }
 
 /**
+ * Admin-initiated password reset — sends password setup email to any user
+ * POST /api/users/:id/reset-password
+ */
+export async function resetPassword(req: Request, res: Response) {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'User ID is required' });
+    }
+
+    const result = await InvitationService.resetPassword(id);
+
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    return res.status(500).json({ success: false, message: 'Failed to reset password.' });
+  }
+}
+
+/**
  * Resend invitation email
  * POST /api/users/:id/resend-invitation
  * Admin only

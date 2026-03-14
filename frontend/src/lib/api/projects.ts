@@ -161,27 +161,29 @@ export const projectsApi = {
   },
 
   /**
-   * Get teacher's own grades for a project (blind grading)
-   * Only returns grades submitted by the requesting teacher
+   * Get teacher's own grades + posudek for a project (blind grading)
+   * Returns { grades, posudek } where posudek is the written evaluation text
    */
-  getMyGrades: async (id: string | number): Promise<any[]> => {
-    return apiRequest<any[]>(`/projects/${id}/grading/my-grades`);
+  getMyGrades: async (id: string | number): Promise<{ grades: any[]; posudek: string | null }> => {
+    return apiRequest<{ grades: any[]; posudek: string | null }>(`/projects/${id}/grading/my-grades`);
   },
 
   /**
-   * Submit/update grades for a project
+   * Submit/update grades and optional posudek for a project
    * @param id - Project ID
    * @param yearId - Year ID
    * @param grades - Array of {scale_id, value} objects
+   * @param posudek - Optional written evaluation text
    */
   submitGrades: async (
     id: string | number,
     yearId: string | number,
-    grades: Array<{ scale_id: string | number; value: number }>
+    grades: Array<{ scale_id: string | number; value: number }>,
+    posudek?: string
   ): Promise<any> => {
     return apiRequest<any>(`/projects/${id}/grading/submit`, {
       method: 'POST',
-      body: JSON.stringify({ year_id: yearId, grades }),
+      body: JSON.stringify({ year_id: yearId, grades, posudek }),
     });
   },
 

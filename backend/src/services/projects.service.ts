@@ -22,6 +22,7 @@ function transformPrismaProject(prismaProject: any): ProjectWithRelations {
     users_projects_student_idTousers,
     users_projects_supervisor_idTousers,
     users_projects_opponent_idTousers,
+    project_descriptions,
     years,
     ...projectData
   } = prismaProject;
@@ -31,6 +32,8 @@ function transformPrismaProject(prismaProject: any): ProjectWithRelations {
     student: users_projects_student_idTousers,
     supervisor: users_projects_supervisor_idTousers,
     opponent: users_projects_opponent_idTousers,
+    // Map plural Prisma relation name to singular API field name
+    project_description: project_descriptions,
     year: years,
   };
 }
@@ -55,7 +58,7 @@ export class ProjectService {
 
         // Nested create for project_description if provided
         ...(data.project_description && {
-          project_description: {
+          project_descriptions: {
             create: {
               topic: data.project_description.topic,
               project_goal: data.project_description.project_goal,
@@ -94,7 +97,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
       }
     });
 
@@ -163,7 +166,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
         subjects: true,
         years: true,
       }
@@ -237,7 +240,7 @@ export class ProjectService {
         users_projects_opponent_idTousers: {
           select: { id: true, email: true, first_name: true, last_name: true }
         },
-        project_description: true,
+        project_descriptions: true,
         subjects: true,
         years: true,
       }
@@ -332,7 +335,7 @@ export class ProjectService {
         status: data.status,
         year_id: data.year_id,
         ...(data.project_description && {
-          project_description: {
+          project_descriptions: {
             upsert: {
               create: {
                 topic: data.project_description.topic,
@@ -382,7 +385,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
       }
     });
 
@@ -612,7 +615,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
         subjects: true,
         years: true,
       }
@@ -691,7 +694,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
         subjects: true,
         years: true,
       }
@@ -762,7 +765,7 @@ export class ProjectService {
             last_name: true,
           }
         },
-        project_description: true,
+        project_descriptions: true,
         subjects: true,
         years: true,
       }

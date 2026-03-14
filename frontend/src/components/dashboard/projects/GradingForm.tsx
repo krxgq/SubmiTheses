@@ -35,6 +35,7 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
   const [isSaving, setIsSaving] = useState(false);
   const [hasSubmittedGrades, setHasSubmittedGrades] = useState(false);
   const [gradingStatus, setGradingStatus] = useState<GradingStatus | null>(null);
+  const [posudekText, setPosudekText] = useState<string>(''); // Written evaluation text
 
   // Load scale set and existing grades on mount
   useEffect(() => {
@@ -50,7 +51,8 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
       ]);
 
       setScaleSet(scaleSetData);
-      setExistingGrades(gradesData);
+      // Response is now { grades, posudek } — extract both
+      setExistingGrades(gradesData.grades);
 
       // Extract grading status from scale set response
       if (scaleSetData?.gradingStatus) {
@@ -59,11 +61,14 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
 
       // Pre-fill existing grades and track if any exist
       const existingValues: Record<string, number> = {};
-      gradesData.forEach((grade: any) => {
+      gradesData.grades.forEach((grade: any) => {
         existingValues[String(grade.scale_id)] = Number(grade.value);
       });
       setGradeValues(existingValues);
-      setHasSubmittedGrades(gradesData.length > 0);
+      setHasSubmittedGrades(gradesData.grades.length > 0);
+
+      // Pre-fill posudek if it exists
+      setPosudekText(gradesData.posudek ?? '');
     } catch (error: any) {
       toast.error(error.message || t('loadFailed'));
       console.error('Load error:', error);
@@ -122,7 +127,8 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
         value: gradeValues[String(scaleItem.scale_id)]
       }));
 
-      await projectsApi.submitGrades(projectId, yearId, grades);
+      // Submit grades along with optional posudek text
+      await projectsApi.submitGrades(projectId, yearId, grades, posudekText.trim() || undefined);
       toast.success(t('gradesSubmitted'));
 
       // Reload to show updated data
@@ -267,6 +273,26 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
           <span className="font-semibold text-text-primary">{t('weightedAverage')}</span>
         </div>
         <span className="text-2xl font-bold text-primary">{weightedAvg}%</span>
+      </div>
+
+      {/* Posudek (written evaluation) textarea */}
+      <div className="p-4 bg-background-elevated border border-border rounded-lg space-y-2">
+        <label className="block font-semibold text-text-primary">
+          {t('posudekLabel')}
+        </label>
+        <p className="text-sm text-text-secondary">{t('posudekHint')}</p>
+        <textarea
+          value={posudekText}
+          onChange={(e) => setPosudekText(e.target.value)}
+          maxLength={10000}
+          disabled={!canGrade}
+          placeholder={t('posudekPlaceholder')}
+          rows={6}
+          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary placeholder:text-text-secondary/50 focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+        />
+        <div className="text-xs text-text-secondary text-right">
+          {posudekText.length} / 10000
+        </div>
       </div>
 
       {/* Submit button */}

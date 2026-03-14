@@ -40,7 +40,7 @@ export function GridItem({project, role, basePath = "/projects", selectable, sel
         <div className={`absolute top-3 right-3 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
           selected ? 'bg-accent-primary border-accent-primary' : 'border-border-strong bg-background-elevated'
         }`}>
-          {selected && <Check size={14} className="text-white" />}
+          {selected && <Check size={14} className="text-text-primary" />}
         </div>
       )}
 

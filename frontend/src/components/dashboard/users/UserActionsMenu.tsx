@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Edit, Trash2, Eye } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Eye, KeyRound } from 'lucide-react';
 import { useRouter } from '@/lib/navigation';
 import { toast } from 'sonner';
 import { usersApi } from '@/lib/api/users';
@@ -17,7 +17,9 @@ interface UserActionsMenuProps {
 export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -82,6 +84,25 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
     setIsOpen(false);
   };
 
+  const handleResetPassword = () => {
+    setShowResetPasswordModal(true);
+    setIsOpen(false);
+  };
+
+  // Send password reset email after admin confirms
+  const handleResetPasswordConfirm = async () => {
+    setIsResettingPassword(true);
+    try {
+      await usersApi.resetPassword(userId);
+      toast.success('Password reset email sent successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send password reset email');
+    } finally {
+      setIsResettingPassword(false);
+      setShowResetPasswordModal(false);
+    }
+  };
+
   const handleDelete = () => {
     setShowDeleteModal(true);
     setIsOpen(false);
@@ -144,6 +165,14 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
             </button>
 
             <button
+              onClick={handleResetPassword}
+              className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-background-hover transition-colors"
+            >
+              <KeyRound className="w-4 h-4 mr-2" />
+              Reset Password
+            </button>
+
+            <button
               onClick={handleDelete}
               className="flex items-center w-full px-4 py-2 text-sm text-danger hover:bg-danger/10 transition-colors"
             >
@@ -154,6 +183,37 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
         </div>,
         document.body
       )}
+
+      {/* Reset Password Confirmation Modal */}
+      <Modal
+        isOpen={showResetPasswordModal}
+        onClose={() => setShowResetPasswordModal(false)}
+        title="Reset Password"
+        description="Send a password setup email to this user?"
+        size="sm"
+        footer={
+          <ModalActions>
+            <Button
+              variant="secondary"
+              onClick={() => setShowResetPasswordModal(false)}
+              disabled={isResettingPassword}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleResetPasswordConfirm}
+              disabled={isResettingPassword}
+            >
+              {isResettingPassword ? 'Sending...' : 'Send Reset Email'}
+            </Button>
+          </ModalActions>
+        }
+      >
+        <p className="text-text-secondary">
+          The user will receive an email with a link to set a new password. Their current password will be invalidated immediately.
+        </p>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

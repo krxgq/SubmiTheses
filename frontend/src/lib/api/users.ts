@@ -114,6 +114,16 @@ export const usersApi = {
       method: 'POST',
     });
   },
+
+  /**
+   * Admin-initiated password reset — sends password setup email to user
+   * POST /api/users/:id/reset-password
+   */
+  async resetPassword(userId: string): Promise<{ success: boolean; message: string }> {
+    return apiRequest<{ success: boolean; message: string }>(`/users/${userId}/reset-password`, {
+      method: 'POST',
+    });
+  },
 }
 
 // Alias for server-side usage (maintains compatibility)

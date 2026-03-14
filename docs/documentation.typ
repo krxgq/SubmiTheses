@@ -580,7 +580,7 @@ Tokeny jsou uloženy v httpOnly cookies, což chrání před XSS útoky – Java
 
 = Uživatelská příručka
 
-// TODO: Napsat návod k použití aplikace
+Tato kapitola slouží jako návod pro uživatele systému SubmiTheses. Popisuje postup nasazení aplikace na server a práci s jednotlivými funkcemi systému z pohledu všech tří rolí – studenta, učitele a administrátora.
 
 == Nasazení na server
 
@@ -635,8 +635,108 @@ Pro automatizované nasazení lze využít GitHub Actions workflow, který po ka
 Tento přístup zajišťuje, že na server se dostane pouze kód, který prošel všemi kontrolami, a minimalizuje riziko lidské chyby při manuálním nasazení.
 
 == Použití aplikace
-// TODO: Popis práce s aplikací, screenshoty
 
+Následující podkapitoly popisují práci s aplikací z pohledu koncového uživatele.
+
+=== Přihlášení do systému
+
+Uživatel přistupuje k aplikaci prostřednictvím webového prohlížeče na adrese, kde je systém nasazen. Na přihlašovací stránce zadá svůj e-mail a heslo. Účty jsou vytvářeny administrátorem, který uživateli odešle pozvánku e-mailem. Pozvánka obsahuje jednorázový odkaz s tokenem, přes který si uživatel nastaví své heslo při prvním přihlášení. Token má omezenou platnost – pokud vyprší, administrátor může odeslat novou pozvánku.
+
+Po úspěšném přihlášení je uživatel přesměrován na hlavní stránku se seznamem projektů. Přihlášení je udržováno pomocí HTTP cookies – uživatel zůstává přihlášen i po zavření prohlížeče, dokud nevyprší platnost refresh tokenu (7–30 dní).
+
+=== Přehled projektů
+
+Hlavní stránka aplikace zobrazuje seznam všech projektů, ke kterým má uživatel přístup. Projekty jsou rozděleny do sekcí podle vztahu uživatele k nim:
+
+- *Moje projekty* – projekty, kde je uživatel studentem (zobrazuje se pouze studentům)
+- *Jako vedoucí* – projekty, kde je uživatel vedoucím práce (učitelé a admini)
+- *Jako oponent* – projekty, kde je uživatel oponentem (učitelé a admini)
+- *Ostatní projekty* – všechny ostatní projekty v systému
+
+Uživatel si může přepínat mezi zobrazením v mřížce (karty) a seznamu (tabulka) pomocí ikon v pravém horním rohu. K dispozici je také vyhledávací pole pro filtrování projektů podle názvu. Učitelé a administrátoři mohou z této stránky vytvořit nový projekt pomocí tlačítka „Nový projekt".
+
+=== Vytvoření projektu
+
+Vytvoření nového projektu je dostupné pro učitele a administrátory. Proces probíhá formou pětikrokového průvodce:
+
++ *Základní informace* – název projektu, výběr předmětu a akademického roku
++ *Téma a cíle* – popis tématu práce a stanovení cílů projektu
++ *Specifikace a výstupy* – detailní specifikace zadání a požadované výstupy
++ *Harmonogram* – plánované milníky a termíny průběžných kontrol
++ *Výběr týmu* – přiřazení studenta, vedoucího a oponenta ze seznamu uživatelů
+
+Rozpracovaný projekt se automaticky ukládá jako koncept (draft). Vedoucí může projekt kdykoli upravit, dokud není uzamčen po uplynutí termínu odevzdání.
+
+=== Volná témata
+
+Studenti mají přístup ke stránce „Volná témata", která zobrazuje projekty bez přiřazeného studenta. Student si může prohlédnout detail tématu a vyjádřit zájem o projekt kliknutím na tlačítko přihlášení. K jednomu tématu se může přihlásit více studentů.
+
+Vedoucí práce vidí seznam všech přihlášených zájemců a z nich vybere jednoho studenta, kterého přiřadí k projektu. Po přiřazení se ostatní přihlášky automaticky odstraní a přiřazený student obdrží notifikaci.
+
+=== Detail projektu
+
+Stránka detailu projektu využívá dvousloupcové rozložení:
+
+*Levý sloupec* (hlavní obsah) zobrazuje přehled projektu s informacemi o tématu, cílech, specifikaci, harmonogramu a přiřazeném týmu. Pod přehledem se nachází záložková navigace pro přístup k:
+- *Přílohy* – nahrané soubory projektu
+- *Externí odkazy* – odkazy na repozitáře, dokumentaci, demo apod.
+- *Posudky* – textové posudky vedoucího a oponenta
+- *Hodnocení* – známky podle hodnotících škál
+
+*Pravý sloupec* obsahuje rychlé statistiky (počet příloh, odkazů, stav hodnocení), akční tlačítka dostupná podle role uživatele a chronologický přehled nedávné aktivity na projektu.
+
+=== Správa příloh a odkazů
+
+*Nahrávání souborů:* Na záložce „Přílohy" v detailu projektu může vlastník (student nebo vedoucí) nahrát soubory kliknutím na tlačítko „Nahrát přílohu". Systém nejprve vyžádá pre-signed URL od backendu a poté nahraje soubor přímo do cloudového úložiště AWS S3. Povolené typy souborů zahrnují PDF, Word, Excel, obrázky a ZIP archivy s maximální velikostí 10 MB.
+
+*Externí odkazy:* Na záložce „Externí odkazy" lze přidávat URL adresy na externí zdroje projektu (např. odkaz na GitHub repozitář, online dokumentaci nebo demo aplikaci). Každý odkaz obsahuje název a URL adresu.
+
+Stahování příloh je dostupné všem přihlášeným uživatelům – systém vygeneruje dočasnou URL adresu pro stažení souboru z S3.
+
+=== Hodnocení
+
+Hodnocení projektů probíhá prostřednictvím konfigurovatelných hodnotících škál. Vedoucí a oponent mají přiřazeny vlastní sady škál s různými kritérii a váhami.
+
+*Učitel (hodnotitel)* přistoupí k hodnocení přes záložku „Hodnocení" v detailu projektu. Formulář zobrazuje seznam kritérií s maximálními hodnotami – učitel zadá číselné hodnocení pro každé kritérium. Systém automaticky vypočítá vážený průměr na základě vah jednotlivých škál v sadě.
+
+*Student* vidí výsledky hodnocení až po datu zpětné vazby (feedback date), které je nastaveno pro daný akademický rok. Do tohoto data jsou známky skryté.
+
+=== Oznámení
+
+Stránka oznámení zobrazuje chronologický seznam systémových notifikací. Uživatel obdrží oznámení při událostech jako přiřazení k projektu, odevzdání hodnocení, připomenutí blížícího se termínu nebo uzamčení projektu.
+
+Dostupné akce:
+- *Filtrování* – přepínání mezi zobrazením všech a pouze nepřečtených oznámení
+- *Označení jako přečtené* – jednotlivě kliknutím na oznámení, nebo hromadně tlačítkem „Označit vše jako přečtené"
+- *Smazání* – odstranění jednotlivých oznámení
+- *Vymazání všech* – hromadné smazání všech oznámení
+
+V postranním panelu se u ikony oznámení zobrazuje červený indikátor s počtem nepřečtených zpráv, který se automaticky aktualizuje každých 60 sekund.
+
+=== Nastavení profilu
+
+Na stránce nastavení může uživatel upravit své osobní údaje:
+
+- *Profil* – změna jména a příjmení
+- *E-mail* – změna přihlašovacího e-mailu
+- *Heslo* – změna hesla (vyžaduje zadání současného hesla a dvakrát nového)
+
+=== Administrátorský panel
+
+Administrátorský panel je přístupný pouze uživatelům s rolí admin. Panel obsahuje čtyři záložky pro správu systémových dat:
+
+- *Předměty* – správa studijních oborů (název, aktivní/neaktivní stav). Neaktivní předměty nejsou nabízeny při vytváření nových projektů.
+- *Škály* – správa jednotlivých hodnotících kritérií s maximální hodnotou a popisem.
+- *Sady škál* – konfigurace sad hodnotících kritérií s vahou a pořadím zobrazení. Sady lze přiřadit k akademickému roku a roli hodnotitele (vedoucí/oponent). K dispozici je funkce hromadného klonování sad do nového akademického roku.
+- *Akademické roky* – správa školních roků s klíčovými termíny (datum zadání, odevzdání, zpětné vazby) a konfigurací dnů připomenutí.
+
+Administrátor má dále přístup ke správě uživatelů, kde může vytvářet nové účty, měnit role uživatelů, odesílat pozvánky a mazat účty. K dispozici je také funkce hromadné publikace projektů.
+
+=== Veřejná galerie
+
+Publikované projekty jsou přístupné veřejně bez nutnosti přihlášení. Veřejná galerie zobrazuje projekty se stavem „public", seskupené podle akademického roku. Návštěvníci mohou procházet projekty, filtrovat je pomocí vyhledávání a přepínat mezi zobrazením v mřížce a seznamu.
+
+U veřejných projektů jsou viditelné základní informace (název, téma, tým), přílohy ke stažení a hodnocení. Toto umožňuje prezentaci nejlepších prací a slouží jako inspirace pro budoucí studenty.
 
 
 = Bezpečnost
@@ -706,57 +806,149 @@ Systém implementuje role-based access control (RBAC) prostřednictvím sady aut
 
 = Výsledky
 
-// TODO: Popsat co bylo vytvořeno/zjištěno
-// - Stručně, jasně, bez komentářů
-// - Fakty, tabulky, grafy
+Výsledkem práce je funkční webová aplikace SubmiTheses pro správu a odevzdávání maturitních projektů. Systém pokrývá celý životní cyklus projektu – od vytvoření tématu a přihlášení studentů, přes správu příloh a externích odkazů, až po hodnocení a publikaci hotových prací.
+
+Backend aplikace poskytuje přibližně 60 REST API endpointů organizovaných do 10 doménových oblastí (projekty, uživatelé, hodnocení, přílohy, oznámení, autentizace, předměty, akademické roky, sady škál a přihlášky studentů). Systém rozlišuje tři uživatelské role – administrátor, učitel a student – s granulárním řízením přístupu na úrovni jednotlivých endpointů.
+
+Mezi hlavní implementované funkce patří:
+
+- *Správa projektů* – vytváření projektů pomocí pětikrokového průvodce, úpravy, přiřazování studentů ze seznamu zájemců a změny stavu (draft, locked, public).
+- *Hodnotící systém* – konfigurovatelné sady hodnotících škál s vahami, automatický výpočet váženého průměru a oddělené sady pro vedoucího a oponenta.
+- *Plánovač termínů* – automatické připomínky blížících se deadlinů (konfigurovatelné dny) a zamykání projektů po uplynutí termínu odevzdání, realizované pomocí BullMQ fronty úloh.
+- *Systém oznámení* – notifikace při přiřazení k projektu, odevzdání hodnocení, připomenutí termínu a dalších událostech.
+- *Veřejná galerie* – publikované projekty přístupné bez přihlášení, seskupené podle akademického roku.
+- *Cloudové úložiště* – nahrávání příloh přes pre-signed URL přímo do AWS S3 bez zatížení serveru.
+- *Dvojjazyčné rozhraní* – kompletní lokalizace do češtiny a angličtiny.
+- *Tmavý režim* – podpora světlého, tmavého a systémového barevného motivu.
+
+Aplikace je kontejnerizována pomocí Dockeru a připravena k nasazení na libovolný server s podporou Docker Engine.
 
 
 
 = Diskuse
 
-// TODO: Napsat diskusi
-// - Zdůvodnění zvoleného řešení
-// - Porovnání s jinými variantami
-// - Co se povedlo, co ne
-// - Realizační možnosti výsledků
+== Zdůvodnění technologických voleb
+
+Volba *Next.js* jako frontendového frameworku byla motivována podporou server-side renderingu a souborového systému pro routování, což zjednodušuje strukturu projektu oproti klasickému SPA přístupu (např. Vite + React Router). Alternativou by byl framework NuxtJS (Vue.js), který nabízí podobné funkce, avšak React ekosystém disponuje rozsáhlejší komunitou a větším množstvím dostupných knihoven.
+
+*Express.js* byl zvolen pro svou minimalistickou architekturu a flexibilitu. Oproti frameworku NestJS, který nabízí silnější strukturu a dependency injection, je Express jednodušší na nastavení a vhodnější pro projekty střední velikosti. Pro tento systém není režie NestJS opodstatněná.
+
+*PostgreSQL* jako relační databáze byla preferována před MongoDB, protože datový model systému obsahuje silné vazby mezi entitami (uživatelé, projekty, hodnocení, škály). Relační databáze s cizími klíči a transakcemi zajišťuje konzistenci dat lépe než dokumentová databáze.
+
+== Co se osvědčilo
+
+*Monorepo struktura* s workspace balíčkem `@sumbi/shared-types` umožnila sdílení TypeScript typů mezi frontendem a backendem, čímž se eliminovaly chyby způsobené nekonzistentními datovými strukturami.
+
+*Prisma ORM* výrazně zrychlil vývoj díky automatickým migracím, typově bezpečným dotazům a přehledné definici schématu. Nevýhodou je mírně vyšší režie při startu aplikace kvůli generování klienta.
+
+*BullMQ s Redis* se ukázal jako spolehlivé řešení pro plánování termínů. Konfigurovatelné dny připomenutí a idempotentní zpracování úloh zajišťují správné fungování i při restartech serveru.
+
+*Tailwind CSS s Flowbite* umožnil rychlé prototypování responzivního rozhraní s podporou tmavého režimu bez nutnosti psát vlastní CSS.
+
+== Omezení a prostor pro zlepšení
+
+Stránka nastavení profilu zatím implementuje pouze základní funkce (změna jména, e-mailu a hesla). Plánované rozšíření o nahrávání profilového obrázku a pokročilejší správu účtu nebylo v rámci projektu dokončeno.
+
+Autentizace je řešena e-mailem a heslem s pozvánkovým systémem. Integrace s Office 365 SSO, která by umožnila jednotné přihlášení školním účtem, nebyla implementována z důvodu časové náročnosti konfigurace OAuth 2.0 poskytovatele a potřeby přístupu k Azure AD tenantu školy.
+
+Systém oznámení využívá polling s intervalem 60 sekund. Pro okamžité doručování notifikací by bylo vhodnější implementovat WebSocket spojení, které by eliminovalo zpoždění a snížilo počet HTTP požadavků.
+
+== Srovnání s existujícími řešeními
+
+Oproti obecným LMS systémům (Moodle, Google Classroom) nabízí SubmiTheses specializované funkce přímo navržené pro životní cyklus maturitních prací – konfigurovatelné hodnotící škály s váhami, automatické připomínky termínů, přihlašování studentů k volným tématům a veřejnou galerii hotových prací. Tyto funkce by v obecných systémech vyžadovaly rozsáhlé přizpůsobení pomocí pluginů nebo vlastního vývoje.
 
 
 
 = Závěr
 
-// TODO: Napsat závěr
-// - Celkové hodnocení
-// - Splnění cílů ze zadání
-// - Možné rozšíření do budoucna
+Cílem této práce bylo navrhnout a implementovat webový informační systém pro správu a odevzdávání maturitních projektů. Tento cíl byl splněn – výsledkem je funkční aplikace SubmiTheses, která pokrývá celý životní cyklus maturitní práce od vytvoření tématu až po publikaci hotového projektu.
+
+Systém implementuje všechny klíčové požadavky ze zadání: správu uživatelů s třemi rolemi, vytváření a správu projektů, nahrávání příloh do cloudového úložiště, hodnocení pomocí konfigurovatelných škál, systém oznámení a automatické připomínky termínů. Aplikace je nasaditelná pomocí Docker kontejnerů a připravena k produkčnímu použití.
+
+Mezi možná rozšíření systému do budoucna patří:
+
+- *Integrace s Office 365 SSO* – jednotné přihlášení školním účtem prostřednictvím OAuth 2.0 a Azure Active Directory, čímž by se eliminovala potřeba samostatných přihlašovacích údajů.
+- *Mobilní aplikace* – nativní aplikace pro iOS a Android využívající existující REST API pro pohodlnější přístup z mobilních zařízení.
+- *AI asistované hodnocení* – integrace jazykového modelu pro návrhy hodnocení na základě obsahu odevzdané práce, které by hodnotiteli usnadnily orientaci v rozsáhlejších projektech.
 
 
 
 
 #heading(numbering: none)[Literatura]
 
++ Next.js Documentation. Vercel, 2024. Dostupné z: https://nextjs.org/docs
+
++ Express.js – Fast, unopinionated, minimalist web framework for Node.js. OpenJS Foundation, 2024. Dostupné z: https://expressjs.com
+
++ PostgreSQL: The World's Most Advanced Open Source Relational Database. The PostgreSQL Global Development Group, 2024. Dostupné z: https://www.postgresql.org/docs
+
++ Prisma ORM Documentation. Prisma Data, Inc., 2024. Dostupné z: https://www.prisma.io/docs
+
++ Redis Documentation. Redis Ltd., 2024. Dostupné z: https://redis.io/docs
+
++ BullMQ – Premium Message Queue for Node.js based on Redis. Taskforce.sh Inc., 2024. Dostupné z: https://docs.bullmq.io
+
++ Jones, M.; Bradley, J.; Sakimura, N. RFC 7519 – JSON Web Token (JWT). Internet Engineering Task Force, 2015. Dostupné z: https://datatracker.ietf.org/doc/html/rfc7519
+
++ OWASP Top Ten – The Ten Most Critical Web Application Security Risks. OWASP Foundation, 2021. Dostupné z: https://owasp.org/www-project-top-ten
+
++ Tailwind CSS Documentation. Tailwind Labs, Inc., 2024. Dostupné z: https://tailwindcss.com/docs
+
++ Flowbite – UI Component Library for Tailwind CSS. Bergside Inc., 2024. Dostupné z: https://flowbite.com/docs
+
++ Zod – TypeScript-first schema validation. Colin McDonnell, 2024. Dostupné z: https://zod.dev
+
++ Nodemailer – Send emails from Node.js. Andris Reinman, 2024. Dostupné z: https://nodemailer.com
+
++ Amazon S3 – Cloud Object Storage. Amazon Web Services, Inc., 2024. Dostupné z: https://docs.aws.amazon.com/s3
+
++ Docker Documentation. Docker Inc., 2024. Dostupné z: https://docs.docker.com
 
 
 
 #heading(numbering: none)[Seznam obrázků]
 
-// TODO: Vygenerovat automaticky nebo napsat ručně
-// Obr. 1: Popis obrázku ..... str. X
-
+#outline(
+  title: none,
+  target: figure.where(kind: image),
+)
 
 
 #heading(numbering: none)[Seznam tabulek]
 
-// TODO: Vygenerovat automaticky nebo napsat ručně
+#outline(
+  title: none,
+  target: figure.where(kind: table),
+)
 
 
 
 #heading(numbering: none)[Seznam příloh]
 
-// TODO: Seznam příloh
-// Příloha A: Název přílohy
+- Příloha A: Zdrojový kód aplikace (odkaz na repozitář)
+- Příloha B: ER diagram datového modelu
+- Příloha C: Schéma architektury systému
 
 
 
 #pagebreak()
 #heading(numbering: none)[Přílohy]
 
+== Příloha A: Zdrojový kód aplikace
+
+Kompletní zdrojový kód aplikace SubmiTheses je dostupný v Git repozitáři:
+
+https://github.com/krxg/SubmiTheses
+
+Repozitář obsahuje monorepo strukturu s adresáři `frontend/` (Next.js aplikace), `backend/` (Express.js API server), `shared-types/` (sdílené TypeScript typy) a `docs/` (dokumentace).
+
+== Příloha B: Pokyny k nasazení
+
+Pro nasazení aplikace je nutné:
+
++ Nainstalovat Docker Engine a Docker Compose na cílový server
++ Naklonovat repozitář a vytvořit soubor `.env` s konfigurací (databáze, JWT secrets, SMTP, AWS S3)
++ Spustit příkazem: `docker compose -f docker-compose.prod.yml up -d --build`
++ Provést migrace databáze: `docker exec submitheses-backend npx prisma migrate deploy`
+
+Podrobný postup nasazení je popsán v kapitole 5.1 této dokumentace.

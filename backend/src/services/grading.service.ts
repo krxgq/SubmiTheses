@@ -90,21 +90,32 @@ export class GradingService {
     const cached = await cache.get(cacheKey);
     if (cached) return cached;
 
-    const grades = await prisma.grades.findMany({
-      where: {
-        project_id: Number(projectId),
-        reviewer_id: teacherId,
-      },
-      include: {
-        scales: true,
-      },
-      orderBy: { created_at: 'desc' },
-    });
+    // Fetch numeric grades and the teacher's posudek (written evaluation) in parallel
+    const [grades, review] = await Promise.all([
+      prisma.grades.findMany({
+        where: {
+          project_id: Number(projectId),
+          reviewer_id: teacherId,
+        },
+        include: {
+          scales: true,
+        },
+        orderBy: { created_at: 'desc' },
+      }),
+      prisma.reviews.findFirst({
+        where: {
+          project_id: Number(projectId),
+          reviewer_id: teacherId,
+        },
+      }),
+    ]);
+
+    const result = { grades, posudek: review?.comments ?? null };
 
     // Cache for 5 minutes (grades may change during grading session)
-    await cache.set(cacheKey, grades, 300);
+    await cache.set(cacheKey, result, 300);
 
-    return grades;
+    return result;
   }
 
   /**
@@ -150,7 +161,8 @@ export class GradingService {
     projectId: bigint,
     teacherId: string,
     yearId: bigint,
-    grades: Array<{ scale_id: bigint; value: number }>
+    grades: Array<{ scale_id: bigint; value: number }>,
+    posudek?: string
   ) {
     // Check if grading is allowed
     const { canSubmit, reason } = await this.canTeacherSubmitGrades(projectId);
@@ -158,7 +170,7 @@ export class GradingService {
       throw new Error(reason);
     }
 
-    // Use transaction for atomicity
+    // Use transaction for atomicity — upsert grades and posudek together
     const result = await prisma.$transaction(async (tx) => {
       const updatedGrades = [];
 
@@ -193,6 +205,33 @@ export class GradingService {
             include: { scales: true },
           });
           updatedGrades.push(created);
+        }
+      }
+
+      // Upsert posudek (written evaluation) in the reviews table
+      if (posudek !== undefined) {
+        const existingReview = await tx.reviews.findFirst({
+          where: {
+            project_id: Number(projectId),
+            reviewer_id: teacherId,
+          },
+        });
+
+        if (existingReview) {
+          await tx.reviews.update({
+            where: { id: existingReview.id },
+            data: { comments: posudek, updated_at: new Date() },
+          });
+        } else if (posudek) {
+          // Only create if posudek is non-empty
+          await tx.reviews.create({
+            data: {
+              project_id: Number(projectId),
+              reviewer_id: teacherId,
+              comments: posudek,
+              updated_at: new Date(),
+            },
+          });
         }
       }
 
@@ -313,13 +352,24 @@ export class GradingService {
       },
     });
 
-    // Group by reviewer
+    // Fetch all posudeks (written evaluations) for this project
+    const reviews = await prisma.reviews.findMany({
+      where: { project_id: Number(projectId) },
+    });
+    // Build reviewer_id → posudek map for quick lookup
+    const posudekMap: Record<string, string> = {};
+    for (const review of reviews) {
+      posudekMap[review.reviewer_id] = review.comments;
+    }
+
+    // Group grades by reviewer and attach posudek
     const gradesByReviewer = grades.reduce((acc, grade) => {
       const reviewerId = grade.reviewer_id;
       if (!acc[reviewerId]) {
         acc[reviewerId] = {
           reviewer: grade.users,
           grades: [],
+          posudek: posudekMap[reviewerId] ?? null,
         };
       }
       acc[reviewerId].grades.push(grade);

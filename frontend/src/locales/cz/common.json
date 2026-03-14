@@ -541,7 +541,11 @@
       "gradesAvailableAfter": "Známky budou k dispozici po datu zpětné vazby",
       "noGrades": "Zatím nebyly odevzdány žádné známky",
       "gradesLoadFailed": "Nepodařilo se načíst známky",
-      "average": "Průměr"
+      "average": "Průměr",
+      "posudekLabel": "Posudek",
+      "posudekHint": "Napište celkové hodnocení závěrečné práce. Student ho uvidí po datu zpětné vazby.",
+      "posudekPlaceholder": "Zadejte váš posudek zde...",
+      "posudekTitle": "Posudek"
     }
   }
 }

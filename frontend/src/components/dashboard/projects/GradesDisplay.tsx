@@ -165,6 +165,16 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
                 );
               })}
             </div>
+
+            {/* Posudek (written evaluation) — shown if the reviewer submitted one */}
+            {reviewerData.posudek && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <h4 className="font-semibold text-text-primary mb-2">{t('posudekTitle')}</h4>
+                <div className="p-3 bg-background-secondary rounded-lg text-text-primary whitespace-pre-wrap text-sm">
+                  {reviewerData.posudek}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}

@@ -207,4 +207,36 @@ export class InvitationService {
       };
     }
   }
+
+  /**
+   * Admin-initiated password reset for any user
+   * Generates a new invitation token and sends the password setup email.
+   * Unlike resendInvitation, this works for verified users too —
+   * createInvitation() sets email_verified=false, invalidating the old password.
+   */
+  static async resetPassword(userId: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const user = await prisma.users.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, first_name: true },
+      });
+
+      if (!user) {
+        return { success: false, message: 'User not found' };
+      }
+
+      // Generate new token (also sets email_verified=false, locking the old password)
+      const token = await this.createInvitation(userId);
+
+      // Send the same password setup email used during registration
+      await EmailService.sendInvitationEmail(user.email, user.first_name, token);
+
+      console.log(`🔑 Password reset initiated for user ${user.email}`);
+
+      return { success: true, message: 'Password reset email sent successfully' };
+    } catch (error) {
+      console.error('❌ Failed to reset password:', error);
+      return { success: false, message: 'Failed to send password reset email. Please try again.' };
+    }
+  }
 }

@@ -338,7 +338,7 @@ export function ProjectsPageClient({
           {userRole === "admin" && (
             selectMode ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="md"
                 leftIcon={<X size={20} />}
                 onClick={exitSelectMode}
@@ -347,7 +347,7 @@ export function ProjectsPageClient({
               </Button>
             ) : (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="md"
                 leftIcon={<CheckSquare size={20} />}
                 onClick={() => setSelectMode(true)}
