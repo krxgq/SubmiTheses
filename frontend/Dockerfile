@@ -29,6 +29,9 @@ COPY frontend/ ./frontend/
 # Move to frontend for build
 WORKDIR /app/frontend
 
+# Ensure public dir exists (git doesn't track empty directories)
+RUN mkdir -p public
+
 # Build the Next.js application (uses standalone output)
 RUN pnpm build
 

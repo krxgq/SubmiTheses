@@ -6,7 +6,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository }}
+  IMAGE_PREFIX: krxgq/submitheses
 
 jobs:
   # Type-check and validate code
@@ -84,6 +84,7 @@ jobs:
           script: |
             cd ${{ secrets.APP_DIR }}
             git pull origin main
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d --no-build
             docker exec submitheses-backend npx prisma migrate deploy
