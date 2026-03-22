@@ -78,17 +78,7 @@
 
   #align(right)[
     ........................................\
-    _podpis autora_
   ]
-
-  #v(1fr)
-]
-
-
-#page(numbering: none)[
-  #v(1fr)
-
-  Rád bych poděkoval ... za ...
 
   #v(1fr)
 ]
@@ -128,7 +118,7 @@
 #set page(
   numbering: "1",
 )
-#counter(page).update(7)
+#counter(page).update(6)
 
 
 = Úvod
@@ -475,6 +465,8 @@ Pro ověření identity uživatelů systém využívá JWT (JSON Web Token). Př
 
 Tokeny jsou uloženy v httpOnly cookies, což chrání před XSS útoky – JavaScript v prohlížeči k nim nemá přístup.
 
+Jako alternativu k přihlášení e-mailem a heslem systém podporuje jednotné přihlášení (SSO) prostřednictvím Microsoft OAuth 2.0 (Azure AD / Entra ID). Tok využívá rozšíření PKCE (Proof Key for Code Exchange) pro zabezpečení výměny autorizačního kódu. Po úspěšné autentizaci u Microsoftu systém ověří podpis ID tokenu pomocí JWKS (JSON Web Key Set), zkontroluje doménu e-mailu a automaticky přiřadí roli: doména `delta-studenti.cz` odpovídá roli studenta, `delta-skola.cz` roli učitele. Pokud uživatel s daným e-mailem v systému již existuje, dojde k propojení účtu s Microsoft identitou; v opačném případě je vytvořen nový účet.
+
 == Přehled endpointů
 
 #figure(
@@ -571,6 +563,8 @@ Tokeny jsou uloženy v httpOnly cookies, což chrání před XSS útoky – Java
     [POST /auth/refresh], [Obnovení access tokenu], [všichni],
     [GET /auth/session], [Informace o aktuální relaci], [všichni],
     [GET /auth/user], [Profil přihlášeného uživatele], [všichni],
+    [GET /auth/microsoft], [Přihlášení přes Microsoft OAuth], [veřejné],
+    [GET /auth/microsoft/callback], [Callback z Microsoft OAuth], [veřejné],
     [GET /users/validate-invitation], [Ověření pozvánkového tokenu], [veřejné],
     [POST /users/setup-password], [Nastavení hesla z pozvánky], [veřejné],
   ),
@@ -593,7 +587,7 @@ Backend aplikace využívá vícefázový (multi-stage) Dockerfile pro optimaliz
 - *Build fáze* – nainstaluje závislosti, vygeneruje Prisma klienta a zkompiluje TypeScript do JavaScriptu. Jako základní obraz slouží `node:latest` (Alpine varianta).
 - *Produkční fáze* – obsahuje pouze produkční závislosti a zkompilovaný kód. Výsledný obraz je výrazně menší než vývojový.
 
-Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který orchestruje čtyři služby:
+Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který orchestruje pět služeb:
 
 #figure(
   table(
@@ -604,6 +598,7 @@ Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který 
     [PostgreSQL 15], [Relační databáze pro ukládání dat], [5432],
     [Redis 7], [Cache a message broker pro BullMQ fronty], [6379],
     [Backend API], [Express.js server s REST API], [5000],
+    [Garage], [S3-kompatibilní úložiště souborů], [3900],
     [Frontend], [Next.js server (standalone režim)], [3000],
   ),
   caption: [Služby v Docker Compose konfiguraci]
@@ -612,6 +607,65 @@ Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který 
 Všechny služby mají nakonfigurované health checky, které zajišťují, že se backend spustí až po úspěšné inicializaci databáze a Redis. Data databáze a Redis jsou perzistentní díky Docker volumes.
 
 Pro produkční nasazení je nutné nastavit proměnné prostředí – zejména `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` (vygenerované pomocí `openssl rand -base64 64`), připojení k databázi, SMTP server a konfiguraci AWS S3 pro ukládání souborů.
+
+=== Úložiště souborů (Garage)
+
+Pro ukládání příloh projektů a profilových obrázků systém využívá *Garage* – self-hosted S3-kompatibilní objektové úložiště. Konfigurace je definována v souboru `garage.toml` v kořenovém adresáři projektu.
+
+Po prvním spuštění kontejnerů (`docker compose up -d`) je nutné provést jednorázovou inicializaci clusteru:
+
++ Zjistit ID uzlu:
+  ```bash
+  docker exec submitheses-garage /garage status
+  ```
++ Přiřadit uzel do rozložení clusteru (nahradit `<node-id>` skutečným ID):
+  ```bash
+  docker exec submitheses-garage /garage layout assign -z dc1 -c 1G <node-id>
+  ```
++ Aplikovat rozložení:
+  ```bash
+  docker exec submitheses-garage /garage layout apply --version 1
+  ```
++ Vytvořit API klíč:
+  ```bash
+  docker exec submitheses-garage /garage key create sumbitheses-key
+  ```
++ Vytvořit buckety a přidělit oprávnění:
+  ```bash
+  docker exec submitheses-garage /garage bucket create sumbitheses-attachments
+  docker exec submitheses-garage /garage bucket create sumbitheses-avatars
+  docker exec submitheses-garage /garage bucket allow --read --write --owner sumbitheses-attachments --key sumbitheses-key
+  docker exec submitheses-garage /garage bucket allow --read --write --owner sumbitheses-avatars --key sumbitheses-key
+  ```
++ Zobrazit přihlašovací údaje a zkopírovat je do `.env`:
+  ```bash
+  docker exec submitheses-garage /garage key info sumbitheses-key
+  ```
+  Hodnotu `Key ID` zapsat do `AWS_ACCESS_KEY_ID` a `Secret key` do `AWS_SECRET_ACCESS_KEY`.
+
+#figure(
+  table(
+    columns: (auto, 1fr, auto),
+    inset: 6pt,
+    align: (left, left, left),
+    table.header([*Proměnná*], [*Popis*], [*Výchozí hodnota*]),
+    [`S3_ENDPOINT`], [URL S3 API Garage], [`http://garage:3900`],
+    [`AWS_REGION`], [Region (musí odpovídat `garage.toml`)], [`garage`],
+    [`AWS_ACCESS_KEY_ID`], [ID přístupového klíče Garage], [—],
+    [`AWS_SECRET_ACCESS_KEY`], [Tajný klíč Garage], [—],
+    [`AWS_S3_BUCKET_ATTACHMENTS`], [Bucket pro přílohy projektů], [`sumbitheses-attachments`],
+    [`AWS_S3_BUCKET_AVATARS`], [Bucket pro profilové obrázky], [`sumbitheses-avatars`],
+    [`USE_S3_STORAGE`], [Povolit S3 úložiště], [`true`],
+  ),
+  caption: [Proměnné prostředí pro konfiguraci Garage úložiště]
+) <fig:garage-env>
+
+Pro ověření funkčnosti stačí nahrát soubor přes aplikaci a následně zkontrolovat obsah bucketu:
+```bash
+docker exec submitheses-garage /garage bucket info sumbitheses-attachments
+```
+
+V případě problémů s přístupem (chyba `AccessDenied`) je třeba ověřit oprávnění klíče příkazem `garage key info` a zkontrolovat shodu přihlašovacích údajů v `.env`. Pokud pre-signed URL adresy nefungují, je nutné ověřit, že `S3_ENDPOINT` ukazuje na správnou adresu – při běhu v Dockeru `http://garage:3900`, při lokálním vývoji `http://localhost:3900`.
 
 === Manuální nasazení
 
@@ -640,7 +694,7 @@ Následující podkapitoly popisují práci s aplikací z pohledu koncového už
 
 === Přihlášení do systému
 
-Uživatel přistupuje k aplikaci prostřednictvím webového prohlížeče na adrese, kde je systém nasazen. Na přihlašovací stránce zadá svůj e-mail a heslo. Účty jsou vytvářeny administrátorem, který uživateli odešle pozvánku e-mailem. Pozvánka obsahuje jednorázový odkaz s tokenem, přes který si uživatel nastaví své heslo při prvním přihlášení. Token má omezenou platnost – pokud vyprší, administrátor může odeslat novou pozvánku.
+Uživatel přistupuje k aplikaci prostřednictvím webového prohlížeče na adrese, kde je systém nasazen. Na přihlašovací stránce zadá svůj e-mail a heslo. Účty jsou vytvářeny administrátorem, který uživateli odešle pozvánku e-mailem. Pozvánka obsahuje jednorázový odkaz s tokenem, přes který si uživatel nastaví své heslo při prvním přihlášení. Token má omezenou platnost – pokud vyprší, administrátor může odeslat novou pozvánku. Alternativně se uživatel může přihlásit školním účtem přes Microsoft (tlačítko „Přihlásit se přes Microsoft"). Systém na základě domény e-mailu automaticky určí roli – `@delta-studenti.cz` pro studenty, `@delta-skola.cz` pro učitele.
 
 Po úspěšném přihlášení je uživatel přesměrován na hlavní stránku se seznamem projektů. Přihlášení je udržováno pomocí HTTP cookies – uživatel zůstává přihlášen i po zavření prohlížeče, dokud nevyprší platnost refresh tokenu (7–30 dní).
 
@@ -759,6 +813,15 @@ XSS útoky spočívají ve vložení škodlivého JavaScriptu do webové stránk
 
 CSRF útok nutí přihlášeného uživatele nechtěně provést akci na webové aplikaci. Systém implementuje ochranu pomocí vlastního CSRF middleware, který u všech stavově měnících požadavků (POST, PUT, DELETE, PATCH) na API endpointy vyžaduje přítomnost hlavičky `X-Requested-With: XMLHttpRequest`. Prohlížeče neumožňují cizím webům nastavovat vlastní hlavičky při cross-origin požadavcích, čímž je útok znemožněn.
 
+== Zabezpečení OAuth
+
+Přihlášení přes Microsoft OAuth 2.0 implementuje několik bezpečnostních mechanismů:
+
+- *PKCE (Proof Key for Code Exchange)* – při zahájení přihlášení server vygeneruje náhodný `code_verifier` a jeho SHA-256 hash (`code_challenge`). Autorizační server Microsoft přijme kód pouze při předložení původního verifieru, čímž se zabraňuje zachycení autorizačního kódu třetí stranou.
+- *Parametr state* – náhodná hodnota zaslaná v autorizačním požadavku a ověřená v callbacku chrání proti CSRF útokům na OAuth tok.
+- *Ověření podpisu ID tokenu* – ID token vrácený Microsoftem je ověřen pomocí veřejných klíčů z JWKS (JSON Web Key Set) endpointu Microsoftu. Tím je zaručeno, že token nebyl podvržen.
+- *Validace domény* – systém přijímá pouze e-maily z povolených domén (`delta-studenti.cz`, `delta-skola.cz`), čímž zabraňuje přihlášení neautorizovaným Microsoft účtům.
+
 == Ochrana hesel
 
 Uživatelská hesla jsou hashována algoritmem *bcrypt* s 10 rundami solení. Bcrypt je záměrně pomalý algoritmus navržený pro hashování hesel – i při úniku databáze je zpětné získání hesel výpočetně nereálné. Systém nikdy neukládá hesla v čitelné podobě.
@@ -776,6 +839,7 @@ Pro ochranu proti útokům hrubou silou (brute-force) jsou citlivé endpointy ch
     [Přihlášení], [10 pokusů], [15 minut],
     [Registrace], [5 pokusů], [1 hodina],
     [Obnovení tokenu], [30 pokusů], [15 minut],
+    [OAuth přihlášení], [30 pokusů], [15 minut],
   ),
   caption: [Konfigurace rate limitingu pro autentizační endpointy]
 ) <fig:rate-limits>
@@ -803,6 +867,11 @@ Nahrávání souborů je zabezpečeno na několika úrovních:
 
 Systém implementuje role-based access control (RBAC) prostřednictvím sady autorizačních middleware. Každý API endpoint má přiřazeny povolené role (admin, teacher, student) a volitelně kontrolu vlastnictví zdroje – například student může upravovat pouze svůj vlastní profil a projekt. Middleware navíc detekuje zastaralé JWT tokeny porovnáním role v tokenu s aktuální rolí v databázi.
 
+== Statická analýza kódu (CodeQL)
+
+Pro automatickou detekci bezpečnostních zranitelností využívá projekt nástroj CodeQL, integrovaný přímo v platformě GitHub. CodeQL provádí sémantickou analýzu zdrojového kódu a dokáže odhalit vzory vedoucí k SQL injection, XSS, nezabezpečeným závislostem či chybám v autentizační logice. Na rozdíl od běžných linterů analyzuje tok dat napříč funkcemi, čímž zachytí i nepřímé zranitelnosti.
+
+Skenování je aktivováno v nastavení repozitáře (Code security → Code scanning) a spouští se automaticky při každém push a pull requestu. Pokrývá jak backendový, tak frontendový TypeScript kód, a poskytuje tak průběžnou kontrolu kvality a bezpečnosti napříč celou aplikací.
 
 = Výsledky
 
@@ -849,7 +918,7 @@ Volba *Next.js* jako frontendového frameworku byla motivována podporou server-
 
 Stránka nastavení profilu zatím implementuje pouze základní funkce (změna jména, e-mailu a hesla). Plánované rozšíření o nahrávání profilového obrázku a pokročilejší správu účtu nebylo v rámci projektu dokončeno.
 
-Autentizace je řešena e-mailem a heslem s pozvánkovým systémem. Integrace s Office 365 SSO, která by umožnila jednotné přihlášení školním účtem, nebyla implementována z důvodu časové náročnosti konfigurace OAuth 2.0 poskytovatele a potřeby přístupu k Azure AD tenantu školy.
+Autentizace podporuje jak e-mail s heslem (pozvánkový systém), tak jednotné přihlášení přes Microsoft OAuth 2.0 (Office 365 SSO). Integrace s Azure AD umožňuje přihlášení školním účtem s automatickým přiřazením role na základě e-mailové domény.
 
 Systém oznámení využívá polling s intervalem 60 sekund. Pro okamžité doručování notifikací by bylo vhodnější implementovat WebSocket spojení, které by eliminovalo zpoždění a snížilo počet HTTP požadavků.
 
@@ -867,7 +936,6 @@ Systém implementuje všechny klíčové požadavky ze zadání: správu uživat
 
 Mezi možná rozšíření systému do budoucna patří:
 
-- *Integrace s Office 365 SSO* – jednotné přihlášení školním účtem prostřednictvím OAuth 2.0 a Azure Active Directory, čímž by se eliminovala potřeba samostatných přihlašovacích údajů.
 - *Mobilní aplikace* – nativní aplikace pro iOS a Android využívající existující REST API pro pohodlnější přístup z mobilních zařízení.
 - *AI asistované hodnocení* – integrace jazykového modelu pro návrhy hodnocení na základě obsahu odevzdané práce, které by hodnotiteli usnadnily orientaci v rozsáhlejších projektech.
 
@@ -947,8 +1015,9 @@ Repozitář obsahuje monorepo strukturu s adresáři `frontend/` (Next.js aplika
 Pro nasazení aplikace je nutné:
 
 + Nainstalovat Docker Engine a Docker Compose na cílový server
-+ Naklonovat repozitář a vytvořit soubor `.env` s konfigurací (databáze, JWT secrets, SMTP, AWS S3)
++ Naklonovat repozitář a vytvořit soubor `.env` s konfigurací (databáze, JWT secrets, SMTP, Garage S3)
 + Spustit příkazem: `docker compose -f docker-compose.prod.yml up -d --build`
 + Provést migrace databáze: `docker exec submitheses-backend npx prisma migrate deploy`
++ Inicializovat Garage úložiště: přiřadit uzel, vytvořit buckety a API klíč (viz kapitola 5.1.2)
 
 Podrobný postup nasazení je popsán v kapitole 5.1 této dokumentace.

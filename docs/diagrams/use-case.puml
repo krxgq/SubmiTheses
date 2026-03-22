@@ -1,0 +1,188 @@
+@startuml use-case-diagram
+' ============================================================
+' SumbiTheses - Use Case Diagram
+' System for submitting, evaluating, and publishing thesis projects
+' ============================================================
+
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor<<core>> #E8F5E9
+    BackgroundColor<<eval>> #E3F2FD
+    BackgroundColor<<admin>> #FFEBEE
+    BackgroundColor<<public>> #FFF3E0
+    BackgroundColor<<auto>> #F3E5F5
+}
+
+' -- Actors --
+actor "Guest" as Guest #95a5a6
+actor "Student" as Student #2ecc71
+actor "Teacher" as Teacher #3498db
+actor "Admin" as Admin #e74c3c
+actor "System\n(Scheduler)" as System #7f8c8d
+
+' Teacher specializations (project-level roles)
+actor "Supervisor" as Supervisor #9b59b6
+actor "Opponent" as Opponent #f39c12
+
+' -- Generalization: Teacher splits into Supervisor/Opponent per project --
+Teacher <|-- Supervisor
+Teacher <|-- Opponent
+' Admin inherits all Teacher capabilities
+Teacher <|-- Admin
+
+rectangle "SumbiTheses System" {
+
+    ' ==========================================
+    ' PUBLIC ACCESS
+    ' ==========================================
+    package "Public Access" {
+        usecase "UC01: View Public\nProjects" as UC01 <<public>>
+        usecase "UC02: Download Public\nAttachments" as UC02 <<public>>
+    }
+
+    ' ==========================================
+    ' AUTHENTICATION
+    ' ==========================================
+    package "Authentication" {
+        usecase "UC03: Login\n(Local)" as UC03
+        usecase "UC04: Login\n(Microsoft OAuth)" as UC04
+        usecase "UC05: Register" as UC05
+        usecase "UC06: Setup Password\n(Invitation)" as UC06
+        usecase "UC07: Link Microsoft\nAccount" as UC07
+        usecase "UC08: Set Password\n(MS-only User)" as UC08
+    }
+
+    ' ==========================================
+    ' PROJECT MANAGEMENT
+    ' ==========================================
+    package "Project Management" {
+        usecase "UC09: Create\nProject" as UC09 <<core>>
+        usecase "UC10: Edit\nProject" as UC10 <<core>>
+        usecase "UC11: Delete\nProject" as UC11 <<core>>
+        usecase "UC12: Upload\nAttachments" as UC12 <<core>>
+        usecase "UC13: Manage\nExternal Links" as UC13 <<core>>
+        usecase "UC14: Sign Up\nfor Project" as UC14 <<core>>
+        usecase "UC15: Cancel\nSignup" as UC15 <<core>>
+        usecase "UC16: View Project\nSignups" as UC16 <<core>>
+        usecase "UC17: Assign Student\nto Project" as UC17 <<core>>
+    }
+
+    ' ==========================================
+    ' EVALUATION & GRADING
+    ' ==========================================
+    package "Evaluation & Grading" {
+        usecase "UC18: Lock\nProject" as UC18 <<eval>>
+        usecase "UC19: Unlock\nProject" as UC19 <<eval>>
+        usecase "UC20: Submit\nGrades" as UC20 <<eval>>
+        usecase "UC21: View\nGrades" as UC21 <<eval>>
+        usecase "UC22: Write Review\n(Posudek)" as UC22 <<eval>>
+        usecase "UC23: Publish\nProject" as UC23 <<eval>>
+        usecase "UC24: Bulk Publish\nProjects" as UC24 <<eval>>
+    }
+
+    ' ==========================================
+    ' ADMINISTRATION
+    ' ==========================================
+    package "Administration" {
+        usecase "UC25: Manage Users\n(CRUD)" as UC25 <<admin>>
+        usecase "UC26: Invite User\nvia Email" as UC26 <<admin>>
+        usecase "UC27: Reset User\nPassword" as UC27 <<admin>>
+        usecase "UC28: Change\nUser Role" as UC28 <<admin>>
+        usecase "UC29: Bulk Assign\nYear" as UC29 <<admin>>
+        usecase "UC30: Manage Scales\n& Scale Sets" as UC30 <<admin>>
+        usecase "UC31: Manage\nSubjects" as UC31 <<admin>>
+        usecase "UC32: Manage Academic\nYears" as UC32 <<admin>>
+    }
+
+    ' ==========================================
+    ' COMMON
+    ' ==========================================
+    package "Common" {
+        usecase "UC33: View\nNotifications" as UC33
+        usecase "UC34: Edit\nProfile" as UC34
+    }
+
+    ' ==========================================
+    ' AUTOMATED (SYSTEM)
+    ' ==========================================
+    package "Automated Processes" {
+        usecase "UC35: Auto-Lock\nExpired Projects" as UC35 <<auto>>
+        usecase "UC36: Send Deadline\nReminders" as UC36 <<auto>>
+    }
+}
+
+' ==========================================
+' ACTOR -> USE CASE CONNECTIONS
+' ==========================================
+
+' Guest
+Guest --> UC01
+Guest --> UC02
+Guest --> UC03
+Guest --> UC04
+Guest --> UC05
+Guest --> UC06
+
+' Student
+Student --> UC09 : create draft
+Student --> UC10 : edit own draft
+Student --> UC12
+Student --> UC13
+Student --> UC14
+Student --> UC15
+Student --> UC21
+Student --> UC07
+Student --> UC08
+Student --> UC33
+Student --> UC34
+
+' Supervisor (Teacher assigned as supervisor)
+Supervisor --> UC10 : edit supervised
+Supervisor --> UC11 : delete supervised draft
+Supervisor --> UC16
+Supervisor --> UC17
+Supervisor --> UC18
+Supervisor --> UC19
+Supervisor --> UC20 : supervisor grades
+Supervisor --> UC22 : supervisor review
+
+' Opponent (Teacher assigned as opponent)
+Opponent --> UC20 : opponent grades
+Opponent --> UC22 : opponent review
+
+' Teacher (general)
+Teacher --> UC09 : create project
+Teacher --> UC33
+Teacher --> UC34
+
+' Admin
+Admin --> UC23
+Admin --> UC24
+Admin --> UC25
+Admin --> UC26
+Admin --> UC27
+Admin --> UC28
+Admin --> UC29
+Admin --> UC30
+Admin --> UC31
+Admin --> UC32
+Admin --> UC11 : delete any
+
+' System
+System --> UC35
+System --> UC36
+
+' ==========================================
+' INCLUDE / EXTEND RELATIONSHIPS
+' ==========================================
+UC04 ..> UC07 : <<extend>>\nlink existing account
+UC14 ..> UC15 : <<extend>>\nundo signup
+UC20 ..> UC22 : <<include>>\nsubmit with review
+UC26 ..> UC06 : <<include>>\ntriggers invitation
+UC23 ..> UC18 : <<include>>\nmust be locked first
+UC35 ..> UC18 : <<include>>\nauto-locks via scheduler
+UC36 ..> UC33 : <<include>>\ncreates notifications
+
+@enduml

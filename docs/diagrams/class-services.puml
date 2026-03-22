@@ -1,0 +1,259 @@
+@startuml class-services
+' ============================================================
+' SumbiTheses - Class Diagram: Service & Controller Layer
+' Shows business logic, request handlers, and middleware
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor<<service>> #E3F2FD
+    BackgroundColor<<controller>> #FFF3E0
+    BackgroundColor<<middleware>> #F3E5F5
+}
+skinparam linetype ortho
+
+' ==========================================
+' SERVICE CLASSES (Business Logic Layer)
+' ==========================================
+
+class AuthService <<service>> {
+    - prisma: PrismaClient
+    __
+    + register(email, password, role, name): User
+    + registerWithoutPassword(email, role, name): User
+    + login(email, password): TokenPair
+    + loginOrCreateFromMicrosoft(msUser): TokenPair
+    + setPasswordForMicrosoftUser(userId, password): void
+    + linkMicrosoftAccount(userId, msId, email): void
+    - hashPassword(password): string
+    - verifyPassword(password, hash): boolean
+}
+
+class JWTService <<service>> {
+    - accessTokenSecret: string
+    - refreshTokenSecret: string
+    - accessTokenExpiry: string
+    - refreshTokenExpiry: string
+    __
+    + generateTokens(user): TokenPair
+    + verifyAccessToken(token): JWTPayload
+    + verifyRefreshToken(token): JWTPayload
+    + decodeToken(token): JWTPayload
+}
+
+class MicrosoftOAuthService <<service>> {
+    - clientId: string
+    - tenantId: string
+    - redirectUri: string
+    __
+    + generatePKCE(): PKCEPair
+    + getAuthorizationUrl(state, codeChallenge): string
+    + exchangeCodeForTokens(code, codeVerifier): TokenResponse
+    + validateAndExtractUser(idToken): MicrosoftUser
+    - validateDomain(email): UserRole
+}
+
+class ProjectService <<service>> {
+    - prisma: PrismaClient
+    __
+    + createProject(data): Project
+    + getProjectById(id): Project
+    + getAllProjects(filters): Project[]
+    + updateProject(id, data): Project
+    + deleteProject(id): void
+    + assignStudentToProject(projectId, studentId): Project
+    + lockProject(id, userId, reason): Project
+    + unlockProject(id): Project
+    + publishProject(id): Project
+    + bulkPublish(ids): number
+    + autoLockExpiredProjects(): void
+}
+
+class GradingService <<service>> {
+    - prisma: PrismaClient
+    __
+    + getScaleSetForTeacher(projectId, userId): ScaleSet
+    + getTeacherGrades(projectId, userId): Grade[]
+    + submitGrades(projectId, userId, grades, review?): void
+    + getAllProjectGrades(projectId): Grade[]
+}
+
+class S3Service <<service>> {
+    - s3Client: S3Client
+    - attachmentBucket: string
+    - avatarBucket: string
+    __
+    + generateAttachmentUploadUrl(projectId, filename, type): PresignedUrl
+    + generateAvatarUploadUrl(userId, filename, type): PresignedUrl
+    + generateDownloadUrl(storagePath): PresignedUrl
+    - validateFileType(filename, mimeType): boolean
+    - generateStorageKey(prefix, id, filename): string
+}
+
+class EmailService <<service>> {
+    - transporter: Transporter
+    - isDevelopment: boolean
+    __
+    + sendInvitationEmail(email, token, name): void
+    + sendPasswordResetEmail(email, token, name): void
+    - createTransporter(): Transporter
+}
+
+class NotificationService <<service>> {
+    - prisma: PrismaClient
+    - redis: RedisClient
+    __
+    + createNotification(userId, type, title, message): Notification
+    + createNotifications(notifications): void
+    + getUserNotifications(userId, limit): Notification[]
+    + markAsRead(notificationId): void
+    + getUnreadCount(userId): number
+    - invalidateCache(userId): void
+}
+
+class ActivityLogService <<service>> {
+    - prisma: PrismaClient
+    __
+    + log(projectId, userId, action, desc, metadata?): ActivityLog
+    + getRecentActivities(projectId, limit): ActivityLog[]
+}
+
+class ProjectSignupService <<service>> {
+    - prisma: PrismaClient
+    __
+    + signupStudent(projectId, studentId): ProjectSignup
+    + cancelSignup(projectId, studentId): void
+    + getProjectSignups(projectId): ProjectSignup[]
+    + checkSignupStatus(projectId, studentId): boolean
+}
+
+class DeadlineSchedulerService <<service>> {
+    - prisma: PrismaClient
+    __
+    + scheduleDeadlineReminders(): void
+    + checkAndSendReminders(): void
+    - shouldSendReminder(project, year, daysLeft): boolean
+}
+
+' ==========================================
+' CONTROLLER CLASSES (Request Handler Layer)
+' ==========================================
+
+class AuthController <<controller>> {
+    + login(req, res): void
+    + register(req, res): void
+    + logout(req, res): void
+    + validateSession(req, res): void
+    + getSession(req, res): void
+    + refreshToken(req, res): void
+    + getUser(req, res): void
+    + setPassword(req, res): void
+    + microsoftAuth(req, res): void
+    + microsoftCallback(req, res): void
+    + microsoftLink(req, res): void
+}
+
+class ProjectsController <<controller>> {
+    + getAll(req, res): void
+    + getById(req, res): void
+    + getPublicProjects(req, res): void
+    + create(req, res): void
+    + update(req, res): void
+    + delete(req, res): void
+    + updateStatus(req, res): void
+    + bulkPublish(req, res): void
+    + assignStudent(req, res): void
+}
+
+class UsersController <<controller>> {
+    + getAll(req, res): void
+    + getById(req, res): void
+    + getByRole(req, res): void
+    + create(req, res): void
+    + update(req, res): void
+    + delete(req, res): void
+    + updateRole(req, res): void
+    + bulkAssignYear(req, res): void
+    + resendInvitation(req, res): void
+    + resetPassword(req, res): void
+}
+
+class GradingController <<controller>> {
+    + getScaleSet(req, res): void
+    + getMyGrades(req, res): void
+    + submitGrades(req, res): void
+    + getAllGrades(req, res): void
+}
+
+' ==========================================
+' MIDDLEWARE CLASSES
+' ==========================================
+
+class AuthMiddleware <<middleware>> {
+    + authenticate(req, res, next): void
+    + requireAdmin(req, res, next): void
+    + requireProjectAccess(req, res, next): void
+    + requireProjectModify(req, res, next): void
+    + requireProjectDelete(req, res, next): void
+    + requireGradingAccess(req, res, next): void
+    + requireSignupAccess(req, res, next): void
+}
+
+class RateLimitMiddleware <<middleware>> {
+    + generalWriteLimit(): Middleware
+    + loginLimit(): Middleware
+    + registrationLimit(): Middleware
+    + sensitiveOperationLimit(): Middleware
+    + destructiveLimit(): Middleware
+    + bulkOperationLimit(): Middleware
+}
+
+class CSRFMiddleware <<middleware>> {
+    + validateCSRF(req, res, next): void
+}
+
+class ValidationSchemas <<middleware>> {
+    + loginSchema: ZodSchema
+    + registerSchema: ZodSchema
+    + createProjectSchema: ZodSchema
+    + updateProjectSchema: ZodSchema
+    + submitGradesSchema: ZodSchema
+    + createUserSchema: ZodSchema
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' Controller --> Service (dependency: controllers delegate to services)
+AuthController ..> AuthService : uses
+ProjectsController ..> ProjectService : uses
+UsersController ..> AuthService : uses
+UsersController ..> EmailService : uses
+GradingController ..> GradingService : uses
+
+' Service --> Service (dependency: services collaborate)
+AuthService ..> JWTService : uses
+AuthService ..> MicrosoftOAuthService : uses
+AuthService ..> EmailService : uses
+ProjectService ..> ActivityLogService : uses
+ProjectService ..> NotificationService : uses
+GradingService ..> NotificationService : uses
+GradingService ..> ActivityLogService : uses
+DeadlineSchedulerService ..> NotificationService : uses
+DeadlineSchedulerService ..> ProjectService : uses
+ProjectSignupService ..> NotificationService : uses
+
+' Middleware --> Service
+AuthMiddleware ..> JWTService : verifies tokens
+
+' Controllers use middleware (dependency)
+AuthController ..> RateLimitMiddleware : protected by
+AuthController ..> CSRFMiddleware : protected by
+AuthController ..> ValidationSchemas : validates with
+ProjectsController ..> AuthMiddleware : protected by
+ProjectsController ..> RateLimitMiddleware : protected by
+UsersController ..> AuthMiddleware : protected by
+GradingController ..> AuthMiddleware : protected by
+
+@enduml

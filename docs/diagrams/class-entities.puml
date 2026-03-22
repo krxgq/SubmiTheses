@@ -1,0 +1,265 @@
+@startuml class-entities
+' ============================================================
+' SumbiTheses - Class Diagram: Entity Layer (Data Models)
+' Shows all database entities with attributes and relationships
+' ============================================================
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #E8F5E9
+    BackgroundColor<<enum>> #FFEBEE
+}
+skinparam linetype ortho
+
+' ==========================================
+' ENUMERATIONS
+' ==========================================
+
+enum UserRole <<enum>> {
+    admin
+    teacher
+    student
+}
+
+enum ProjectStatus <<enum>> {
+    draft
+    locked
+    public
+}
+
+enum ProjectRole <<enum>> {
+    supervisor
+    opponent
+}
+
+enum AuthProvider <<enum>> {
+    local
+    microsoft
+    both
+}
+
+' ==========================================
+' CORE ENTITIES
+' ==========================================
+
+class User {
+    - id: UUID <<PK>>
+    - role: UserRole
+    - email: string <<unique>>
+    - password_hash: string
+    - first_name: string
+    - last_name: string
+    - avatar_url: string
+    - class: string
+    - auth_provider: AuthProvider
+    - microsoft_id: string
+    - email_verified: boolean
+    - last_login: DateTime
+    - password_reset_token: string
+    - password_reset_expires: DateTime
+    - year_id: BigInt <<FK>>
+    - created_at: DateTime
+    - updated_at: DateTime
+    __
+    + getFullName(): string
+    + isAdmin(): boolean
+    + isTeacher(): boolean
+    + isStudent(): boolean
+}
+
+class Project {
+    - id: BigInt <<PK>>
+    - title: string
+    - subject: string
+    - description: string
+    - main_documentation: string
+    - status: ProjectStatus
+    - supervisor_id: UUID <<FK>>
+    - opponent_id: UUID <<FK>>
+    - student_id: UUID <<FK>>
+    - year_id: BigInt <<FK>>
+    - subject_id: BigInt <<FK>>
+    - lock_reason: string
+    - locked_at: DateTime
+    - locked_by: UUID <<FK>>
+    - reminders_sent: int[]
+    - updated_at: DateTime
+    __
+    + isDraft(): boolean
+    + isLocked(): boolean
+    + isPublic(): boolean
+}
+
+class ProjectDescription {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK, unique>>
+    - topic: string
+    - project_goal: string
+    - specification: string
+    - schedule: JSON
+    - needed_output: string[]
+    - grading_criteria: string[]
+    - grading_notes: string
+}
+
+class Year {
+    - id: BigInt <<PK>>
+    - name: string <<unique>>
+    - assignment_date: DateTime
+    - submission_date: DateTime
+    - feedback_date: DateTime
+    - deadline_reminder_days: int[]
+    - created_at: DateTime
+}
+
+class Subject {
+    - id: BigInt <<PK>>
+    - name: string <<unique>>
+    - description: string
+    - is_active: boolean
+}
+
+' ==========================================
+' EVALUATION ENTITIES
+' ==========================================
+
+class Grade {
+    - id: BigInt <<PK>>
+    - value: BigInt
+    - project_id: BigInt <<FK>>
+    - reviewer_id: UUID <<FK>>
+    - year_id: BigInt <<FK>>
+    - scale_id: BigInt <<FK>>
+    - created_at: DateTime
+}
+
+class Review {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK>>
+    - reviewer_id: UUID <<FK>>
+    - comments: string
+    - submitted_at: DateTime
+    - updated_at: DateTime
+}
+
+class Scale {
+    - id: BigInt <<PK>>
+    - name: string
+    - desc: string
+    - maxVal: BigInt
+    - created_at: DateTime
+}
+
+class ScaleSet {
+    - id: BigInt <<PK>>
+    - name: string
+    - year_id: BigInt <<FK>>
+    - project_role: ProjectRole
+    - created_at: DateTime
+}
+
+class ScaleSetScale {
+    - id: BigInt <<PK>>
+    - scale_set_id: BigInt <<FK>>
+    - scale_id: BigInt <<FK>>
+    - weight: smallint
+    - display_order: smallint
+}
+
+' ==========================================
+' SUPPORTING ENTITIES
+' ==========================================
+
+class Attachment {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK>>
+    - filename: string
+    - storage_path: string
+    - description: string
+    - uploaded_at: DateTime
+}
+
+class ExternalLink {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK>>
+    - url: string
+    - title: string
+    - description: string
+}
+
+class ProjectSignup {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK>>
+    - student_id: UUID <<FK>>
+    - created_at: DateTime
+}
+
+class ActivityLog {
+    - id: BigInt <<PK>>
+    - project_id: BigInt <<FK>>
+    - user_id: UUID <<FK>>
+    - action_type: string
+    - description: string
+    - metadata: JSON
+    - created_at: DateTime
+}
+
+class Notification {
+    - id: BigInt <<PK>>
+    - user_id: UUID <<FK>>
+    - type: string
+    - title: string
+    - message: string
+    - read: boolean
+    - metadata: JSON
+    - created_at: DateTime
+}
+
+' ==========================================
+' RELATIONSHIPS
+' ==========================================
+
+' Enum usage
+User --> UserRole
+User --> AuthProvider
+Project --> ProjectStatus
+ScaleSet --> ProjectRole
+
+' User <-> Year (aggregation: users belong to a year)
+Year "1" o-down- "0..*" User : belongs to
+
+' User <-> Project (association: multiple roles)
+User "1" -right- "0..*" Project : supervises
+User "1" -- "0..*" Project : opposes
+User "1" -- "0..*" Project : is student of
+
+' Project <-> Year/Subject (aggregation)
+Year "1" o-- "0..*" Project : in year
+Subject "1" o-- "0..*" Project : categorized by
+
+' Project compositions (parts deleted with project)
+Project "1" *-down- "0..1" ProjectDescription : contains
+Project "1" *-down- "0..*" Attachment : has
+Project "1" *-down- "0..*" ExternalLink : has
+Project "1" *-down- "0..*" Grade : has
+Project "1" *-down- "0..*" Review : has
+Project "1" *-down- "0..*" ProjectSignup : has
+Project "1" *-down- "0..*" ActivityLog : logs
+
+' User compositions/associations
+User "1" *-- "0..*" Notification : receives
+User "1" -- "0..*" Grade : gives
+User "1" -- "0..*" Review : writes
+User "1" -- "0..*" ProjectSignup : signs up
+User "1" -- "0..*" ActivityLog : performs
+
+' Grading relationships
+Grade "0..*" --> "0..1" Scale : uses
+Grade "0..*" --> "1" Year : in year
+
+' Scale set composition
+ScaleSet "1" *-- "0..*" ScaleSetScale : contains
+ScaleSetScale "0..*" --> "1" Scale : references
+Year "1" o-- "0..*" ScaleSet : configures
+
+@enduml

@@ -25,6 +25,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@sumbi/shared-types": [
+        "../packages/shared-types/src"
       ]
     }
   },
