@@ -4,6 +4,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { csrfProtection } from './middleware/csrf';
 import { apiRateLimiter } from './middleware/rate-limit';
+import { authenticated } from './middleware/auth';
+import { requireAdmin } from './middleware/authorization.middleware';
 import routes from './routes/api';
 import { createBullBoard } from '@bull-board/api';
 import { BullMQAdapter } from '@bull-board/api/bullMQAdapter';
@@ -45,8 +47,8 @@ createBullBoard({
   serverAdapter: serverAdapter,
 });
 
-// Mount Bull Board UI at /admin/queues
-app.use('/admin/queues', serverAdapter.getRouter());
+// Mount Bull Board UI — admin-only access
+app.use('/admin/queues', authenticated, requireAdmin, serverAdapter.getRouter());
 
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Backend API is running!' });

@@ -60,7 +60,8 @@ export async function getAllUsers(req: Request, res: Response) {
     const users = await UserService.getAllUsers();
     return res.status(200).json(users);
   } catch (error) {
-    return res.status(500).json({ error: `Failed to fetch users, ${error}` });
+    console.error('Error fetching users:', error);
+    return res.status(500).json({ error: 'Failed to fetch users' });
   }
 }
 
@@ -173,6 +174,21 @@ export async function deleteUser(req: Request, res: Response) {
     return res.status(204).send();
   } catch (error) {
     return res.status(500).json({ error: "Failed to delete user" });
+  }
+}
+
+/**
+ * Bulk assign year to multiple users (admin only)
+ * PUT /api/users/bulk-assign-year
+ */
+export async function bulkAssignYear(req: Request, res: Response) {
+  try {
+    const { userIds, year_id } = req.body;
+    const result = await UserService.bulkAssignYear(userIds, year_id);
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error('Error bulk assigning year:', error);
+    return res.status(500).json({ error: 'Failed to assign year' });
   }
 }
 

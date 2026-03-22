@@ -12,7 +12,7 @@ COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
 # Install dependencies
-RUN pnpm install --no-frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 # Copy shared-types source
 COPY packages/shared-types/ ./packages/shared-types/
@@ -43,7 +43,7 @@ COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
 # Install production dependencies
-RUN pnpm install --prod --no-frozen-lockfile
+RUN pnpm install --prod --frozen-lockfile
 
 # Copy shared-types source (needed for workspace dependency)
 COPY packages/shared-types/ ./packages/shared-types/
@@ -57,11 +57,16 @@ COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
 # Copy Zod types from builder (generated during build stage)
 COPY --from=builder /app/packages/shared-types/src/generated ./packages/shared-types/src/generated
 
+# Run as non-root user
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 appuser
+
 # Move to backend directory
 WORKDIR /app/backend
 
 # Copy built application from builder
 COPY --from=builder /app/backend/dist ./dist
+
+USER appuser
 
 # Expose port
 EXPOSE 5000

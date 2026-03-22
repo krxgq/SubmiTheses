@@ -59,6 +59,26 @@ services:
       - submitheses-network
     restart: unless-stopped
 
+  # Garage - self-hosted S3-compatible object storage
+  garage:
+    image: dxflrs/garage:v1.1.0
+    container_name: submitheses-garage
+    ports:
+      - "3900:3900"  # S3 API
+      - "3903:3903"  # Admin API
+    volumes:
+      - garage-data:/var/lib/garage/data
+      - garage-meta:/var/lib/garage/meta
+      - ./garage.toml:/etc/garage.toml:ro
+    healthcheck:
+      test: ["CMD", "/garage", "stats"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - submitheses-network
+    restart: unless-stopped
+
   # Backend API
   backend:
     build:
@@ -95,12 +115,24 @@ services:
       - SMTP_FROM_EMAIL=noreply@submitheses.local
       - APP_URL=http://localhost:3000
 
+      # S3-compatible storage (Garage)
+      - S3_ENDPOINT=http://garage:3900
+      - S3_PUBLIC_ENDPOINT=http://localhost:3900
+      - AWS_REGION=garage
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_S3_BUCKET_ATTACHMENTS=${AWS_S3_BUCKET_ATTACHMENTS:-sumbitheses-attachments}
+      - AWS_S3_BUCKET_AVATARS=${AWS_S3_BUCKET_AVATARS:-sumbitheses-avatars}
+      - USE_S3_STORAGE=${USE_S3_STORAGE:-true}
+
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       mailpit:
+        condition: service_healthy
+      garage:
         condition: service_healthy
     volumes:
       # Mount for hot reload in development (optional)
@@ -120,6 +152,10 @@ volumes:
   postgres-data:
     driver: local
   redis-data:
+    driver: local
+  garage-data:
+    driver: local
+  garage-meta:
     driver: local
 
 networks:

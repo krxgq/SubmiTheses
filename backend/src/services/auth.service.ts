@@ -138,6 +138,145 @@ export class AuthService {
   }
 
   /**
+   * Login or create a user from Microsoft OAuth.
+   * Links to existing account if email matches, or creates a new one.
+   */
+  static async loginOrCreateFromMicrosoft(
+    email: string,
+    microsoftId: string,
+    firstName: string | undefined,
+    lastName: string | undefined,
+    role: UserRole
+  ) {
+    let finalUser;
+
+    const existing = await prisma.users.findUnique({
+      where: { email },
+    });
+
+    if (existing) {
+      // Link Microsoft ID to existing account, upgrade auth_provider if was local-only
+      finalUser = await prisma.users.update({
+        where: { id: existing.id },
+        data: {
+          microsoft_id: microsoftId,
+          auth_provider: existing.auth_provider === 'local' ? 'both' : existing.auth_provider,
+          first_name: firstName || existing.first_name,
+          last_name: lastName || existing.last_name,
+          last_login: new Date(),
+        },
+      });
+    } else {
+      // Create new Microsoft-only user (empty password_hash disables local login)
+      finalUser = await prisma.users.create({
+        data: {
+          id: crypto.randomUUID(),
+          email,
+          password_hash: '',
+          auth_provider: 'microsoft',
+          microsoft_id: microsoftId,
+          first_name: firstName,
+          last_name: lastName,
+          role,
+          email_verified: true,
+          last_login: new Date(),
+          created_at: new Date(),
+          updated_at: new Date(),
+        },
+      });
+    }
+
+    // Invalidate user caches (same pattern as registerWithoutPassword)
+    await cache.delete('users:all');
+    await cache.delete(`users:role:${finalUser.role}`);
+    if (finalUser.role === 'teacher' || finalUser.role === 'admin') {
+      await cache.delete('users:teachers');
+    }
+
+    // Generate JWT tokens for the session
+    const { accessToken, refreshToken } = JWTService.generateTokens(
+      finalUser.id,
+      finalUser.email,
+      finalUser.role
+    );
+
+    return {
+      user: {
+        id: finalUser.id,
+        email: finalUser.email,
+        role: finalUser.role,
+        first_name: finalUser.first_name,
+        last_name: finalUser.last_name,
+        avatar_url: finalUser.avatar_url,
+      },
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  /**
+   * Set a local password for a Microsoft-only user, upgrading auth_provider to 'both'
+   */
+  static async setPasswordForMicrosoftUser(userId: string, password: string) {
+    const user = await prisma.users.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+    if (user.auth_provider !== 'microsoft') {
+      throw new Error('Password can only be set for Microsoft-only accounts');
+    }
+
+    const passwordHash = await this.hashPassword(password);
+
+    const updated = await prisma.users.update({
+      where: { id: userId },
+      data: {
+        password_hash: passwordHash,
+        auth_provider: 'both',
+        updated_at: new Date(),
+      },
+    });
+
+    // Invalidate caches
+    await cache.delete(`user:${userId}`);
+    await cache.delete('users:all');
+    await cache.delete(`users:role:${updated.role}`);
+
+    return updated;
+  }
+
+  /**
+   * Link a Microsoft account to a local-only user, upgrading auth_provider to 'both'.
+   * Requires the Microsoft email to match the local account email.
+   */
+  static async linkMicrosoftAccount(userId: string, microsoftId: string, microsoftEmail: string) {
+    const user = await prisma.users.findUnique({ where: { id: userId } });
+    if (!user) throw new Error('User not found');
+    if (user.auth_provider !== 'local') {
+      throw new Error('Microsoft linking is only available for local-only accounts');
+    }
+
+    // Email must match (case-insensitive) to prevent account hijacking
+    if (user.email.toLowerCase() !== microsoftEmail.toLowerCase()) {
+      throw new Error('Microsoft account email does not match your account email');
+    }
+
+    const updated = await prisma.users.update({
+      where: { id: userId },
+      data: {
+        microsoft_id: microsoftId,
+        auth_provider: 'both',
+        updated_at: new Date(),
+      },
+    });
+
+    // Invalidate caches
+    await cache.delete(`user:${userId}`);
+    await cache.delete('users:all');
+    await cache.delete(`users:role:${updated.role}`);
+
+    return updated;
+  }
+
+  /**
    * Login user with email and password
    * Verifies password and returns JWT tokens
    */

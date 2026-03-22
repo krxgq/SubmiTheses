@@ -1,6 +1,6 @@
 import { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { s3Client, S3_CONFIG } from '../config/s3.config';
+import { s3Client, s3PublicClient, S3_CONFIG } from '../config/s3.config';
 import path from 'path';
 
 type BucketType = 'attachments' | 'avatars';
@@ -43,7 +43,7 @@ export class S3Service {
     });
 
     // Generate pre-signed URL (expires in 5 minutes)
-    const uploadUrl = await getSignedUrl(s3Client, command, {
+    const uploadUrl = await getSignedUrl(s3PublicClient, command, {
       expiresIn: S3_CONFIG.uploadUrlExpiration,
     });
 
@@ -87,7 +87,7 @@ export class S3Service {
     });
 
     // Generate pre-signed URL (expires in 5 minutes)
-    const uploadUrl = await getSignedUrl(s3Client, command, {
+    const uploadUrl = await getSignedUrl(s3PublicClient, command, {
       expiresIn: S3_CONFIG.uploadUrlExpiration,
     });
 
@@ -107,7 +107,7 @@ export class S3Service {
     });
 
     // Generate pre-signed URL (expires in 1 hour)
-    const downloadUrl = await getSignedUrl(s3Client, command, {
+    const downloadUrl = await getSignedUrl(s3PublicClient, command, {
       expiresIn: S3_CONFIG.downloadUrlExpiration,
     });
 

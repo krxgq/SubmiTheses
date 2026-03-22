@@ -1,12 +1,43 @@
 import { S3Client } from '@aws-sdk/client-s3';
 
-// Initialize S3 client with credentials from environment
+// Fail fast in production if S3 credentials are missing
+const isProduction = process.env.NODE_ENV === 'production';
+const useS3 = process.env.USE_S3_STORAGE === 'true';
+
+if (isProduction && useS3) {
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    throw new Error('Missing AWS_ACCESS_KEY_ID or AWS_SECRET_ACCESS_KEY — required when USE_S3_STORAGE=true in production');
+  }
+}
+
+const credentials = {
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+};
+
+// Disable SDK checksums — Garage doesn't support AWS SDK v3's CRC32 checksums
+const requestChecksumCalculation = 'WHEN_REQUIRED' as const;
+const responseChecksumValidation = 'WHEN_REQUIRED' as const;
+
+// Internal client for server-side S3 operations (delete, exists, etc.)
 export const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
+  endpoint: process.env.S3_ENDPOINT || undefined,
+  forcePathStyle: !!process.env.S3_ENDPOINT,
+  credentials,
+  requestChecksumCalculation,
+  responseChecksumValidation,
+});
+
+// Public client for pre-signed URLs the browser can reach
+const publicEndpoint = process.env.S3_PUBLIC_ENDPOINT || process.env.S3_ENDPOINT;
+export const s3PublicClient = new S3Client({
+  region: process.env.AWS_REGION || 'us-east-1',
+  endpoint: publicEndpoint || undefined,
+  forcePathStyle: !!publicEndpoint,
+  credentials,
+  requestChecksumCalculation,
+  responseChecksumValidation,
 });
 
 // S3 bucket configuration

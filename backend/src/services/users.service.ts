@@ -60,6 +60,8 @@ export class UserService {
         password_reset_token: true,
         password_reset_expires: true,
         last_login: true,
+        auth_provider: true,  // needed by frontend to show correct settings UI
+        microsoft_id: true,   // needed to detect linked Microsoft account
         years: true,
       },
     });
@@ -121,6 +123,29 @@ export class UserService {
     await cache.set(cacheKey, teachers, 300);
 
     return teachers;
+  }
+
+  /**
+   * Bulk assign year to multiple users (admin only)
+   * Single atomic query + cache invalidation for all affected keys
+   */
+  static async bulkAssignYear(userIds: string[], yearId: bigint | null) {
+    const result = await prisma.users.updateMany({
+      where: { id: { in: userIds } },
+      data: { year_id: yearId },
+    });
+
+    // Invalidate all user-related caches
+    await cache.delete('users:all');
+    await cache.delete('users:role:student');
+    await cache.delete('users:role:teacher');
+    await cache.delete('users:role:admin');
+    await cache.delete('users:teachers');
+    for (const id of userIds) {
+      await cache.delete(`user:${id}`);
+    }
+
+    return { updated: result.count };
   }
 
   /**

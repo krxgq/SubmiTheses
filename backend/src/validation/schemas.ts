@@ -491,6 +491,14 @@ export const bulkPublishSchema = z.object({
   }),
 });
 
+// Bulk assign year — validates array of user UUIDs and optional year ID
+export const bulkAssignYearSchema = z.object({
+  body: z.object({
+    userIds: z.array(z.string().uuid()).min(1, "At least one user ID is required"),
+    year_id: z.coerce.bigint().nullable(),
+  }),
+});
+
 // Invitation schemas
 export const setupPasswordSchema = z.object({
   body: z.object({
@@ -508,6 +516,17 @@ export const validateInvitationTokenSchema = z.object({
 export const resendInvitationSchema = z.object({
   params: z.object({
     id: z.string().uuid("Invalid user ID"),
+  }),
+});
+
+// Set password schema — for Microsoft-only users creating a local password
+export const setPasswordSchema = z.object({
+  body: z.object({
+    password: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string().min(8, 'Password must be at least 8 characters'),
+  }).refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
   }),
 });
 

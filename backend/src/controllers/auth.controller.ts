@@ -1,7 +1,9 @@
+import crypto from "crypto";
 import { Request, Response } from "express";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../services/users.service";
 import { JWTService } from "../services/jwt.service";
+import { MicrosoftOAuthService } from "../services/microsoft-oauth.service";
 
 /**
  * Auth Controller - Local Password-Based Authentication
@@ -299,6 +301,186 @@ export async function getUser(req: Request, res: Response) {
 }
 
 /**
+ * POST /api/auth/set-password
+ * Allow Microsoft-only users to create a local password (upgrades to 'both')
+ */
+export async function setPassword(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const { password } = req.body;
+    await AuthService.setPasswordForMicrosoftUser(req.user.id, password);
+
+    console.log('[Auth] Password set for Microsoft user:', req.user.id);
+    return res.status(200).json({ message: 'Password set successfully' });
+  } catch (err: any) {
+    console.error('[Auth] Set password error:', err);
+    return res.status(400).json({ error: err.message || 'Failed to set password' });
+  }
+}
+
+/**
+ * GET /api/auth/microsoft/link
+ * Initiate Microsoft OAuth linking for local-only users.
+ * Sets an oauth-action cookie so the callback knows to link instead of login.
+ */
+export async function microsoftLink(req: Request, res: Response) {
+  try {
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+    const state = crypto.randomBytes(32).toString('hex');
+    const { codeVerifier, codeChallenge } = MicrosoftOAuthService.generatePKCE();
+
+    const cookieOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 10 * 60 * 1000,
+      path: '/',
+    };
+    res.cookie('oauth-state', state, cookieOpts);
+    res.cookie('oauth-verifier', codeVerifier, cookieOpts);
+    // Signal to the callback that this is a link flow, not a login
+    res.cookie('oauth-action', 'link', cookieOpts);
+
+    const authUrl = MicrosoftOAuthService.getAuthorizationUrl(state, codeChallenge);
+    return res.redirect(authUrl);
+  } catch (err) {
+    console.error('[Auth] Microsoft link initiation error:', err);
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    return res.redirect(`${APP_URL}/en/settings?error=link_failed`);
+  }
+}
+
+/**
+ * GET /api/auth/microsoft
+ * Initiate Microsoft OAuth login — generates PKCE + state, stores in cookies, redirects to Microsoft
+ */
+export async function microsoftLogin(req: Request, res: Response) {
+  try {
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+    // Random state for CSRF protection
+    const state = crypto.randomBytes(32).toString('hex');
+    const { codeVerifier, codeChallenge } = MicrosoftOAuthService.generatePKCE();
+
+    // Store state + verifier in short-lived httpOnly cookies (10 min expiry)
+    const cookieOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax' as const,
+      maxAge: 10 * 60 * 1000, // 10 minutes
+      path: '/',
+    };
+    res.cookie('oauth-state', state, cookieOpts);
+    res.cookie('oauth-verifier', codeVerifier, cookieOpts);
+
+    const authUrl = MicrosoftOAuthService.getAuthorizationUrl(state, codeChallenge);
+    return res.redirect(authUrl);
+  } catch (err) {
+    console.error('[Auth] Microsoft login initiation error:', err);
+    const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+    return res.redirect(`${APP_URL}/auth?error=oauth_failed`);
+  }
+}
+
+/**
+ * GET /api/auth/microsoft/callback
+ * Handle the redirect back from Microsoft — validates state, exchanges code, sets JWT cookies
+ */
+export async function microsoftCallback(req: Request, res: Response) {
+  const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+  try {
+    const { code, state } = req.query as { code?: string; state?: string };
+    const savedState = req.cookies['oauth-state'];
+    const codeVerifier = req.cookies['oauth-verifier'];
+    const oauthAction = req.cookies['oauth-action']; // 'link' if account-linking flow
+
+    // Clear OAuth cookies regardless of outcome
+    res.clearCookie('oauth-state', { path: '/' });
+    res.clearCookie('oauth-verifier', { path: '/' });
+    res.clearCookie('oauth-action', { path: '/' });
+
+    // CSRF check — state from Microsoft must match the cookie we set
+    if (!state || !savedState || state !== savedState) {
+      console.warn('[Auth] Microsoft OAuth state mismatch');
+      return res.redirect(`${APP_URL}/auth?error=invalid_state`);
+    }
+
+    if (!code || !codeVerifier) {
+      return res.redirect(`${APP_URL}/auth?error=oauth_failed`);
+    }
+
+    // Exchange authorization code for tokens
+    const { idToken, accessToken } = await MicrosoftOAuthService.exchangeCodeForTokens(code, codeVerifier);
+
+    // Verify ID token signature and extract user claims (falls back to Graph API for name)
+    const msUser = await MicrosoftOAuthService.validateAndExtractUser(idToken, accessToken);
+
+    // --- Account-linking flow: link Microsoft to existing local account ---
+    if (oauthAction === 'link') {
+      try {
+        // Verify the user is still logged in via their JWT cookie
+        const token = req.cookies['sb-access-token'];
+        if (!token) {
+          return res.redirect(`${APP_URL}/en/settings?error=link_failed`);
+        }
+        const decoded = JWTService.verifyAccessToken(token);
+        await AuthService.linkMicrosoftAccount(decoded.sub, msUser.oid, msUser.email);
+        console.log('[Auth] Microsoft account linked for user:', decoded.sub);
+        return res.redirect(`${APP_URL}/en/settings?linked=true`);
+      } catch (linkErr: any) {
+        console.error('[Auth] Microsoft link error:', linkErr);
+        return res.redirect(`${APP_URL}/en/settings?error=link_failed`);
+      }
+    }
+
+    // --- Normal login flow (unchanged) ---
+    // Reject emails from non-school domains
+    const domainCheck = MicrosoftOAuthService.validateEmailDomain(msUser.email);
+    if (!domainCheck.valid || !domainCheck.role) {
+      console.warn('[Auth] Microsoft OAuth rejected domain:', msUser.email);
+      return res.redirect(`${APP_URL}/auth?error=invalid_domain`);
+    }
+
+    // Link or create the user account, then generate JWT tokens
+    const result = await AuthService.loginOrCreateFromMicrosoft(
+      msUser.email,
+      msUser.oid,
+      msUser.firstName,
+      msUser.lastName,
+      domainCheck.role,
+    );
+
+    // Set JWT cookies (same pattern as local login)
+    res.cookie('sb-access-token', result.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 1000, // 1 hour
+      path: '/',
+    });
+
+    res.cookie('sb-refresh-token', result.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: '/api/auth/refresh',
+    });
+
+    console.log('[Auth] Microsoft login successful for user:', result.user.id);
+    return res.redirect(`${APP_URL}/en/projects`);
+  } catch (err) {
+    console.error('[Auth] Microsoft callback error:', err);
+    return res.redirect(`${APP_URL}/auth?error=oauth_failed`);
+  }
+}
+
+/**
  * Helper: Fetch user profile from database and enrich with role from JWT
  * Replaces the direct database query in frontend/src/lib/auth.ts:200-204
  */
@@ -316,6 +498,7 @@ async function getUserProfile(userId: string) {
     last_name: user!.last_name,
     avatar_url: user!.avatar_url,
     role: user!.role,
+    auth_provider: user!.auth_provider, // 'local' | 'microsoft' | 'both'
     year_id: user!.year_id ? Number(user!.year_id) : undefined,
     created_at: user!.created_at,
   };

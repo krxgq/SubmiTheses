@@ -16,14 +16,16 @@ import {
   validateInvitationToken,
   setupPassword,
   resendInvitation,
-  resetPassword
+  resetPassword,
+  bulkAssignYear
 } from '../controllers/users.controller'
 import { validate } from '../middleware/validate'
 import {
   updateUserSchema,
   setupPasswordSchema,
   validateInvitationTokenSchema,
-  resendInvitationSchema
+  resendInvitationSchema,
+  bulkAssignYearSchema
 } from '../validation/schemas'
 import { z } from 'zod'
 import {
@@ -31,6 +33,7 @@ import {
   sensitiveWriteRateLimiter,
   destructiveActionRateLimiter,
   writeRateLimiter,
+  bulkOperationRateLimiter,
 } from '../middleware/rate-limit'
 
 const router = Router()
@@ -62,6 +65,9 @@ router.get('/by-role', authenticated, getUsersByRole)
 
 // Get all teachers
 router.get('/teachers', authenticated, getTeachers)
+
+// Bulk assign year to multiple users (admin only) — before /:id to avoid param collision
+router.put('/bulk-assign-year', authenticated, bulkOperationRateLimiter, requireAdmin, validate(bulkAssignYearSchema), bulkAssignYear)
 
 // Get user by ID (admin/teacher or the user themselves)
 router.get('/:id', authenticated, requireUserAccess, validate(userIdSchema), getUserById)

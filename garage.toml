@@ -1,0 +1,25 @@
+# Garage configuration for single-node school deployment
+# Docs: https://garagehq.deuxfleurs.fr/documentation/reference-manual/configuration/
+
+metadata_dir = "/var/lib/garage/meta"
+data_dir = "/var/lib/garage/data"
+db_engine = "sqlite"
+
+# Replication factor 1 = single server, no copies (use backups!)
+replication_factor = 1
+
+# RPC settings (top-level for Garage v1.x)
+rpc_bind_addr = "[::]:3901"
+rpc_secret = "af2ce46358934edd48ec1e1ca6690c2af96e4fa732527e20243c926024f81242"
+
+[s3_api]
+s3_region = "garage"
+api_bind_addr = "[::]:3900"
+root_domain = ".s3.garage.localhost"
+
+[s3_web]
+bind_addr = "[::]:3902"
+root_domain = ".web.garage.localhost"
+
+[admin]
+api_bind_addr = "[::]:3903"
