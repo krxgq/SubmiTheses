@@ -3,7 +3,7 @@
  * BullMQ creates its own connections internally from this config
  */
 export const bullMQConnection = {
-  host: process.env.REDIS_HOST || 'localhost',
+  host: process.env.REDIS_HOST || 'redis',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   maxRetriesPerRequest: null, // Required for BullMQ
   enableReadyCheck: false,
