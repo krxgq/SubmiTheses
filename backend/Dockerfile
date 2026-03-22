@@ -6,8 +6,8 @@ WORKDIR /app
 # Install pnpm
 RUN npm install -g pnpm
 
-# Copy workspace files from root
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+# Copy workspace files from root (`.npmrc` ensures proper Prisma hoisting)
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
@@ -38,7 +38,7 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copy workspace files from root
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 

@@ -1,0 +1,23 @@
+{
+  "name": "@sumbi/shared-types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript types for backend and frontend",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "keywords": [
+    "types",
+    "shared"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

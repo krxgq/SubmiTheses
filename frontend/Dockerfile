@@ -7,15 +7,21 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # Copy workspace files from root
-COPY pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY frontend/package.json ./frontend/
 COPY packages/shared-types/package.json ./packages/shared-types/
+# Backend package.json needed so pnpm can install prisma + zod-prisma-types
+COPY backend/package.json ./backend/
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy shared-types source
 COPY packages/shared-types/ ./packages/shared-types/
+
+# Copy Prisma schema and generate Zod types into shared-types
+COPY backend/prisma/ ./backend/prisma/
+RUN cd /app/backend && npx prisma generate
 
 # Copy frontend source code
 COPY frontend/ ./frontend/
