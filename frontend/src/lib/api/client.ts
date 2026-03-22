@@ -72,9 +72,6 @@ export async function apiRequest<T>(
       const cookieStore = await cookies();
       const accessToken = cookieStore.get('sb-access-token');
 
-      console.log('[apiRequest] Server-side request to:', endpoint);
-      console.log('[apiRequest] Access token exists:', !!accessToken);
-
       // Only forward refresh token to the refresh endpoint
       const isRefreshEndpoint = endpoint === '/auth/refresh';
       const refreshToken = isRefreshEndpoint ? cookieStore.get('sb-refresh-token') : null;
@@ -89,9 +86,6 @@ export async function apiRequest<T>(
 
       if (cookieHeader) {
         headers['Cookie'] = cookieHeader;
-        console.log('[apiRequest] Cookie header set');
-      } else {
-        console.log('[apiRequest] No cookies found to forward');
       }
     } catch (err) {
       console.error('[apiRequest] Failed to read cookies on server:', err);

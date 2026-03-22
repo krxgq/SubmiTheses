@@ -7,6 +7,7 @@ export interface AuthUser {
   last_name?: string;
   avatar_url?: string;
   role?: string;
+  auth_provider?: 'local' | 'microsoft' | 'both';
   year_id?: number;
   created_at: string;
 }
@@ -122,6 +123,24 @@ class AuthService {
     } catch (err) {
       return null;
     }
+  }
+
+  /** Set a local password for Microsoft-only users */
+  async setPassword(password: string, confirmPassword: string): Promise<AuthResponse<null>> {
+    try {
+      await apiRequest<{ message: string }>('/auth/set-password', {
+        method: 'POST',
+        body: JSON.stringify({ password, confirmPassword }),
+      });
+      return { data: null, error: null };
+    } catch (err: any) {
+      return { data: null, error: err.message || 'Failed to set password' };
+    }
+  }
+
+  /** Returns the URL that initiates the Microsoft account-linking OAuth flow */
+  getMicrosoftLinkUrl(): string {
+    return `${API_BASE_URL}/auth/microsoft/link`;
   }
 
   async refreshSession(): Promise<void> {

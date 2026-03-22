@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
 import { Award, User } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 
 interface GradesDisplayProps {
@@ -170,8 +171,8 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
             {reviewerData.posudek && (
               <div className="mt-4 pt-4 border-t border-border">
                 <h4 className="font-semibold text-text-primary mb-2">{t('posudekTitle')}</h4>
-                <div className="p-3 bg-background-secondary rounded-lg text-text-primary whitespace-pre-wrap text-sm">
-                  {reviewerData.posudek}
+                <div className="p-3 bg-background-secondary rounded-lg">
+                  <MarkdownRenderer content={reviewerData.posudek} className="text-sm" />
                 </div>
               </div>
             )}

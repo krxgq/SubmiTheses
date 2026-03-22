@@ -106,6 +106,17 @@ export const usersApi = {
   },
 
   /**
+   * Bulk assign year to multiple users (admin only)
+   * PUT /api/users/bulk-assign-year
+   */
+  async bulkAssignYear(userIds: string[], yearId: number | null): Promise<{ updated: number }> {
+    return apiRequest<{ updated: number }>('/users/bulk-assign-year', {
+      method: 'PUT',
+      body: JSON.stringify({ userIds, year_id: yearId }),
+    });
+  },
+
+  /**
    * Resend invitation email (admin only)
    * POST /api/users/:id/resend-invitation
    */

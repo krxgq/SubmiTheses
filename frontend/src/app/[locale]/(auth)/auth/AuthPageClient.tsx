@@ -1,6 +1,7 @@
 'use client'
 import { TabItem, Tabs } from "flowbite-react"
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Mail, Lock, User, Shield, CheckCircle, XCircle, GraduationCap, Folder } from 'lucide-react'
 import { useRouter } from '@/lib/navigation'
 import { useAuthContext } from '@/components/providers/AuthProvider'
@@ -12,6 +13,7 @@ export default function AuthPageClient() {
     const REGISTRATION_ENABLED = false
 
     const router = useRouter()
+    const searchParams = useSearchParams()
     const { login, register, isLoading: authLoading } = useAuthContext()
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -36,6 +38,19 @@ export default function AuthPageClient() {
     // General feedback
     const [authError, setAuthError] = useState<string>('')
     const [successMessage, setSuccessMessage] = useState<string>('')
+
+    // Detect OAuth redirect errors from query params (e.g. ?error=invalid_domain)
+    useEffect(() => {
+        const error = searchParams.get('error')
+        if (!error) return
+
+        const errorMessages: Record<string, string> = {
+            invalid_state: 'Authentication failed — please try again.',
+            invalid_domain: 'Only @delta-studenti.cz and @delta-skola.cz emails are allowed.',
+            oauth_failed: 'Microsoft sign-in failed. Please try again.',
+        }
+        setAuthError(errorMessages[error] || 'An unexpected error occurred.')
+    }, [searchParams])
 
     // Password strength calculation
     const calculatePasswordStrength = (password: string) => {
@@ -263,6 +278,34 @@ export default function AuthPageClient() {
                                     {(isLoading || authLoading) ? 'Signing In...' : 'Sign In'}
                                 </button>
                             </form>
+
+                        {/* Divider + Microsoft sign-in */}
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-border" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-surface px-2 text-text-secondary">or</span>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => {
+                                const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'
+                                window.location.href = `${apiBase}/auth/microsoft`
+                            }}
+                            className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-border rounded-lg font-medium text-text-primary hover:bg-background-hover transition-colors"
+                        >
+                            {/* Microsoft 4-tile logo */}
+                            <svg width="20" height="20" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="1" y="1" width="9" height="9" fill="#F25022" />
+                                <rect x="11" y="1" width="9" height="9" fill="#7FBA00" />
+                                <rect x="1" y="11" width="9" height="9" fill="#00A4EF" />
+                                <rect x="11" y="11" width="9" height="9" fill="#FFB900" />
+                            </svg>
+                            Sign in with Microsoft
+                        </button>
 
                         {/* Browse public projects link */}
                         <div className="mt-6 pt-4 border-t border-border">

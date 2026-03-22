@@ -39,12 +39,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const authState = useAuth();
   const { user } = authState;
 
-  console.log('[ProjectActions] Auth state:', {
-    user,
-    isLoading: authState.isLoading,
-    isAuthenticated: authState.isAuthenticated
-  });
-
   const router = useRouter();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -87,18 +81,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
   const canUnpublish = isAdmin && project.status === 'public'; // revert public → locked
 
   const hasStudent = !!project.student_id;
-
-  // Debug: Log lock button conditions
-  console.log('[ProjectActions Debug]', {
-    userId: user?.id,
-    userRole: user?.role,
-    isAdmin,
-    isSupervisor,
-    projectStatus: project.status,
-    canLock,
-    canUnlock,
-    canPublish
-  });
 
   // Check if user has ANY actions available - if not, hide the entire Actions section
   const hasAnyActions = canEdit || canManage || canDelete || canInteract;
@@ -182,14 +164,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
     }
   };
 
-  const handleShare = () => {
-    console.log('Share project');
-  };
-
-  const handleNotifications = () => {
-    console.log('Toggle notifications');
-  };
-
   const handleUploadClick = () => {
     setShowUploadModal(true);
     setUploadError('');
@@ -208,8 +182,6 @@ export default function ProjectActions({ project }: ProjectActionsProps) {
 
     setIsUploading(true);
     try {
-      console.log('Uploading files:', uploadedFiles);
-
       // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 1000));
 

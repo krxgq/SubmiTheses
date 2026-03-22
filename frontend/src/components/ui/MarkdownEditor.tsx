@@ -16,6 +16,8 @@ interface MarkdownEditorProps {
   minHeight?: number;
   maxLength?: number;
   showCharCount?: boolean;
+  disabled?: boolean;       // Disables editing + toolbar when true
+  placeholder?: string;     // Custom placeholder for the textarea
 }
 
 // Markdown editor with toolbar buttons that insert syntax and live preview
@@ -30,6 +32,8 @@ export function MarkdownEditor({
   minHeight = 200,
   maxLength,
   showCharCount = false,
+  disabled = false,
+  placeholder = "Type markdown here...",
 }: MarkdownEditorProps) {
   const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -44,6 +48,7 @@ export function MarkdownEditor({
 
   // Insert markdown syntax at cursor or wrap selected text
   const insertMarkdown = (before: string, after: string = before) => {
+    if (disabled) return; // Block formatting when editor is disabled
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -66,6 +71,7 @@ export function MarkdownEditor({
 
   // Insert markdown syntax at the start of current line
   const insertAtLineStart = (prefix: string) => {
+    if (disabled) return; // Block formatting when editor is disabled
     const textarea = textareaRef.current;
     if (!textarea) return;
 
@@ -97,11 +103,12 @@ export function MarkdownEditor({
       </Label>
 
       {/* Toolbar with markdown formatting buttons */}
-      <div className="flex gap-1 p-2 border border-border rounded-lg bg-background-elevated">
+      <div className={`flex gap-1 p-2 border border-border rounded-lg bg-background-elevated ${disabled ? 'opacity-50' : ''}`}>
         <button
           type="button"
           onClick={() => insertMarkdown('**', '**')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="Bold"
         >
           <Bold className="w-4 h-4" />
@@ -109,7 +116,8 @@ export function MarkdownEditor({
         <button
           type="button"
           onClick={() => insertMarkdown('*', '*')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="Italic"
         >
           <Italic className="w-4 h-4" />
@@ -117,7 +125,8 @@ export function MarkdownEditor({
         <button
           type="button"
           onClick={() => insertAtLineStart('## ')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="Heading"
         >
           <Heading className="w-4 h-4" />
@@ -125,7 +134,8 @@ export function MarkdownEditor({
         <button
           type="button"
           onClick={() => insertAtLineStart('- ')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="List"
         >
           <List className="w-4 h-4" />
@@ -133,7 +143,8 @@ export function MarkdownEditor({
         <button
           type="button"
           onClick={() => insertMarkdown('[', '](url)')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="Link"
         >
           <LinkIcon className="w-4 h-4" />
@@ -141,7 +152,8 @@ export function MarkdownEditor({
         <button
           type="button"
           onClick={() => insertMarkdown('`', '`')}
-          className="p-2 hover:bg-background-secondary rounded transition-colors"
+          disabled={disabled}
+          className="p-2 hover:bg-background-secondary rounded transition-colors disabled:cursor-not-allowed disabled:hover:bg-transparent"
           title="Inline Code"
         >
           <Code className="w-4 h-4" />
@@ -185,6 +197,8 @@ export function MarkdownEditor({
             onChange={handleChange}
             maxLength={maxLength}
             required={required}
+            disabled={disabled}
+            placeholder={placeholder}
             className={`
               w-full p-4 font-mono text-sm
               bg-background-elevated
@@ -192,6 +206,7 @@ export function MarkdownEditor({
               text-text-primary
               resize-y
               focus:outline-none focus:ring-2
+              disabled:opacity-50 disabled:cursor-not-allowed
               ${
                 error
                   ? "border-danger focus:ring-danger/20"
@@ -199,7 +214,6 @@ export function MarkdownEditor({
               }
             `}
             style={{ minHeight }}
-            placeholder="Type markdown here..."
           />
         </div>
 

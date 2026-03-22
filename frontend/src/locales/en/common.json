@@ -220,7 +220,18 @@
       "invitationSent": "Invitation email sent successfully",
       "invitationResent": "Invitation email resent successfully",
       "createSuccess": "User created successfully. Invitation email sent."
-    }
+    },
+    "selectUsers": "Select",
+    "cancelSelection": "Cancel",
+    "selectedCount": "{count} selected",
+    "assignToYear": "Assign to Year",
+    "assignToYearTitle": "Assign to Year",
+    "assignToYearDescription": "Select the academic year to assign to the selected users.",
+    "yearLabel": "Academic Year",
+    "selectYear": "Select a year",
+    "clearYear": "Clear year assignment",
+    "bulkAssignYearSuccess": "Assigned {count} users to year",
+    "bulkAssignYearFailed": "Failed to assign year"
   },
   "projects": {
     "supervisor": "Supervisor",

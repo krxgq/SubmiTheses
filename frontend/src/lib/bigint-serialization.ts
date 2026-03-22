@@ -9,9 +9,3 @@
   return this.toString();
 };
 
-// Log to confirm this file is loaded
-if (typeof window === 'undefined') {
-  console.log('[Server] BigInt serialization enabled');
-} else {
-  console.log('[Client] BigInt serialization enabled');
-}

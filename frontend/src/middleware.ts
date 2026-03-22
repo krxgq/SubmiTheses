@@ -81,8 +81,6 @@ export async function middleware(request: NextRequest) {
           const hasAccess = checkRouteAccess(userRole, routeConfig, userId, pathParams);
 
           if (!hasAccess) {
-            console.log('[Middleware] Access denied, rewriting to access-denied page');
-
             // Rewrite to access-denied page (preserves URL in browser, stops original page execution)
             const accessDeniedUrl = new URL(`/${locale}/access-denied`, request.url);
             const newResponse = NextResponse.rewrite(accessDeniedUrl);
@@ -105,7 +103,6 @@ export async function middleware(request: NextRequest) {
         return newResponse;
       } catch (error) {
         // JWT verification failed (expired, invalid signature, etc.)
-        console.log('[Middleware] JWT verification failed:', error);
         return NextResponse.redirect(new URL(`/${locale}/auth`, request.url));
       }
     }

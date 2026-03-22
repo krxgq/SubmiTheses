@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Download, Trash2, FileText, Loader2 } from 'lucide-react';
+import { Download, Trash2, FileText } from 'lucide-react';
 import UploadField from './UploadField';
 import {
   uploadAttachment,
@@ -11,7 +11,9 @@ import {
   deleteAttachment,
   type Attachment,
 } from '@/lib/api/attachments';
-import { Button, Modal, Progress } from 'flowbite-react';
+import { Progress } from 'flowbite-react';
+import { Button } from '@/components/ui/Button';
+import { Modal, ModalActions } from '@/components/ui/Modal';
 import { useAuth } from '@/hooks/useAuth';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { useTranslations } from 'next-intl';
@@ -279,39 +281,37 @@ export default function AttachmentsTab({ projectId, project }: AttachmentsTabPro
 
       {/* Delete Confirmation Modal */}
       <Modal
-        show={deleteModalOpen}
+        isOpen={deleteModalOpen}
         onClose={() => !isDeleting && setDeleteModalOpen(false)}
+        title={t('deleteTitle')}
         size="md"
-      >
-        <div className="p-6">
-          <h3 className="text-xl font-semibold text-text-primary mb-4">{t('deleteTitle')}</h3>
-          <div className="space-y-4">
-            <p className="text-text-primary">
-              {t('deleteMessage', { filename: attachmentToDelete?.filename || '' })}
-            </p>
-            <p className="text-text-secondary text-sm">
-              {t('deleteDescription')}
-            </p>
-          </div>
-          <div className="flex gap-3 mt-6">
+        footer={
+          <ModalActions>
             <Button
-              className="bg-danger hover:bg-danger-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all"
-              onClick={handleDeleteConfirm}
+              variant="secondary"
+              onClick={() => setDeleteModalOpen(false)}
               disabled={isDeleting}
             >
-              {isDeleting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {t('deleting')}
-                </>
-              ) : (
-                t('delete')
-              )}
-            </Button>
-            <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={() => setDeleteModalOpen(false)} disabled={isDeleting}>
               {tButtons('cancel')}
             </Button>
-          </div>
+            <Button
+              variant="danger"
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              loading={isDeleting}
+            >
+              {t('delete')}
+            </Button>
+          </ModalActions>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-text-primary">
+            {t('deleteMessage', { filename: attachmentToDelete?.filename || '' })}
+          </p>
+          <p className="text-text-secondary text-sm">
+            {t('deleteDescription')}
+          </p>
         </div>
       </Modal>
     </div>

@@ -220,7 +220,18 @@
       "invitationSent": "Pozvánka byla úspěšně odeslána",
       "invitationResent": "Pozvánka byla úspěšně znovu odeslána",
       "createSuccess": "Uživatel byl úspěšně vytvořen. Pozvánka byla odeslána."
-    }
+    },
+    "selectUsers": "Vybrat",
+    "cancelSelection": "Zrušit",
+    "selectedCount": "{count} vybráno",
+    "assignToYear": "Přiřadit ročník",
+    "assignToYearTitle": "Přiřadit ročník",
+    "assignToYearDescription": "Vyberte akademický ročník pro vybrané uživatele.",
+    "yearLabel": "Akademický ročník",
+    "selectYear": "Vyberte ročník",
+    "clearYear": "Zrušit přiřazení ročníku",
+    "bulkAssignYearSuccess": "Přiřazeno {count} uživatelů k ročníku",
+    "bulkAssignYearFailed": "Nepodařilo se přiřadit ročník"
   },
   "projects": {
     "supervisor": "Vedoucí",

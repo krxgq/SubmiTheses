@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
 import { Save, Calculator, UserCheck, CheckCircle, AlertCircle, Clock, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 
 // Grading status returned from backend
 interface GradingStatus {
@@ -275,24 +276,20 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
         <span className="text-2xl font-bold text-primary">{weightedAvg}%</span>
       </div>
 
-      {/* Posudek (written evaluation) textarea */}
+      {/* Posudek (written evaluation) — markdown editor with toolbar + preview */}
       <div className="p-4 bg-background-elevated border border-border rounded-lg space-y-2">
-        <label className="block font-semibold text-text-primary">
-          {t('posudekLabel')}
-        </label>
         <p className="text-sm text-text-secondary">{t('posudekHint')}</p>
-        <textarea
+        <MarkdownEditor
+          label={t('posudekLabel')}
+          id="posudek"
           value={posudekText}
-          onChange={(e) => setPosudekText(e.target.value)}
+          onChange={setPosudekText}
           maxLength={10000}
+          showCharCount
           disabled={!canGrade}
           placeholder={t('posudekPlaceholder')}
-          rows={6}
-          className="w-full px-3 py-2 border border-border rounded-lg bg-background text-text-primary placeholder:text-text-secondary/50 focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+          minHeight={150}
         />
-        <div className="text-xs text-text-secondary text-right">
-          {posudekText.length} / 10000
-        </div>
       </div>
 
       {/* Submit button */}
