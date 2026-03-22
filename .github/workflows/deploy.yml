@@ -65,6 +65,8 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=https://submitheses.app/api
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/${{ matrix.service }}:${{ github.sha }}

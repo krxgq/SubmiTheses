@@ -32,6 +32,10 @@ WORKDIR /app/frontend
 # Ensure public dir exists (git doesn't track empty directories)
 RUN mkdir -p public
 
+# Set public API URL at build time (NEXT_PUBLIC_* vars are baked in during build)
+ARG NEXT_PUBLIC_API_URL=http://localhost:5000/api
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 # Build the Next.js application (uses standalone output)
 RUN pnpm build
 
