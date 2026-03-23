@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { MoreVertical, Edit, Trash2, Eye, KeyRound } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, Eye, KeyRound, Mail } from 'lucide-react';
 import { useRouter } from '@/lib/navigation';
 import { toast } from 'sonner';
 import { usersApi } from '@/lib/api/users';
@@ -11,15 +11,18 @@ import { Button } from '@/components/ui/Button';
 
 interface UserActionsMenuProps {
   userId: string;
+  emailVerified: boolean;
   onUserDeleted?: () => void;
 }
 
-export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps) {
+export function UserActionsMenu({ userId, emailVerified, onUserDeleted }: UserActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
+  const [showResendModal, setShowResendModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [isResending, setIsResending] = useState(false);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -103,6 +106,24 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
     }
   };
 
+  const handleResendInvitation = () => {
+    setShowResendModal(true);
+    setIsOpen(false);
+  };
+
+  const handleResendConfirm = async () => {
+    setIsResending(true);
+    try {
+      await usersApi.resendInvitation(userId);
+      toast.success('Invitation email resent successfully');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to resend invitation email');
+    } finally {
+      setIsResending(false);
+      setShowResendModal(false);
+    }
+  };
+
   const handleDelete = () => {
     setShowDeleteModal(true);
     setIsOpen(false);
@@ -164,6 +185,16 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
               Edit User
             </button>
 
+            {!emailVerified && (
+              <button
+                onClick={handleResendInvitation}
+                className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-background-hover transition-colors"
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Resend Invitation
+              </button>
+            )}
+
             <button
               onClick={handleResetPassword}
               className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-background-hover transition-colors"
@@ -212,6 +243,37 @@ export function UserActionsMenu({ userId, onUserDeleted }: UserActionsMenuProps)
       >
         <p className="text-text-secondary">
           The user will receive an email with a link to set a new password. Their current password will be invalidated immediately.
+        </p>
+      </Modal>
+
+      {/* Resend Invitation Confirmation Modal */}
+      <Modal
+        isOpen={showResendModal}
+        onClose={() => setShowResendModal(false)}
+        title="Resend Invitation"
+        description="Resend the invitation email to this user?"
+        size="sm"
+        footer={
+          <ModalActions>
+            <Button
+              variant="secondary"
+              onClick={() => setShowResendModal(false)}
+              disabled={isResending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleResendConfirm}
+              disabled={isResending}
+            >
+              {isResending ? 'Sending...' : 'Send Invitation'}
+            </Button>
+          </ModalActions>
+        }
+      >
+        <p className="text-text-secondary">
+          A new invitation email will be sent with a fresh link to set up their password. The previous link will be invalidated.
         </p>
       </Modal>
 

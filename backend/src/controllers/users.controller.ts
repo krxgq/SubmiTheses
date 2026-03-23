@@ -35,8 +35,13 @@ export async function createUser(req: Request, res: Response) {
     // Generate invitation token (30-day expiry)
     const token = await InvitationService.createInvitation(user.id);
 
-    // Send invitation email with password setup link
-    await EmailService.sendInvitationEmail(email, first_name, token);
+    // Send invitation email — roll back user if email fails
+    try {
+      await EmailService.sendInvitationEmail(email, first_name, token);
+    } catch (emailError) {
+      await UserService.deleteUser(user.id);
+      throw emailError;
+    }
 
     return res.status(201).json({
       user,

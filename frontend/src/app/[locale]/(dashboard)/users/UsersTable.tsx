@@ -250,6 +250,7 @@ export function UsersTable({ users: initialUsers }: UsersTableProps) {
                     <td className="px-6 py-4">
                       <UserActionsMenu
                         userId={user.id}
+                        emailVerified={user.email_verified}
                         onUserDeleted={() => handleUserDeleted(user.id)}
                       />
                     </td>
