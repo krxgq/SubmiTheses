@@ -90,4 +90,4 @@ jobs:
             git checkout origin/main -- docker-compose.prod.yml
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --no-build
+            docker compose -f docker-compose.prod.yml up -d --no-build --force-recreate
