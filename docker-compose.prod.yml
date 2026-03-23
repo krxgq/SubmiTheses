@@ -84,6 +84,11 @@ services:
       - SMTP_FROM_NAME=${SMTP_FROM_NAME:-SumbiTheses System}
       - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
       - APP_URL=${APP_URL:-http://localhost:3000}
+      # Microsoft OAuth
+      - MICROSOFT_CLIENT_ID=${MICROSOFT_CLIENT_ID}
+      - MICROSOFT_CLIENT_SECRET=${MICROSOFT_CLIENT_SECRET}
+      - MICROSOFT_TENANT_ID=${MICROSOFT_TENANT_ID}
+      - MICROSOFT_REDIRECT_URI=${MICROSOFT_REDIRECT_URI}
       # S3-compatible storage (Garage)
       - S3_ENDPOINT=${S3_ENDPOINT:-http://garage:3900}
       - AWS_REGION=${AWS_REGION:-garage}
