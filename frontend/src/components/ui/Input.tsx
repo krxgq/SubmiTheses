@@ -112,7 +112,7 @@ export function Input({
         className={`
           absolute transition-all duration-200 pointer-events-none text-text-secondary!
           ${hasLeftIcon ? "left-10" : "left-4"}
-          ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
+          ${isFloating ? "top-1.5 text-xs bg-background-elevated px-1" : "top-3.5 text-sm"}
           ${error ? "text-danger" : ""}
         `}
       >

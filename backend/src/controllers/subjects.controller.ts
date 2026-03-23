@@ -123,4 +123,21 @@ export class SubjectsController {
       next(error);
     }
   }
+
+  /**
+   * POST /subjects/:id/activate - Activate subject (admin only)
+   */
+  static async activateSubject(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const id = BigInt(req.params.id);
+      const subject = await SubjectsService.activateSubject(id);
+      res.json(subject);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

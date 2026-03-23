@@ -6,7 +6,7 @@ import { Link, useRouter } from '@/lib/navigation';
 import { Button } from 'flowbite-react';
 import { Plus, MoreVertical } from 'lucide-react';
 import type { Subject } from '@/lib/api/subjects';
-import { deleteSubject, deactivateSubject } from '@/lib/api/subjects';
+import { deleteSubject, deactivateSubject, activateSubject } from '@/lib/api/subjects';
 
 interface SubjectsTableProps {
   subjects: Subject[];
@@ -69,6 +69,16 @@ export function SubjectsTable({ subjects }: SubjectsTableProps) {
     }
   };
 
+  const handleActivate = async (id: bigint) => {
+    try {
+      await activateSubject(id);
+      router.refresh();
+    } catch (error) {
+      alert('Failed to activate subject.');
+      console.error(error);
+    }
+  };
+
   return (
     <div className="w-full">
       <div className="mb-6 flex items-center justify-between">
@@ -86,7 +96,7 @@ export function SubjectsTable({ subjects }: SubjectsTableProps) {
           </select>
 
           <Link href="/admin/subjects/create">
-            <Button size="sm" className="flex items-center bg-primary text-text-inverse hover:bg-primary">
+            <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all">
               <Plus className="w-4 h-4 mr-2" />
               {t('create')}
             </Button>
@@ -165,7 +175,8 @@ export function SubjectsTable({ subjects }: SubjectsTableProps) {
                             >
                               Edit
                             </Link>
-                            {subject.is_active && (
+                            {/* Toggle active/inactive status */}
+                            {subject.is_active ? (
                               <button
                                 onClick={() => {
                                   handleDeactivate(subject.id);
@@ -175,6 +186,17 @@ export function SubjectsTable({ subjects }: SubjectsTableProps) {
                                 className="block w-full text-left px-4 py-2 text-sm text-text-primary hover:bg-background-hover"
                               >
                                 Deactivate
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  handleActivate(subject.id);
+                                  setActionMenuOpen(null);
+                                  setMenuPosition(null);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm text-success hover:bg-success/10"
+                              >
+                                Activate
                               </button>
                             )}
                             <button

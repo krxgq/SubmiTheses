@@ -64,4 +64,13 @@ router.post(
   SubjectsController.deactivateSubject
 );
 
+router.post(
+  '/:id/activate',
+  authenticated,
+  sensitiveWriteRateLimiter,
+  requireRoles(['admin']),
+  validate(subjectIdSchema),
+  SubjectsController.activateSubject
+);
+
 export default router;

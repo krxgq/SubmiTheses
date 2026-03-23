@@ -92,12 +92,12 @@ export function FilterMenu({ onFilterChange }: FilterMenuProps) {
                 </label>
                 <div className="space-y-2">
                   {['admin', 'teacher', 'student'].map((role) => (
-                    <label key={role} className="flex items-center cursor-pointer">
+                    <label key={role} className="flex items-center cursor-pointer px-2 py-1.5 rounded-lg hover:bg-background-hover transition-colors">
                       <input
                         type="checkbox"
                         checked={filters.role?.includes(role) || false}
                         onChange={() => handleRoleToggle(role)}
-                        className="mr-2"
+                        className="mr-2.5 w-4 h-4 rounded border-border text-interactive-primary focus:ring-interactive-primary/20"
                       />
                       <span className="text-sm text-text-primary capitalize">
                         {role}

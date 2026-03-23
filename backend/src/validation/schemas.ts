@@ -95,7 +95,7 @@ export const createProjectSchema = z.object({
       // Nested project description (optional but recommended)
       project_description: z
         .object({
-          topic: z.string().min(1),
+          topic: z.string().min(1).max(150, "Topic must be at most 150 characters"),
           project_goal: z.string().min(10),
           specification: z.string().min(20),
           needed_output: z.array(z.string().min(3)).min(1),
@@ -140,7 +140,7 @@ export const updateProjectSchema = z.object({
     year_id: z.coerce.bigint().optional(),
     project_description: z
       .object({
-        topic: z.string().optional(),
+        topic: z.string().max(150, "Topic must be at most 150 characters").optional(),
         project_goal: z.string().optional(),
         specification: z.string().optional(),
         needed_output: z.array(z.string().min(3)).optional(),
@@ -366,7 +366,13 @@ export const createYearSchema = z.object({
     assignment_date: z.string().datetime().or(z.coerce.date()),
     submission_date: z.string().datetime().or(z.coerce.date()),
     feedback_date: z.string().datetime().or(z.coerce.date()),
-  }),
+  }).refine(
+    (data) => new Date(data.assignment_date) < new Date(data.submission_date),
+    { message: "Assignment date must be before submission date", path: ["assignment_date"] }
+  ).refine(
+    (data) => new Date(data.submission_date) < new Date(data.feedback_date),
+    { message: "Submission date must be before feedback date", path: ["submission_date"] }
+  ),
 });
 
 export const updateYearSchema = z.object({
@@ -375,7 +381,24 @@ export const updateYearSchema = z.object({
     assignment_date: z.string().datetime().or(z.coerce.date()).optional(),
     submission_date: z.string().datetime().or(z.coerce.date()).optional(),
     feedback_date: z.string().datetime().or(z.coerce.date()).optional(),
-  }),
+  }).refine(
+    (data) => {
+      // Only validate if both dates are provided
+      if (data.assignment_date && data.submission_date) {
+        return new Date(data.assignment_date) < new Date(data.submission_date);
+      }
+      return true;
+    },
+    { message: "Assignment date must be before submission date", path: ["assignment_date"] }
+  ).refine(
+    (data) => {
+      if (data.submission_date && data.feedback_date) {
+        return new Date(data.submission_date) < new Date(data.feedback_date);
+      }
+      return true;
+    },
+    { message: "Submission date must be before feedback date", path: ["submission_date"] }
+  ),
   params: z.object({
     id: z.coerce.bigint(),
   }),

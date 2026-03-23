@@ -84,3 +84,12 @@ export async function deactivateSubject(id: bigint): Promise<Subject> {
     method: 'POST',
   });
 }
+
+/**
+ * Activate a previously deactivated subject (admin only)
+ */
+export async function activateSubject(id: bigint): Promise<Subject> {
+  return apiRequest<Subject>(`/subjects/${id}/activate`, {
+    method: 'POST',
+  });
+}

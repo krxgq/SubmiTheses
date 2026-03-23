@@ -88,6 +88,12 @@ export default function Breadcrumbs() {
       settings: "Settings",
       schools: t("sidebar.schools"),
       edit: t("common.edit") || "Edit",
+      admin: t("admin.title"),
+      subjects: t("admin.subjects.title"),
+      scales: t("admin.scales.title"),
+      years: t("admin.years.title"),
+      create: t("admin.subjects.create"),
+      "scale-sets": t("admin.scaleSets.title"),
     };
 
     return (
@@ -96,10 +102,19 @@ export default function Breadcrumbs() {
     );
   };
 
+  // Segments that are tabs on /admin (no standalone page)
+  const adminTabSegments = new Set(['subjects', 'scales', 'years', 'scale-sets']);
+
   const breadcrumbItems = pathSegments.map((segment, index) => {
-    const href = "/" + pathSegments.slice(0, index + 1).join("/");
+    let href = "/" + pathSegments.slice(0, index + 1).join("/");
     const label = getSegmentLabel(segment, index);
     const isLast = index === pathSegments.length - 1;
+
+    // Redirect admin tab segments to /admin since they don't have standalone pages
+    const parentSegment = pathSegments[index - 1];
+    if (parentSegment === 'admin' && adminTabSegments.has(segment)) {
+      href = '/admin';
+    }
 
     return {
       href,

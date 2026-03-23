@@ -94,7 +94,7 @@ export function Select({
         htmlFor={id}
         className={`
           absolute transition-all duration-200 pointer-events-none left-4 text-text-secondary!
-          ${isFloating ? "top-1.5 text-xs" : "top-3.5 text-sm"}
+          ${isFloating ? "top-1.5 text-xs bg-background-elevated px-1" : "top-3.5 text-sm"}
           ${error ? "text-danger" : ""}
         `}
       >

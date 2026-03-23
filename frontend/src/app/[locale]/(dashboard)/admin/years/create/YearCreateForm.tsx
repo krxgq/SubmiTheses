@@ -115,6 +115,19 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
   // Step 1: Create year
   const handleCreateYear = async () => {
     setError('');
+
+    // Validate date ordering before sending to backend
+    if (yearData.assignment_date && yearData.submission_date &&
+        new Date(yearData.assignment_date) >= new Date(yearData.submission_date)) {
+      setError('Assignment date must be before submission date');
+      return;
+    }
+    if (yearData.submission_date && yearData.feedback_date &&
+        new Date(yearData.submission_date) >= new Date(yearData.feedback_date)) {
+      setError('Submission date must be before feedback date');
+      return;
+    }
+
     setLoading(true);
 
     try {

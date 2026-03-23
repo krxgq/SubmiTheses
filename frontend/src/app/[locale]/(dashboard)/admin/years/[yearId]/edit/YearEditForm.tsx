@@ -58,6 +58,19 @@ export function YearEditForm({ year }: YearEditFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate date ordering before sending to backend
+    if (formData.assignment_date && formData.submission_date &&
+        new Date(formData.assignment_date) >= new Date(formData.submission_date)) {
+      setError('Assignment date must be before submission date');
+      return;
+    }
+    if (formData.submission_date && formData.feedback_date &&
+        new Date(formData.submission_date) >= new Date(formData.feedback_date)) {
+      setError('Submission date must be before feedback date');
+      return;
+    }
+
     setLoading(true);
 
     try {

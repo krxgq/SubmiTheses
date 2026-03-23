@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
-import { Button } from "flowbite-react";
+import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { authService } from "@/lib/auth";
 import { Avatar } from "@/components/ui/Avatar";
@@ -204,8 +204,8 @@ export default function SettingsPageClient() {
             </div>
           )}
 
-          <Button type="submit" disabled={updatingProfile}>
-            {updatingProfile ? "Updating..." : "Update Profile"}
+          <Button type="submit" loading={updatingProfile}>
+            Update Profile
           </Button>
         </form>
       </div>
@@ -238,8 +238,8 @@ export default function SettingsPageClient() {
             </div>
           )}
 
-          <Button type="submit" disabled={updatingEmail}>
-            {updatingEmail ? "Updating..." : "Update Email"}
+          <Button type="submit" loading={updatingEmail}>
+            Update Email
           </Button>
         </form>
       </div>
@@ -309,8 +309,8 @@ export default function SettingsPageClient() {
               </div>
             )}
 
-            <Button type="submit" disabled={settingPassword}>
-              {settingPassword ? "Setting Password..." : "Set Password"}
+            <Button type="submit" loading={settingPassword}>
+              Set Password
             </Button>
           </form>
         </div>
@@ -338,8 +338,8 @@ export default function SettingsPageClient() {
               </div>
             )}
 
-            <Button type="submit" disabled={updatingPassword}>
-              {updatingPassword ? "Updating..." : "Update Password"}
+            <Button type="submit" loading={updatingPassword}>
+              Update Password
             </Button>
           </form>
         </div>

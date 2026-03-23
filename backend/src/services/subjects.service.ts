@@ -165,4 +165,23 @@ export class SubjectsService {
 
     return subject;
   }
+
+  /**
+   * Activate a previously deactivated subject - admin only
+   */
+  static async activateSubject(id: bigint) {
+    const subject = await prisma.subjects.update({
+      where: { id },
+      data: {
+        is_active: true,
+        updated_at: new Date(),
+      },
+    });
+
+    await cache.delete(`subject:${id}`);
+    await cache.delete('subjects:all');
+    await cache.delete('subjects:active');
+
+    return subject;
+  }
 }

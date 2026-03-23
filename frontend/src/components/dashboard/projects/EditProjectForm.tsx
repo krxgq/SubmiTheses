@@ -157,6 +157,8 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
             name="topic"
             value={formData.topic}
             onChange={(e) => updateField("topic", e.target.value)}
+            maxLength={150}
+            showCharCount
           />
 
           <Textarea
