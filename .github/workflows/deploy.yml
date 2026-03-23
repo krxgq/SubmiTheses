@@ -86,8 +86,8 @@ jobs:
           script_stop: true
           script: |
             cd ${{ secrets.APP_DIR }}
-            git pull origin main
+            git fetch origin main
+            git checkout origin/main -- docker-compose.prod.yml
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --no-build
-            docker exec submitheses-backend npx prisma migrate deploy
