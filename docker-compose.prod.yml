@@ -76,6 +76,7 @@ services:
       - DIRECT_URL=${DIRECT_URL}
       - REDIS_URL=redis://redis:6379
       - REDIS_ENABLED=true
+      - RESEND_API_KEY=${RESEND_API_KEY}
       - SMTP_HOST=${SMTP_HOST}
       - SMTP_PORT=${SMTP_PORT:-587}
       - SMTP_SECURE=${SMTP_SECURE:-false}
