@@ -346,12 +346,24 @@
       "assignmentDate": "Assignment Date",
       "submissionDate": "Submission Date",
       "feedbackDate": "Feedback Date",
+      "assignmentDateHelper": "When projects are assigned to students",
+      "submissionDateHelper": "When students must submit their theses",
+      "feedbackDateHelper": "Final deadline for reviews and grading",
+      "academicYearHelper": "Modify the academic year range",
+      "saveChanges": "Save Changes",
+      "saving": "Saving...",
+      "cancel": "Cancel",
       "status": "Status",
       "actions": "Actions",
       "statuses": {
         "active": "Active",
         "past": "Past",
         "future": "Future"
+      },
+      "errors": {
+        "assignmentBeforeSubmission": "Assignment date must be before submission date",
+        "submissionBeforeFeedback": "Submission date must be before feedback date",
+        "updateFailed": "Failed to update year"
       }
     }
   },

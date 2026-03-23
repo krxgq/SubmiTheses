@@ -98,7 +98,7 @@ export function YearsTable({ years }: YearsTableProps) {
           )}
 
           <Link href="/admin/years/create">
-            <Button size="sm" className="flex items-center bg-primary text-text-inverse hover:bg-primary">
+            <Button size="sm" className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all flex items-center">
               <Plus className="w-4 h-4 mr-2" />
               {t('create')}
             </Button>

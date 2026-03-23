@@ -346,12 +346,24 @@
       "assignmentDate": "Datum přidělení",
       "submissionDate": "Datum odevzdání",
       "feedbackDate": "Datum zpětné vazby",
+      "assignmentDateHelper": "Kdy jsou projekty přiděleny studentům",
+      "submissionDateHelper": "Kdy studenti musí odevzdat práce",
+      "feedbackDateHelper": "Konečný termín pro hodnocení a známkování",
+      "academicYearHelper": "Upravit rozsah akademického roku",
+      "saveChanges": "Uložit změny",
+      "saving": "Ukládání...",
+      "cancel": "Zrušit",
       "status": "Stav",
       "actions": "Akce",
       "statuses": {
         "active": "Aktivní",
         "past": "Minulý",
         "future": "Budoucí"
+      },
+      "errors": {
+        "assignmentBeforeSubmission": "Datum přidělení musí být před datem odevzdání",
+        "submissionBeforeFeedback": "Datum odevzdání musí být před datem zpětné vazby",
+        "updateFailed": "Nepodařilo se aktualizovat ročník"
       }
     }
   },

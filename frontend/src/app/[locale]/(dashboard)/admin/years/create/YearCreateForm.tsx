@@ -269,6 +269,7 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
             value={yearData.assignment_date}
             onChange={(e) => setYearData({ ...yearData, assignment_date: e.target.value })}
             required
+            max={yearData.submission_date || undefined}
             helperText="When projects are assigned to students"
           />
 
@@ -279,6 +280,8 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
             value={yearData.submission_date}
             onChange={(e) => setYearData({ ...yearData, submission_date: e.target.value })}
             required
+            min={yearData.assignment_date || undefined}
+            max={yearData.feedback_date || undefined}
             helperText="When students must submit their theses"
           />
 
@@ -289,6 +292,7 @@ export function YearCreateForm({ cloneSourceYear, cloneSourceScaleSets }: YearCr
             value={yearData.feedback_date}
             onChange={(e) => setYearData({ ...yearData, feedback_date: e.target.value })}
             required
+            min={yearData.submission_date || undefined}
             helperText="Final deadline for reviews and grading"
           />
 

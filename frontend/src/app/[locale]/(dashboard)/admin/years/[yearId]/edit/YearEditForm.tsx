@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from '@/lib/navigation';
-import { Button } from 'flowbite-react';
+import { useTranslations } from 'next-intl';
+import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AcademicYearSelector } from '@/components/ui/AcademicYearSelector';
 import { updateYear, type Year } from '@/lib/api/years';
@@ -23,6 +24,7 @@ interface YearFormData {
 // Client component for editing year details
 export function YearEditForm({ year }: YearEditFormProps) {
   const router = useRouter();
+  const t = useTranslations('admin.years');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -62,12 +64,12 @@ export function YearEditForm({ year }: YearEditFormProps) {
     // Validate date ordering before sending to backend
     if (formData.assignment_date && formData.submission_date &&
         new Date(formData.assignment_date) >= new Date(formData.submission_date)) {
-      setError('Assignment date must be before submission date');
+      setError(t('errors.assignmentBeforeSubmission'));
       return;
     }
     if (formData.submission_date && formData.feedback_date &&
         new Date(formData.submission_date) >= new Date(formData.feedback_date)) {
-      setError('Submission date must be before feedback date');
+      setError(t('errors.submissionBeforeFeedback'));
       return;
     }
 
@@ -78,48 +80,53 @@ export function YearEditForm({ year }: YearEditFormProps) {
       router.push('/admin');
       router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to update year');
+      setError(err.message || t('errors.updateFailed'));
       setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 bg-background-elevated p-6 rounded-xl border border-border">
-      <h2 className="text-lg font-semibold text-text-primary">Edit Year Details</h2>
+      <h2 className="text-lg font-semibold text-text-primary">{t('edit')}</h2>
 
       <AcademicYearSelector
-        label="Academic Year"
+        label={t('name')}
         value={startYear}
         onChange={setStartYear}
-        helperText="Modify the academic year range"
+        helperText={t('academicYearHelper')}
         required
       />
 
+      {/* min/max constraints give immediate feedback in the date picker */}
       <Input
-        label="Assignment Date"
+        label={t('assignmentDate')}
         id="assignment_date"
         type="date"
         value={formData.assignment_date}
         onChange={(e) => setFormData({ ...formData, assignment_date: e.target.value })}
-        helperText="When projects are assigned to students"
+        max={formData.submission_date || undefined}
+        helperText={t('assignmentDateHelper')}
       />
 
       <Input
-        label="Submission Date"
+        label={t('submissionDate')}
         id="submission_date"
         type="date"
         value={formData.submission_date}
         onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
-        helperText="When students must submit their theses"
+        min={formData.assignment_date || undefined}
+        max={formData.feedback_date || undefined}
+        helperText={t('submissionDateHelper')}
       />
 
       <Input
-        label="Feedback Date"
+        label={t('feedbackDate')}
         id="feedback_date"
         type="date"
         value={formData.feedback_date}
         onChange={(e) => setFormData({ ...formData, feedback_date: e.target.value })}
-        helperText="Final deadline for reviews and grading"
+        min={formData.submission_date || undefined}
+        helperText={t('feedbackDateHelper')}
       />
 
       {error && (
@@ -130,11 +137,11 @@ export function YearEditForm({ year }: YearEditFormProps) {
       )}
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={loading}>
-          {loading ? 'Saving...' : 'Save Changes'}
+        <Button type="submit" loading={loading}>
+          {t('saveChanges')}
         </Button>
-        <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={() => router.push('/admin')} type="button">
-          Cancel
+        <Button variant="secondary" onClick={() => router.push('/admin')} type="button">
+          {t('cancel')}
         </Button>
       </div>
     </form>
