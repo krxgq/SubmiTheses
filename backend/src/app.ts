@@ -14,6 +14,9 @@ import { deadlineQueue } from './queues/deadline.queue';
 
 const app: Express = express();
 
+// Trust reverse proxy (nginx) so rate limiter sees real client IPs
+app.set('trust proxy', 1);
+
 // Enable BigInt serialization globally
 // This allows Prisma BigInt values to be sent as strings in JSON responses
 (BigInt.prototype as any).toJSON = function() {
