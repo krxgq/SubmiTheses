@@ -85,10 +85,26 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script_stop: true
           script: |
+            set -e
             cd ${{ secrets.APP_DIR }}
-            # Reset tracked files to match remote, preserving .env
-            git fetch origin main
+
+            # Sync all tracked files to match remote main
+            echo "==> Fetching latest from origin..."
+            git fetch origin
+            echo "==> Resetting to origin/main ($(git rev-parse origin/main))..."
             git reset --hard origin/main
+
+            # Pull latest container images
+            echo "==> Logging in to GHCR..."
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
+            echo "==> Pulling images..."
             docker compose -f docker-compose.prod.yml pull
+
+            # Recreate containers with updated config
+            echo "==> Recreating containers..."
             docker compose -f docker-compose.prod.yml up -d --no-build --force-recreate
+
+            # Verify deployment
+            echo "==> Deploy complete. Running containers:"
+            docker compose -f docker-compose.prod.yml ps
+            echo "==> Server is at commit: $(git rev-parse HEAD)"
