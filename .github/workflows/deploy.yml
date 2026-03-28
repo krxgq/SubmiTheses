@@ -86,8 +86,9 @@ jobs:
           script_stop: true
           script: |
             cd ${{ secrets.APP_DIR }}
+            # Reset tracked files to match remote, preserving .env
             git fetch origin main
-            git checkout origin/main -- docker-compose.prod.yml
+            git reset --hard origin/main
             echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u ${{ secrets.GHCR_USER }} --password-stdin
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --no-build --force-recreate
