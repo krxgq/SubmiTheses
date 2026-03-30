@@ -1,5 +1,10 @@
 
 #show figure: set block(breakable: true)
+// "obr. 1" / "tab. 1" instead of "Obrázek 1" / "Tabulka 1"
+#show figure.where(kind: image): set figure(supplement: "obr.")
+#show figure.where(kind: table): set figure(supplement: "tab.")
+// Non-breaking space after single-letter Czech prepositions (k, s, v, z, o, u, i, a)
+#show regex("\\b[ksvzouiaKSVZOUIA]\\s"): it => it.text.first() + "\u{00a0}"
 #set page(
   paper: "a4",
   margin: (x: 2.5cm, top: 3cm, bottom: 3cm),
@@ -10,7 +15,7 @@
   lang: "cs",
 )
 #set par(
-  leading: 1.2em,  
+  leading: 1.2em,
   justify: true,
   spacing: 1em,
 )
@@ -167,7 +172,7 @@ Pro vývoj systému byly zvoleny následující technologie:
 
 - *Prisma ORM* – typově bezpečný objektově-relační mapovač, který zjednodušuje práci s databází a poskytuje automatické migrace schématu.
 
-- *AWS S3* – cloudové úložiště pro přílohy projektů. Zajišťuje škálovatelnost a spolehlivost ukládání souborů.
+- *Garage* – self-hosted S3-kompatibilní objektové úložiště pro přílohy projektů a profilové obrázky. Běží jako Docker kontejner v rámci infrastruktury aplikace.
 
 - *Redis* – in-memory databáze využívaná pro cachování často používaných dat a jako message broker pro frontu úloh BullMQ.
 
@@ -190,7 +195,7 @@ Systém SubmiTheses je navržen jako monorepo obsahující dvě hlavní části 
 
 *Backend* využívá Express.js a zpracovává veškerou aplikační logiku. Pro přístup k databázi PostgreSQL používá Prisma ORM, který zajišťuje typově bezpečnou práci s daty a automatické migrace schématu. Pro optimalizaci výkonu je implementována cache pomocí Redis, která ukládá často používaná data.
 
-*Ukládání souborů* je řešeno prostřednictvím cloudového úložiště AWS S3. Backend generuje pre-signed URL adresy, které umožňují frontendu nahrávat soubory přímo do S3 bez nutnosti průchodu dat přes server. Tento přístup snižuje zatížení backendu a zrychluje nahrávání velkých souborů.
+*Ukládání souborů* je řešeno prostřednictvím self-hosted S3-kompatibilního úložiště Garage. Backend generuje pre-signed URL adresy, které umožňují frontendu nahrávat soubory přímo do S3 bez nutnosti průchodu dat přes server. Tento přístup snižuje zatížení backendu a zrychluje nahrávání velkých souborů.
 
 *Fronta úloh* pro zpracování na pozadí využívá knihovnu BullMQ s Redis jako brokerem. Systém automaticky plánuje připomenutí blížících se termínů a zamykání projektů po uplynutí deadlinu. Konfigurovatelné dny připomenutí (výchozí 7, 3 a 1 den před termínem) jsou nastavitelné pro každý akademický rok.
 
@@ -200,6 +205,35 @@ Systém SubmiTheses je navržen jako monorepo obsahující dvě hlavní části 
   image("./architecture.drawio.png", width: 90%),
   caption: [Schéma architektury]
 ) <fig:architecture>
+
+=== Diagram případů užití
+
+Funkční požadavky systému jsou zachyceny formou diagramu případů užití (Use Case Diagram). Diagram je rozdělen do pěti tematických oblastí podle funkčních celků systému.
+
+#figure(
+  image("./diagrams/usecasediagram-a4-1.svg", width: 120%),
+  caption: [Případy užití — Veřejný přístup a autentizace (UC01–UC08)]
+) <fig:uc-1>
+
+#figure(
+  image("./diagrams/usecasediagram-a4-2.svg", width: 100%),
+  caption: [Případy užití — Správa projektů (UC09–UC17)]
+) <fig:uc-2>
+
+#figure(
+  image("./diagrams/usecasediagram-a4-3.svg", width: 100%),
+  caption: [Případy užití — Hodnocení a klasifikace (UC18–UC24)]
+) <fig:uc-3>
+
+#figure(
+  image("./diagrams/usecasediagram-a4-4.svg", width: 100%),
+  caption: [Případy užití — Administrace (UC25–UC32)]
+) <fig:uc-4>
+
+#figure(
+  image("./diagrams/usecasediagram-a4-5.svg", width: 100%),
+  caption: [Případy užití — Společné a automatizované procesy (UC33–UC36)]
+) <fig:uc-5>
 
 == Datový model
 
@@ -398,7 +432,20 @@ Zdrojový kód backendu je organizován v adresáři `backend/src/` do následuj
 - `types/` – TypeScript typy specifické pro backend.
 - `utils/` – pomocné funkce (formátování dat, generování tokenů apod.).
 
-Tato struktura sleduje princip oddělení odpovědností – HTTP vrstva (controllers/routes) je oddělena od business logiky (services), což usnadňuje testování a údržbu kódu.
+Tato struktura sleduje princip oddělení odpovědností – HTTP vrstva (controllers/routes) je oddělena od business logiky (services), což usnadňuje testování a údržbu kódu. Přehled klíčových servisních tříd a jejich vzájemných závislostí je znázorněn na @fig:class-diagram.
+
+Diagram tříd zachycuje hlavní servisní vrstvu backendu, zejména odpovědnosti jednotlivých služeb a vazby mezi nimi. Z diagramu je patrné, které služby tvoří jádro autentizace, správy projektů, notifikací a plánování termínů a jak spolu tyto části spolupracují.
+
+// Class diagram — rotated landscape on its own page for readability
+
+#page(numbering: none, margin: 1cm)[
+  #figure(
+    align(center + horizon)[
+      #rotate(90deg, reflow: true, image("./diagrams/class-services.svg", width: 26cm))
+    ],
+    caption: [Diagram tříd — servisní vrstva backendu]
+  ) <fig:class-diagram>
+]
 
 ==== Fronta úloh a plánování termínů
 
@@ -584,7 +631,7 @@ Systém SubmiTheses je kontejnerizován pomocí Dockeru, což umožňuje konzist
 
 Backend aplikace využívá vícefázový (multi-stage) Dockerfile pro optimalizaci velikosti výsledného obrazu:
 
-- *Build fáze* – nainstaluje závislosti, vygeneruje Prisma klienta a zkompiluje TypeScript do JavaScriptu. Jako základní obraz slouží `node:latest` (Alpine varianta).
+- *Build fáze* – nainstaluje závislosti, vygeneruje Prisma klienta a zkompiluje TypeScript do JavaScriptu. Jako základní obraz slouží `node:latest`.
 - *Produkční fáze* – obsahuje pouze produkční závislosti a zkompilovaný kód. Výsledný obraz je výrazně menší než vývojový.
 
 Celá infrastruktura je definována v souboru `docker-compose.prod.yml`, který orchestruje pět služeb:
@@ -649,7 +696,8 @@ Po prvním spuštění kontejnerů (`docker compose up -d`) je nutné provést j
     inset: 6pt,
     align: (left, left, left),
     table.header([*Proměnná*], [*Popis*], [*Výchozí hodnota*]),
-    [`S3_ENDPOINT`], [URL S3 API Garage], [`http://garage:3900`],
+    [`S3_ENDPOINT`], [Interní URL S3 API Garage (Docker síť)], [`http://garage:3900`],
+    [`S3_PUBLIC_ENDPOINT`], [Veřejná URL pro pre-signed URL (přes Nginx)], [`https://s3.submitheses.app`],
     [`AWS_REGION`], [Region (musí odpovídat `garage.toml`)], [`garage`],
     [`AWS_ACCESS_KEY_ID`], [ID přístupového klíče Garage], [—],
     [`AWS_SECRET_ACCESS_KEY`], [Tajný klíč Garage], [—],
@@ -667,13 +715,29 @@ docker exec submitheses-garage /garage bucket info sumbitheses-attachments
 
 V případě problémů s přístupem (chyba `AccessDenied`) je třeba ověřit oprávnění klíče příkazem `garage key info` a zkontrolovat shodu přihlašovacích údajů v `.env`. Pokud pre-signed URL adresy nefungují, je nutné ověřit, že `S3_ENDPOINT` ukazuje na správnou adresu – při běhu v Dockeru `http://garage:3900`, při lokálním vývoji `http://localhost:3900`.
 
+=== Reverzní proxy (Nginx)
+
+Aplikace vyžaduje Nginx jako reverzní proxy se dvěma server bloky:
+
+- *`submitheses.app`* – frontend (port 3000) a backend API (port 5000)
+- *`s3.submitheses.app`* – Garage S3 úložiště (port 3900)
+
+Samostatná subdoména pro S3 je nutná, protože pre-signed URL obsahují podpis zahrnující celou cestu – přepis cesty by podpis zneplatnil. Referenční konfigurace je v adresáři `nginx/`. SSL certifikáty lze získat pomocí Certbot:
+```bash
+sudo certbot --nginx -d submitheses.app -d s3.submitheses.app
+```
+
 === Manuální nasazení
 
 Postup manuálního nasazení na server:
 
 + Naklonovat repozitář: `git clone <repo-url>`
 + Vytvořit soubor `.env` s produkčními proměnnými prostředí
++ Nastavit Nginx – zkopírovat konfigurační soubory z `nginx/` do `/etc/nginx/sites-enabled/`
++ Vytvořit DNS A záznamy pro `submitheses.app` a `s3.submitheses.app`
++ Získat SSL certifikáty: `sudo certbot --nginx -d submitheses.app -d s3.submitheses.app`
 + Spustit aplikaci: `docker compose -f docker-compose.prod.yml up -d --build`
++ Provést inicializaci Garage (viz sekce Úložiště souborů)
 + Provést databázové migrace: `docker exec submitheses-backend npx prisma migrate deploy`
 
 Pro aktualizaci aplikace stačí stáhnout nové změny (`git pull`), přestavět obrazy a restartovat služby.
@@ -741,7 +805,7 @@ Stránka detailu projektu využívá dvousloupcové rozložení:
 
 === Správa příloh a odkazů
 
-*Nahrávání souborů:* Na záložce „Přílohy" v detailu projektu může vlastník (student nebo vedoucí) nahrát soubory kliknutím na tlačítko „Nahrát přílohu". Systém nejprve vyžádá pre-signed URL od backendu a poté nahraje soubor přímo do cloudového úložiště AWS S3. Povolené typy souborů zahrnují PDF, Word, Excel, obrázky a ZIP archivy s maximální velikostí 10 MB.
+*Nahrávání souborů:* Na záložce „Přílohy" v detailu projektu může vlastník (student nebo vedoucí) nahrát soubory kliknutím na tlačítko „Nahrát přílohu". Systém nejprve vyžádá pre-signed URL od backendu a poté nahraje soubor přímo do S3-kompatibilního úložiště Garage. Povolené typy souborů zahrnují PDF, Word, Excel, obrázky a ZIP archivy s maximální velikostí 10 MB.
 
 *Externí odkazy:* Na záložce „Externí odkazy" lze přidávat URL adresy na externí zdroje projektu (např. odkaz na GitHub repozitář, online dokumentaci nebo demo aplikaci). Každý odkaz obsahuje název a URL adresu.
 
@@ -773,7 +837,8 @@ Na stránce nastavení může uživatel upravit své osobní údaje:
 
 - *Profil* – změna jména a příjmení
 - *E-mail* – změna přihlašovacího e-mailu
-- *Heslo* – změna hesla (vyžaduje zadání současného hesla a dvakrát nového)
+- *Propojení Microsoft účtu* – uživatelé s lokálním účtem mohou propojit svůj školní Microsoft účet pro jednotné přihlášení (SSO)
+- *Heslo* – změna hesla (vyžaduje zadání současného hesla a dvakrát nového), případně nastavení nového hesla pro uživatele přihlášené přes Microsoft
 
 === Administrátorský panel
 
@@ -861,7 +926,7 @@ Nahrávání souborů je zabezpečeno na několika úrovních:
 - *Whitelist MIME typů* – povoleny jsou pouze definované typy souborů (PDF, Word, Excel, obrázky, ZIP). Ostatní typy jsou odmítnuty.
 - *Omezení velikosti* – přílohy max. 10 MB, profilové obrázky max. 2 MB.
 - *Sanitizace názvů* – názvy souborů jsou zpracovány funkcí `path.basename()`, která odstraní cestu a zabrání útokům typu directory traversal.
-- *Pre-signed URL* – soubory se nahrávají přímo do AWS S3 přes dočasné URL s platností 5 minut, čímž se zamezuje přímému průchodu souborů přes server.
+- *Pre-signed URL* – soubory se nahrávají přímo do Garage přes dočasné URL s platností 5 minut, čímž se zamezuje přímému průchodu souborů přes server.
 
 == Autorizace a řízení přístupu
 
@@ -886,7 +951,7 @@ Mezi hlavní implementované funkce patří:
 - *Plánovač termínů* – automatické připomínky blížících se deadlinů (konfigurovatelné dny) a zamykání projektů po uplynutí termínu odevzdání, realizované pomocí BullMQ fronty úloh.
 - *Systém oznámení* – notifikace při přiřazení k projektu, odevzdání hodnocení, připomenutí termínu a dalších událostech.
 - *Veřejná galerie* – publikované projekty přístupné bez přihlášení, seskupené podle akademického roku.
-- *Cloudové úložiště* – nahrávání příloh přes pre-signed URL přímo do AWS S3 bez zatížení serveru.
+- *Cloudové úložiště* – nahrávání příloh přes pre-signed URL přímo do Garage bez zatížení serveru.
 - *Dvojjazyčné rozhraní* – kompletní lokalizace do češtiny a angličtiny.
 - *Tmavý režim* – podpora světlého, tmavého a systémového barevného motivu.
 
@@ -968,7 +1033,7 @@ Mezi možná rozšíření systému do budoucna patří:
 
 + Nodemailer – Send emails from Node.js. Andris Reinman, 2024. Dostupné z: https://nodemailer.com
 
-+ Amazon S3 – Cloud Object Storage. Amazon Web Services, Inc., 2024. Dostupné z: https://docs.aws.amazon.com/s3
++ Garage – An open-source distributed object storage service. Deuxfleurs, 2024. Dostupné z: https://garagehq.deuxfleurs.fr/documentation
 
 + Docker Documentation. Docker Inc., 2024. Dostupné z: https://docs.docker.com
 
@@ -993,9 +1058,13 @@ Mezi možná rozšíření systému do budoucna patří:
 
 #heading(numbering: none)[Seznam příloh]
 
-- Příloha A: Zdrojový kód aplikace (odkaz na repozitář)
-- Příloha B: ER diagram datového modelu
-- Příloha C: Schéma architektury systému
+// Auto-generated: queries all level-2 headings whose text starts with "Příloha"
+#context {
+  let appendices = query(heading.where(level: 2)).filter(h =>
+    repr(h.body).starts-with("Příloha")
+  )
+  appendices.map(h => [- #link(h.location())[#h.body]]).join()
+}
 
 
 
@@ -1006,7 +1075,7 @@ Mezi možná rozšíření systému do budoucna patří:
 
 Kompletní zdrojový kód aplikace SubmiTheses je dostupný v Git repozitáři:
 
-https://github.com/krxg/SubmiTheses
+https://github.com/krxgq/SubmiTheses
 
 Repozitář obsahuje monorepo strukturu s adresáři `frontend/` (Next.js aplikace), `backend/` (Express.js API server), `shared-types/` (sdílené TypeScript typy) a `docs/` (dokumentace).
 
@@ -1016,6 +1085,9 @@ Pro nasazení aplikace je nutné:
 
 + Nainstalovat Docker Engine a Docker Compose na cílový server
 + Naklonovat repozitář a vytvořit soubor `.env` s konfigurací (databáze, JWT secrets, SMTP, Garage S3)
++ Nastavit Nginx reverzní proxy – zkopírovat konfigurace z `nginx/` do `/etc/nginx/sites-enabled/`
++ Vytvořit DNS A záznamy pro doménu a S3 subdoménu
++ Získat SSL certifikáty pomocí Certbot
 + Spustit příkazem: `docker compose -f docker-compose.prod.yml up -d --build`
 + Provést migrace databáze: `docker exec submitheses-backend npx prisma migrate deploy`
 + Inicializovat Garage úložiště: přiřadit uzel, vytvořit buckety a API klíč (viz kapitola 5.1.2)

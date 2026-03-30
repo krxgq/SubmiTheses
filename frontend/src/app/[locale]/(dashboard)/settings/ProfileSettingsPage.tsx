@@ -204,7 +204,7 @@ export default function SettingsPageClient() {
             </div>
           )}
 
-          <Button type="submit" loading={updatingProfile}>
+          <Button type="submit" variant="secondary" loading={updatingProfile}>
             Update Profile
           </Button>
         </form>
@@ -238,7 +238,7 @@ export default function SettingsPageClient() {
             </div>
           )}
 
-          <Button type="submit" loading={updatingEmail}>
+          <Button type="submit" variant="secondary" loading={updatingEmail}>
             Update Email
           </Button>
         </form>
@@ -309,7 +309,7 @@ export default function SettingsPageClient() {
               </div>
             )}
 
-            <Button type="submit" loading={settingPassword}>
+            <Button type="submit" variant="secondary" loading={settingPassword}>
               Set Password
             </Button>
           </form>
@@ -338,7 +338,7 @@ export default function SettingsPageClient() {
               </div>
             )}
 
-            <Button type="submit" loading={updatingPassword}>
+            <Button type="submit" variant="secondary" loading={updatingPassword}>
               Update Password
             </Button>
           </form>
