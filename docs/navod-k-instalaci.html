@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Návod k instalaci — suBMiTheses</title>
+  <style>
+    :root {
+      --bg:      #f2ece2;
+      --surface: #fdf8f0;
+      --hover:   #e8dfd0;
+      --border:  #b8a898;
+      --text:    #1a1208;
+      --muted:   #5a4e3c;
+      --subtle:  #8a7a68;
+      --primary: #2c5f3f;
+      --accent:  #7a3b1e;
+      --font: "Courier New", Courier, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem;
+    }
+
+    .container { width: 100%; max-width: 760px; }
+
+    .header {
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      padding: 2rem 2.4rem;
+      margin-bottom: 1.8rem;
+      position: relative;
+    }
+
+    .header::before {
+      content: "[ suBMiTheses ]";
+      position: absolute;
+      top: -0.75rem;
+      left: 1.4rem;
+      background: var(--bg);
+      padding: 0 0.6rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      font-weight: normal;
+      letter-spacing: 0.04em;
+      color: var(--primary);
+    }
+
+    .header h1 span { color: var(--accent); }
+
+    .header p {
+      color: var(--muted);
+      font-size: 1rem;
+      margin-top: 0.5rem;
+      letter-spacing: 0.04em;
+    }
+
+    .back {
+      display: inline-block;
+      margin-bottom: 1.4rem;
+      color: var(--primary);
+      text-decoration: none;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+    }
+
+    .back:hover { text-decoration: underline; }
+
+    .section {
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      padding: 0.7rem 1.4rem;
+      border-bottom: 1.5px solid var(--border);
+      color: var(--accent);
+      font-size: 0.85rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .section-body { padding: 1.2rem 1.8rem; }
+
+    ol {
+      padding-left: 1.4rem;
+      line-height: 2;
+      font-size: 1rem;
+    }
+
+    ol li { padding-left: 0.4rem; }
+
+    code {
+      background: var(--hover);
+      border: 1px solid var(--border);
+      padding: 0.1em 0.45em;
+      font-family: var(--font);
+      font-size: 0.92em;
+      color: var(--primary);
+    }
+
+    pre {
+      background: var(--hover);
+      border: 1.5px solid var(--border);
+      padding: 1rem 1.4rem;
+      margin: 0.8rem 0 0.4rem;
+      overflow-x: auto;
+      font-family: var(--font);
+      font-size: 0.93rem;
+      line-height: 1.7;
+    }
+
+    pre code { background: none; border: none; padding: 0; color: var(--text); }
+
+    .urls { width: 100%; border-collapse: collapse; font-size: 0.97rem; }
+    .urls td { padding: 0.55rem 0; vertical-align: top; }
+    .urls td:first-child { color: var(--subtle); width: 40%; padding-right: 1rem; }
+    .urls td:last-child { color: var(--primary); }
+
+    .note {
+      color: var(--subtle);
+      font-size: 0.9rem;
+      margin-top: 0.8rem;
+      line-height: 1.6;
+      border-top: 1px solid var(--border);
+      padding-top: 0.8rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a class="back" href="index.html">← zpět</a>
+
+    <header class="header">
+      <h1>su<span>BM</span>iTheses</h1>
+      <p>návod k lokálnímu spuštění</p>
+    </header>
+
+    <div class="section">
+      <div class="section-title">Požadavky</div>
+      <div class="section-body">
+        <ol>
+          <li>Nainstalovaný Docker Engine &amp; Docker Compose</li>
+          <li>Git</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Spuštění</div>
+      <div class="section-body">
+        <ol>
+          <li>Naklonovat repozitář:</li>
+        </ol>
+        <pre><code>git clone &lt;url-repozitáře&gt;
+cd suBMiTheses</code></pre>
+
+        <ol start="2">
+          <li>Vytvořit konfigurační soubor prostředí:</li>
+        </ol>
+        <pre><code>cp .env.docker.example .env</code></pre>
+
+        <ol start="3">
+          <li>Spustit aplikaci:</li>
+        </ol>
+        <pre><code>docker compose up -d --build</code></pre>
+
+        <ol start="4">
+          <li>Provést databázové migrace:</li>
+        </ol>
+        <pre><code>docker exec suBMitheses-backend npx prisma migrate deploy</code></pre>
+
+        <ol start="5">
+          <li>Ověřit, že vše běží:</li>
+        </ol>
+        <pre><code>docker compose ps</code></pre>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Přístupové adresy</div>
+      <div class="section-body">
+        <table class="urls">
+          <tr>
+            <td>Aplikace</td>
+            <td><code>http://localhost:3000</code></td>
+          </tr>
+          <tr>
+            <td>Backend API</td>
+            <td><code>http://localhost:5000/api</code></td>
+          </tr>
+          <tr>
+            <td>Mailpit (e-maily)</td>
+            <td><code>http://localhost:8025</code></td>
+          </tr>
+        </table>
+        <p class="note">
+          První administrátorský účet je nutné vytvořit ručně přímým vložením do databáze, nebo kontaktovat autora pro seed skript.<br>
+          Výchozí konfigurace v <code>.env.docker.example</code> je připravena pro lokální spuštění bez dalších úprav.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
