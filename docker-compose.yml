@@ -11,8 +11,8 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-submitheses}
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      # Mount init script to import schema
-      - ./migrations:/docker-entrypoint-initdb.d
+      # Auto-import schema on first container creation
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -144,6 +144,23 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+    networks:
+      - submitheses-network
+    restart: unless-stopped
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    container_name: submitheses-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
     networks:
       - submitheses-network
     restart: unless-stopped
