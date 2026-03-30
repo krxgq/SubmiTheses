@@ -189,8 +189,9 @@
         <div class="section-title">Požadavky</div>
         <div class="section-body">
           <ol>
-            <li>Nainstalovaný Docker Engine &amp; Docker Compose</li>
+            <li><a href="https://docs.docker.com/engine/install/" target="_blank" rel="noopener">Docker Engine</a> &amp; Docker Compose</li>
             <li>Git</li>
+            <li>Bash (Linux / macOS / WSL na Windows)</li>
           </ol>
         </div>
       </div>
@@ -201,7 +202,7 @@
           <ol>
             <li>Naklonovat repozitář:</li>
           </ol>
-          <pre><code>git clone &lt;url-repozitáře&gt;
+          <pre><code>git clone https://github.com/krxgq/SubmiTheses.git
 cd SubmiTheses</code></pre>
 
           <ol start="2">
@@ -210,17 +211,22 @@ cd SubmiTheses</code></pre>
           <pre><code>cp .env.docker.example .env</code></pre>
 
           <ol start="3">
-            <li>Spustit aplikaci:</li>
+            <li>Sestavit a spustit kontejnery (stáhne závislosti automaticky):</li>
           </ol>
           <pre><code>docker compose up -d --build</code></pre>
 
           <ol start="4">
-            <li>Provést databázové migrace:</li>
+            <li>Importovat schéma databáze:</li>
           </ol>
-          <pre><code>docker exec submitheses-backend npx prisma migrate deploy</code></pre>
+          <pre><code>docker exec -i submitheses-postgres psql -U postgres -d submitheses &lt; schema.sql</code></pre>
 
           <ol start="5">
-            <li>Ověřit, že vše běží:</li>
+            <li>Vytvořit administrátorský účet:</li>
+          </ol>
+          <pre><code>bash seed-admin.sh</code></pre>
+
+          <ol start="6">
+            <li>Ověřit stav kontejnerů:</li>
           </ol>
           <pre><code>docker compose ps</code></pre>
         </div>
@@ -244,8 +250,6 @@ cd SubmiTheses</code></pre>
             </tr>
           </table>
           <p class="note">
-            První administrátorský účet je nutné vytvořit ručně přímým vložením
-            do databáze, nebo kontaktovat autora pro seed skript.<br />
             Výchozí konfigurace v <code>.env.docker.example</code> je připravena
             pro lokální spuštění bez dalších úprav.
           </p>
