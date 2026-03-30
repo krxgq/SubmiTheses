@@ -83,10 +83,12 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script_stop: true
           script: |
             set -e
             cd ${{ secrets.APP_DIR }}
+
+            # Fix .git/objects permissions if deploy user isn't the owner
+            sudo chown -R $(whoami) .git/objects 2>/dev/null || true
 
             # Sync all tracked files to match remote main
             echo "==> Fetching latest from origin..."
