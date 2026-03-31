@@ -92,7 +92,7 @@
 #page(numbering: none)[
   #heading(outlined: false, numbering: none)[Resumé]
 
-  Práce se zabývá vývojem webového informačního systému pro správu a odevzdávání maturitních projektů. Systém umožňuje studentům nahrávat práce, učitelům je hodnotit pomocí konfigurovatelných škál a administrátorům spravovat uživatele, předměty a ročníky. Backend je postaven na Node.js s Express a PostgreSQL, frontend využívá Next.js s React.
+  Práce se zabývá vývojem webového informačního systému pro správu a odevzdávání maturitních projektů. Systém umožňuje studentům nahrávat práce, učitelům je hodnotit pomocí konfigurovatelných škál a administrátorům spravovat uživatele, předměty a akademické roky. Backend je postaven na Node.js s Express a PostgreSQL, frontend využívá Next.js s React.
 
   #v(0.5cm)
 
@@ -245,7 +245,7 @@ Databáze systému je postavena na PostgreSQL a obsahuje následující hlavní 
 
 *Popis projektu (project\_descriptions)* – rozšiřující entita v relaci 1:1 s projektem. Obsahuje detailní specifikaci práce: téma, cíl, harmonogram, požadované výstupy a kritéria hodnocení.
 
-*Akademické roky (years)* – definuje školní rok s klíčovými termíny: datum zadání, odevzdání a zpětné vazby. Projekty a uživatelé jsou přiřazeni k roku.
+*Akademické roky (years)* – definují školní rok s klíčovými termíny: datum zadání, odevzdání a zpětné vazby. Projekty a uživatelé jsou přiřazeni k roku.
 
 *Předměty (subjects)* – obory studia, ke kterým jsou projekty přiřazeny.
 
@@ -296,12 +296,6 @@ Aplikace využívá klasické rozložení dashboardu se dvěma hlavními oblastm
 
 - *Hlavní oblast* – zabírá zbývající šířku, obsahuje navigační drobečky (breadcrumbs) a samotný obsah stránky s maximální šířkou 1400 px.
 
-// TODO: Screenshot celkového rozložení aplikace (sidebar + hlavní obsah)
-// #figure(
-//   image("./screenshots/layout.png", width: 90%),
-//   caption: [Celkové rozložení aplikace s postranním panelem]
-// ) <fig:ui-layout>
-
 === Navigace podle rolí
 
 Postranní panel zobrazuje položky navigace v závislosti na roli uživatele:
@@ -331,11 +325,10 @@ Hlavní stránka zobrazuje projekty rozdělené do sekcí podle vztahu uživatel
 
 Mřížka využívá responzivní rozložení – 1 sloupec na mobilu, 2 na tabletu a 3 na desktopu.
 
-// TODO: Screenshot seznamu projektů v mřížkovém zobrazení
-// #figure(
-//   image("./screenshots/projects-list.png", width: 90%),
-//   caption: [Seznam projektů v mřížkovém zobrazení]
-// ) <fig:ui-projects>
+#figure(
+   image("./screenshots/projects-list.png", width: 90%),
+   caption: [Seznam projektů v mřížkovém zobrazení]
+ ) <fig:ui-projects>
 
 ==== Detail projektu
 
@@ -346,51 +339,61 @@ Stránka detailu projektu využívá dvousloupcové rozložení na desktopu:
 
 Na mobilních zařízeních se sloupce skládají pod sebe.
 
-// TODO: Screenshot detailu projektu
-// #figure(
-//   image("./screenshots/project-detail.png", width: 90%),
-//   caption: [Detail projektu – dvousloupcové rozložení]
-// ) <fig:ui-project-detail>
+#figure(
+   image("./screenshots/project-detail.png", width: 90%),
+   caption: [Detail projektu – dvousloupcové rozložení]
+ ) <fig:ui-project-detail>
 
 ==== Volná témata
 
 Studenti mají přístup ke stránce s volnými tématy, kde mohou vyjádřit zájem o projekt pomocí tlačítka přihlášení. Vedoucí následně vidí seznam zájemců a může studenta přiřadit.
 
-// TODO: Screenshot stránky s volnými tématy
-// #figure(
-//   image("./screenshots/available-topics.png", width: 90%),
-//   caption: [Stránka volných témat pro studenty]
-// ) <fig:ui-available>
+#figure(
+   image("./screenshots/available-topics.png", width: 90%),
+   caption: [Stránka volných témat pro studenty]
+ ) <fig:ui-available>
 
 ==== Hodnocení
 
 Hodnotící formulář zobrazuje škálu kritérií s maximálními hodnotami a váhami. Učitel zadává hodnoty a systém automaticky vypočítá vážený průměr. Studenti vidí výsledky hodnocení až po datu zpětné vazby stanoveném pro akademický rok.
 
-// TODO: Screenshot hodnotícího formuláře
-// #figure(
-//   image("./screenshots/grading-form.png", width: 90%),
-//   caption: [Formulář pro hodnocení projektu]
-// ) <fig:ui-grading>
+#figure(
+   image("./screenshots/grading-form.png", width: 90%),
+   caption: [Formulář pro hodnocení projektu]
+ ) <fig:ui-grading>
 
 ==== Oznámení
 
 Stránka oznámení zobrazuje seznam notifikací s možností filtrování (všechny / nepřečtené). Nepřečtené zprávy jsou zvýrazněny barevným pruhem na levé straně. Uživatel může označit jednotlivé zprávy nebo všechny najednou jako přečtené.
 
-// TODO: Screenshot stránky s oznámeními
-// #figure(
-//   image("./screenshots/notifications.png", width: 90%),
-//   caption: [Stránka oznámení s filtrováním]
-// ) <fig:ui-notifications>
+#figure(
+   image("./screenshots/notifications.png", width: 90%),
+   caption: [Stránka oznámení s filtrováním]
+ ) <fig:ui-notifications>
 
 ==== Administrátorský panel
 
 Administrátoři mají přístup k panelu s horizontální záložkovou navigací pro správu předmětů, škál, sad škál a akademických roků. Každá záložka obsahuje datovou tabulku s akcemi pro vytvoření, úpravu a smazání záznamů.
 
-// TODO: Screenshot admin panelu
-// #figure(
-//   image("./screenshots/admin-panel.png", width: 90%),
-//   caption: [Administrátorský panel se záložkovou navigací]
-// ) <fig:ui-admin>
+ #figure(
+   image("./screenshots/admin-panel-subjects.png", width: 90%),
+   caption: [Administrátorský panel — správa předmětů]
+) <fig:ui-admin-subjects>
+
+ #figure(
+   image("./screenshots/admin-panel-grading-scales.png", width: 90%),
+   caption: [Administrátorský panel — správa hodnotících škál]
+) <fig:ui-admin-grading-scales>
+
+#figure(
+   image("./screenshots/admin-panel-scale-sets.png", width: 90%),
+   caption: [Administrátorský panel — správa sad škál]
+) <fig:ui-admin-scale-sets>
+
+ #figure(
+   image("./screenshots/admin-panel-academic-years.png", width: 90%),
+   caption: [Administrátorský panel — správa akademických roků]
+) <fig:ui-admin-academic-years>
 
 === Responzivní chování
 
@@ -402,7 +405,7 @@ Aplikace se přizpůsobuje třem hlavním rozlišením:
     inset: 6pt,
     align: (left, left),
     table.header([*Rozlišení*], [*Chování*]),
-    [Mobil (< 640 px)], [Sidebar skrytý za hamburger ikonou, jednoslovpcový layout, zmenšené odsazení],
+    [Mobil (< 640 px)], [Sidebar skrytý za hamburger ikonou, jednosloupcový layout, zmenšené odsazení],
     [Tablet (768 px+)], [Mřížka projektů ve 2 sloupcích, viditelná jména uživatelů],
     [Desktop (1024 px+)], [Sidebar vždy viditelný, 3 sloupce mřížky, dvousloupcový detail projektu, plné odsazení],
   ),
@@ -889,7 +892,7 @@ Přihlášení přes Microsoft OAuth 2.0 implementuje několik bezpečnostních 
 
 == Ochrana hesel
 
-Uživatelská hesla jsou hashována algoritmem *bcrypt* s 10 rundami solení. Bcrypt je záměrně pomalý algoritmus navržený pro hashování hesel – i při úniku databáze je zpětné získání hesel výpočetně nereálné. Systém nikdy neukládá hesla v čitelné podobě.
+Uživatelská hesla jsou hashována algoritmem *bcrypt* s 10 koly solení. Bcrypt je záměrně pomalý algoritmus navržený pro hashování hesel – i při úniku databáze je zpětné získání hesel výpočetně nereálné. Systém nikdy neukládá hesla v čitelné podobě.
 
 == Rate Limiting
 
@@ -947,7 +950,7 @@ Backend aplikace poskytuje přibližně 60 REST API endpointů organizovaných d
 Mezi hlavní implementované funkce patří:
 
 - *Správa projektů* – vytváření projektů pomocí pětikrokového průvodce, úpravy, přiřazování studentů ze seznamu zájemců a změny stavu (draft, locked, public).
-- *Hodnotící systém* – konfigurovatelné sady hodnotících škál s vahami, automatický výpočet váženého průměru a oddělené sady pro vedoucího a oponenta.
+- *Hodnotící systém* – konfigurovatelné sady hodnotících škál s váhami, automatický výpočet váženého průměru a oddělené sady pro vedoucího a oponenta.
 - *Plánovač termínů* – automatické připomínky blížících se deadlinů (konfigurovatelné dny) a zamykání projektů po uplynutí termínu odevzdání, realizované pomocí BullMQ fronty úloh.
 - *Systém oznámení* – notifikace při přiřazení k projektu, odevzdání hodnocení, připomenutí termínu a dalších událostech.
 - *Veřejná galerie* – publikované projekty přístupné bez přihlášení, seskupené podle akademického roku.
@@ -1054,17 +1057,6 @@ Mezi možná rozšíření systému do budoucna patří:
   target: figure.where(kind: table),
 )
 
-
-
-#heading(numbering: none)[Seznam příloh]
-
-// Auto-generated: queries all level-2 headings whose text starts with "Příloha"
-#context {
-  let appendices = query(heading.where(level: 2)).filter(h =>
-    repr(h.body).starts-with("Příloha")
-  )
-  appendices.map(h => [- #link(h.location())[#h.body]]).join()
-}
 
 
 
