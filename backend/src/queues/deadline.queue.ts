@@ -40,7 +40,6 @@ export const deadlineQueue = new Queue('deadlines', {
  * This allows us to remove/replace jobs when deadline changes
  */
 export function getJobId(projectId: number, type: 'reminder' | 'lock', days?: number): string {
-  // BullMQ doesn't allow ':' in job IDs — use dashes instead
   if (type === 'reminder' && days !== undefined) {
     return `project-${projectId}-reminder-${days}`;
   }

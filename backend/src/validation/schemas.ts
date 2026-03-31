@@ -84,7 +84,7 @@ export const createProjectSchema = z.object({
     .object({
       // Basic project fields
       title: z.string().min(1).max(255),
-      subject_id: z.coerce.bigint(), // Changed from subject string to subject_id bigint
+      subject_id: z.coerce.bigint(),
       description: z.string().optional(),
       supervisor_id: z.string().uuid(),
       opponent_id: z.string().uuid().nullable().optional(), // Make opponent optional

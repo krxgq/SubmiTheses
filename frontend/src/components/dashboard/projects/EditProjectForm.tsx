@@ -25,9 +25,9 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [yearOptions, setYearOptions] = useState<SelectOption[]>([]); // dropdown options for academic years
 
-  // @ts-ignore - subject_id exists in DB but not in type yet
+  // @ts-ignore
   const projectSubjectId = project.subject_id || null;
-  // @ts-ignore - year_id exists in DB but not in type yet
+  // @ts-ignore
   const projectYearId = project.year_id ? String(project.year_id) : "";
   
   const [formData, setFormData] = useState({
@@ -48,7 +48,6 @@ export default function EditProjectForm({ project }: EditProjectFormProps) {
     const fetchYears = async () => {
       try {
         const years = await getAllYears();
-        // Fallback to "Year #id" if year.name is null (shouldn't happen in practice)
         setYearOptions(years.map((y) => ({ value: String(y.id), label: y.name ?? `Year #${y.id}` })));
       } catch (error) {
         console.error("Failed to fetch years:", error);

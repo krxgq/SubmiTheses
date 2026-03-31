@@ -1,7 +1,6 @@
 import { apiRequest } from './client';
 
 // Scale interface matching database schema
-// Note: maxVal is number in frontend, backend converts to bigint
 export interface Scale {
   id: bigint;
   name: string;

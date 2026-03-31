@@ -60,7 +60,6 @@ export default function CreateProjectModule() {
         ]);
 
         // Build dropdown options from all years
-        // Fallback to "Unnamed" if year.name is null (shouldn't happen in practice)
         const options = allYears.map((y) => ({
           value: String(y.id),
           label: y.name ?? `Year #${y.id}`,
@@ -225,15 +224,11 @@ export default function CreateProjectModule() {
     e.preventDefault();
     e.stopPropagation();
 
-    // Safety check: Prevent submission if not on the final step
-    // This prevents accidental submissions from Enter key presses
     if (currentStep !== totalSteps - 1) {
       console.warn('Attempted to submit form while not on final step');
       return;
     }
 
-    // Additional safety: Only allow submission if user is actually clicking submit button
-    // Check if the event was triggered by the submit button, not by Enter key
     const submitter = (e.nativeEvent as SubmitEvent).submitter;
     if (submitter && submitter.getAttribute('type') !== 'submit') {
       console.warn('Form submission attempted from non-submit button');
@@ -279,7 +274,6 @@ export default function CreateProjectModule() {
     setFieldErrors({}); // Clear errors on valid submission
 
     try {
-      // Verify year is selected (should be caught by validation, but double-check)
       if (!formData.year_id) {
         toast.error("No academic year selected. Please select a year.");
         setIsSubmitting(false);
@@ -415,7 +409,6 @@ export default function CreateProjectModule() {
     );
   }
 
-  // Middleware already blocks students, but double-check as defense in depth
   if (!user) {
     return null; // Let middleware handle the redirect
   }

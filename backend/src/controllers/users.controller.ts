@@ -14,7 +14,6 @@ export async function createUser(req: Request, res: Response) {
   try {
     const { email, first_name, last_name, role, year_id } = req.body;
 
-    // Validation - password no longer required
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
@@ -153,10 +152,6 @@ export async function updateUserRole(req: Request, res: Response) {
     if (!updatedUser) {
       return res.status(404).json({ error: "User not found" });
     }
-
-    // Note: JWT tokens remain valid until expiration (1 hour for access tokens)
-    // User will see new role after token refresh or re-login
-    // For immediate invalidation, implement token blacklist (Redis) or versioning
 
     return res.status(200).json(updatedUser);
   } catch (error) {

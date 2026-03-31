@@ -96,8 +96,6 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
         const projectRoleLabel = isReviewerSupervisor ? tProjects('supervisor') : tProjects('opponent');
 
         // Calculate weighted average for this reviewer
-        // Note: Ideally weight should come from scale_set_scales
-        // For now, we'll calculate simple average
         let totalScore = 0;
         let totalMaxPoints = 0;
 

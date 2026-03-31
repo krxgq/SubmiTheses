@@ -100,12 +100,6 @@ export async function register(req: Request, res: Response) {
 /**
  * POST /api/auth/logout
  * Clear authentication cookies (custom JWT logout)
- *
- * Note: JWTs are stateless and remain valid until expiration.
- * For immediate invalidation, implement one of:
- * 1. Token blacklist (Redis/DB with token ID)
- * 2. Token versioning (add 'jti' claim + version in DB)
- * 3. Short expiry times (current: 1h access token)
  */
 export async function logout(req: Request, res: Response) {
   try {
@@ -119,7 +113,6 @@ export async function logout(req: Request, res: Response) {
     }
 
     // Clear authentication cookies
-    // Note: Tokens remain technically valid until expiration, but browsers won't send them
     res.clearCookie('sb-access-token', {
       path: '/',
       httpOnly: true,

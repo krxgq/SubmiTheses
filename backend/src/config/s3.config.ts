@@ -15,7 +15,6 @@ const credentials = {
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
 };
 
-// Disable SDK checksums — Garage doesn't support AWS SDK v3's CRC32 checksums
 const requestChecksumCalculation = 'WHEN_REQUIRED' as const;
 const responseChecksumValidation = 'WHEN_REQUIRED' as const;
 

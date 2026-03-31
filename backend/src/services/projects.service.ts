@@ -265,7 +265,6 @@ export class ProjectService {
 
     console.log('[ProjectService] Cache MISS for all projects, querying database...');
 
-    // Cache miss - query database (2-4s due to AWS network latency)
     const projects = await prisma.projects.findMany({
       include: {
         users_projects_student_idTousers: {
