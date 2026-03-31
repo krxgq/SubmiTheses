@@ -117,6 +117,59 @@
       color: var(--subtle);
       white-space: nowrap;
     }
+
+    /* Credentials box */
+    .credentials {
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      padding: 1.6rem 2.4rem;
+      margin-top: 1.8rem;
+      position: relative;
+    }
+
+    .credentials::before {
+      content: "[ demo credentials ]";
+      position: absolute;
+      top: -0.75rem;
+      left: 1.4rem;
+      background: var(--bg);
+      padding: 0 0.6rem;
+      font-size: 0.85rem;
+      color: var(--accent);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .credentials table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    .credentials th {
+      text-align: left;
+      color: var(--muted);
+      padding: 0.3rem 1rem 0.3rem 0;
+      font-weight: normal;
+      letter-spacing: 0.06em;
+    }
+
+    .credentials td {
+      padding: 0.3rem 1rem 0.3rem 0;
+      color: var(--text);
+    }
+
+    .credentials tr + tr td,
+    .credentials tr + tr th {
+      border-top: 1px solid var(--border);
+      padding-top: 0.5rem;
+    }
+
+    .role-badge {
+      font-size: 0.8rem;
+      color: var(--subtle);
+      margin-left: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -135,13 +188,13 @@
           </a>
         </li>
         <li>
-          <a href="/documentation.pdf">
+          <a href="/maturita/documentation.pdf">
             <span class="link-label">PDF Documentation</span>
             <span class="link-desc">.pdf</span>
           </a>
         </li>
         <li>
-          <a href="documentation.typ">
+          <a href="/maturita/documentation.typ">
             <span class="link-label">Typst Source</span>
             <span class="link-desc">.typ</span>
           </a>
@@ -160,6 +213,34 @@
         </li>
       </ul>
     </nav>
+    <div class="credentials">
+      <table>
+        <thead>
+          <tr>
+            <th>role</th>
+            <th>email</th>
+            <th>password</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>admin</td>
+            <td>submitheses@gmail.com</td>
+            <td>AdminProd123</td>
+          </tr>
+          <tr>
+            <td>teacher</td>
+            <td>teacher@submitheses.app</td>
+            <td>TeacherProd123</td>
+          </tr>
+          <tr>
+            <td>student</td>
+            <td>student@submitheses.app</td>
+            <td>StudentProd123</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </body>
 </html>
