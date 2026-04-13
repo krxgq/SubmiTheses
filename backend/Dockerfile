@@ -23,7 +23,8 @@ COPY backend/ ./backend/
 # Move to backend for build commands
 WORKDIR /app/backend
 
-# Generate Prisma client
+# Pre-delete generated dir so zod-prisma-types skips its fs.rmdir call (broken in Node 22+)
+RUN rm -rf /app/packages/shared-types/src/generated
 RUN pnpm generate
 
 # Build the application

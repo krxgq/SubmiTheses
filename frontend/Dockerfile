@@ -21,6 +21,8 @@ COPY packages/shared-types/ ./packages/shared-types/
 
 # Copy Prisma schema and generate Zod types into shared-types
 COPY backend/prisma/ ./backend/prisma/
+# Pre-delete generated dir so zod-prisma-types skips its fs.rmdir call (broken in Node 22+)
+RUN rm -rf /app/packages/shared-types/src/generated
 RUN cd /app/backend && npx prisma generate
 
 # Copy frontend source code
