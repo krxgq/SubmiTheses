@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
-import { Award, User } from 'lucide-react';
+import { Award, User, FileDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
+import { downloadPosudekPDF } from '@/lib/downloadPosudekPDF';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 
 interface GradesDisplayProps {
@@ -26,6 +27,7 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
   const [grades, setGrades] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [canView, setCanView] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
 
   useEffect(() => {
     loadGrades();
@@ -47,6 +49,20 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleExportPosudekPDF = async () => {
+    if (!grades) return;
+    setIsExportingPDF(true);
+    try {
+      await downloadPosudekPDF(project, grades);
+      toast.success(t('posudekPdfExported'));
+    } catch (error: any) {
+      console.error('Posudek PDF export error:', error);
+      toast.error(t('posudekPdfExportFailed'));
+    } finally {
+      setIsExportingPDF(false);
     }
   };
 
@@ -86,6 +102,22 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
 
   return (
     <div className="space-y-6">
+      {/* Export button — downloads all reviewers' grades + posudek as one PDF */}
+      <div className="flex justify-end">
+        <button
+          onClick={handleExportPosudekPDF}
+          disabled={isExportingPDF}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
+        >
+          {isExportingPDF ? (
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+          ) : (
+            <FileDown className="w-4 h-4 text-text-accent" />
+          )}
+          <span>{isExportingPDF ? t('exportingPosudek') : t('exportPosudekPdf')}</span>
+        </button>
+      </div>
+
       {/* Display grades grouped by reviewer */}
       {Object.values(grades).map((reviewerData: any) => {
         const reviewer = reviewerData.reviewer;

@@ -568,7 +568,11 @@
       "posudekLabel": "Written Evaluation (Posudek)",
       "posudekHint": "Write your comprehensive evaluation of the thesis. Visible to the student after the feedback date.",
       "posudekPlaceholder": "Enter your written evaluation here...",
-      "posudekTitle": "Written Evaluation"
+      "posudekTitle": "Written Evaluation",
+      "exportPosudekPdf": "Export Evaluation as PDF",
+      "exportingPosudek": "Exporting...",
+      "posudekPdfExported": "Evaluation exported successfully",
+      "posudekPdfExportFailed": "Failed to export evaluation"
     }
   }
 }

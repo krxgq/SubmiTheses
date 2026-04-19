@@ -568,7 +568,11 @@
       "posudekLabel": "Posudek",
       "posudekHint": "Napište celkové hodnocení závěrečné práce. Student ho uvidí po datu zpětné vazby.",
       "posudekPlaceholder": "Zadejte váš posudek zde...",
-      "posudekTitle": "Posudek"
+      "posudekTitle": "Posudek",
+      "exportPosudekPdf": "Exportovat posudek jako PDF",
+      "exportingPosudek": "Exportování...",
+      "posudekPdfExported": "Posudek byl úspěšně exportován",
+      "posudekPdfExportFailed": "Nepodařilo se exportovat posudek"
     }
   }
 }

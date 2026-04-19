@@ -209,10 +209,10 @@ const PDFDocument: React.FC<PDFDocumentProps> = ({ project, options }) => {
 };
 
 function renderMarkdown(markdown: string): React.ReactElement[] {
-  // Use remark to parse markdown with GFM (GitHub Flavored Markdown) support
+  // Normalize escaped \n sequences to actual newlines before parsing
   const result = remark()
     .use(remarkGfm)
-    .parse(markdown);
+    .parse(markdown.replace(/\\n/g, '\n'));
 
   const elements: React.ReactElement[] = [];
   let keyCounter = 0;
