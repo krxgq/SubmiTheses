@@ -1,10 +1,22 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { Options } from "express-rate-limit";
+import { RedisStore } from "rate-limit-redis";
+import { redisClient } from "../lib/cache";
 
 type RateLimiterConfig = {
   windowMs: number;
   limit: number;
   message: string;
 };
+
+// Use Redis store when available; fall back to in-memory if Redis is down
+function getStore(): Partial<Options> {
+  if (!redisClient) return {};
+  return {
+    store: new RedisStore({
+      sendCommand: (...args: string[]) => (redisClient as any).call(...args),
+    }),
+  };
+}
 
 function createApiRateLimiter({ windowMs, limit, message }: RateLimiterConfig) {
   return rateLimit({
@@ -13,6 +25,7 @@ function createApiRateLimiter({ windowMs, limit, message }: RateLimiterConfig) {
     standardHeaders: "draft-7",
     legacyHeaders: false,
     message: { error: message },
+    ...getStore(),
   });
 }
 

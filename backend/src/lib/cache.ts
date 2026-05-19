@@ -141,6 +141,9 @@ export const cache = {
   },
 };
 
+// Exported for use by rate limiter and other infrastructure that needs the raw client
+export { redis as redisClient };
+
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   if (redis) {
