@@ -54,9 +54,11 @@ export function MarkdownEditor({
 
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end);
-    const beforeText = value.substring(0, start);
-    const afterText = value.substring(end);
+    // Use textarea.value (DOM) so text and cursor positions are always in sync
+    const current = textarea.value;
+    const selectedText = current.substring(start, end);
+    const beforeText = current.substring(0, start);
+    const afterText = current.substring(end);
 
     const newText = beforeText + before + selectedText + after + afterText;
     onChange(newText);
@@ -69,23 +71,42 @@ export function MarkdownEditor({
     }, 0);
   };
 
-  // Insert markdown syntax at the start of current line
+  // Insert prefix at the start of every line covered by the current selection (or cursor line)
   const insertAtLineStart = (prefix: string) => {
     if (disabled) return; // Block formatting when editor is disabled
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const beforeCursor = value.substring(0, start);
-    const lastNewline = beforeCursor.lastIndexOf('\n');
-    const lineStart = lastNewline + 1;
+    const selStart = textarea.selectionStart;
+    const selEnd = textarea.selectionEnd;
+    const current = textarea.value;
 
-    const newText = value.substring(0, lineStart) + prefix + value.substring(lineStart);
+    // Start of the first selected line
+    const firstLineStart = current.substring(0, selStart).lastIndexOf('\n') + 1;
+
+    // End of the last selected line — selEnd is exclusive, so back up one char when
+    // there is a real selection to avoid pulling in a line the user didn't touch
+    const lastCharPos = selEnd > selStart ? selEnd - 1 : selEnd;
+    const nextNewline = current.indexOf('\n', lastCharPos);
+    const lastLineEnd = nextNewline === -1 ? current.length : nextNewline;
+
+    // Prefix every line in the covered block
+    const block = current.substring(firstLineStart, lastLineEnd);
+    const prefixed = block.split('\n').map(line => prefix + line).join('\n');
+    const addedLength = prefixed.length - block.length; // = line count × prefix.length
+
+    const newText = current.substring(0, firstLineStart) + prefixed + current.substring(lastLineEnd);
     onChange(newText);
 
     setTimeout(() => {
       textarea.focus();
-      textarea.setSelectionRange(start + prefix.length, start + prefix.length);
+      if (selStart === selEnd) {
+        // No selection: move cursor past the newly inserted prefix
+        textarea.setSelectionRange(selStart + prefix.length, selStart + prefix.length);
+      } else {
+        // Selection: keep it covering the full prefixed block
+        textarea.setSelectionRange(firstLineStart, lastLineEnd + addedLength);
+      }
     }, 0);
   };
 
