@@ -247,15 +247,16 @@ export class ProjectSignupService {
   }
 
   /**
-   * Check if a student is assigned to any project
+   * Check if a student is assigned to any project.
+   * Returns the project id so callers can link to it, or null if unassigned.
    */
-  static async studentHasProject(studentId: string): Promise<boolean> {
+  static async studentHasProject(studentId: string): Promise<bigint | null> {
     const project = await prisma.projects.findFirst({
       where: { student_id: studentId },
       select: { id: true },
     });
 
-    return !!project;
+    return project ? project.id : null;
   }
 
   /**

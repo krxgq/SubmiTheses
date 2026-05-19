@@ -46,25 +46,24 @@ export function AvailableTopicsClient({
   const [signupStatus, setSignupStatus] = useState<SignupStatus>({});
   const [loadingSignups, setLoadingSignups] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  // Local state so we can correct a stale server-rendered value without waiting for a full nav
   const [hasProject, setHasProject] = useState(studentHasProject);
+  const [assignedProjectId, setAssignedProjectId] = useState<string | null>(null);
 
-  // On mount, verify studentHasProject freshly from the DB — the server-rendered prop can be
-  // stale when the Next.js Router Cache serves an old RSC payload (up to 30s). If the value
-  // changed, update local state and call router.refresh() so the projects list also updates.
+  // On mount, verify studentHasProject freshly from the DB — server-rendered prop can be stale.
   useEffect(() => {
     if (!projects.length) return;
     projectsApi
-      .getSignupStatus(String(projects[0].id)) // hasProject field is DB-direct, no Redis cache
-      .then(({ hasProject: fresh }) => {
+      .getSignupStatus(String(projects[0].id))
+      .then(({ hasProject: fresh, assignedProjectId: pid }) => {
         if (fresh === undefined) return;
+        if (pid) setAssignedProjectId(pid);
         if (fresh !== studentHasProject) {
           setHasProject(fresh);
-          if (!fresh) router.refresh(); // busts Router Cache → server re-fetches updated project list
+          if (!fresh) router.refresh();
         }
       })
-      .catch(() => {}); // non-critical check, ignore errors
-  }, []); // intentionally runs once on mount only
+      .catch(() => {});
+  }, []);
 
   // Load signup status for all projects on mount (skip if student already has a project)
   useEffect(() => {
@@ -179,10 +178,18 @@ export function AvailableTopicsClient({
         <div className="px-5 pb-5 pt-0 mt-auto">
           <div className="border-t border-border pt-4">
             {hasProject ? (
-              // Student already has a project - show info message
               <div className="flex items-center justify-center gap-2 py-2.5 text-sm text-text-secondary">
                 <CheckCircle size={16} className="text-success" />
-                <span>{t("projects.alreadyHasProject")}</span>
+                {assignedProjectId ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); router.push(`/projects/${assignedProjectId}`); }}
+                    className="underline hover:text-text-primary transition-colors"
+                  >
+                    {t("projects.alreadyHasProject")}
+                  </button>
+                ) : (
+                  <span>{t("projects.alreadyHasProject")}</span>
+                )}
               </div>
             ) : loadingSignups ? (
               <div className="flex items-center justify-center py-2">
@@ -272,7 +279,16 @@ export function AvailableTopicsClient({
           {hasProject ? (
             <div className="flex items-center gap-2 px-4 py-2 text-sm text-text-secondary">
               <CheckCircle size={16} className="text-success" />
-              <span className="hidden sm:inline">{t("projects.alreadyHasProject")}</span>
+              {assignedProjectId ? (
+                <button
+                  onClick={() => router.push(`/projects/${assignedProjectId}`)}
+                  className="hidden sm:inline underline hover:text-text-primary transition-colors"
+                >
+                  {t("projects.alreadyHasProject")}
+                </button>
+              ) : (
+                <span className="hidden sm:inline">{t("projects.alreadyHasProject")}</span>
+              )}
             </div>
           ) : loadingSignups ? (
             <Loader2 className="w-5 h-5 animate-spin text-text-secondary" />

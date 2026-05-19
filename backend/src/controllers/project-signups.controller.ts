@@ -75,12 +75,17 @@ export async function getSignupStatus(req: Request, res: Response) {
     const studentId = req.user!.id;
 
     // Check both signup status and if student has any assigned project
-    const [hasSignedUp, hasProject] = await Promise.all([
+    const [hasSignedUp, assignedProjectId] = await Promise.all([
       ProjectSignupService.hasStudentSignedUp(projectId, studentId),
       ProjectSignupService.studentHasProject(studentId),
     ]);
 
-    return res.status(200).json({ signedUp: hasSignedUp, hasProject });
+    return res.status(200).json({
+      signedUp: hasSignedUp,
+      hasProject: assignedProjectId !== null,
+      // lets the UI link directly to the project they're already on
+      assignedProjectId: assignedProjectId !== null ? String(assignedProjectId) : null,
+    });
   } catch (error) {
     console.error('[SignupsController] Error checking signup status:', error);
     return res.status(500).json({ error: 'Failed to check signup status' });

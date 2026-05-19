@@ -221,8 +221,8 @@ export const projectsApi = {
    * Also returns whether student is assigned to any project
    * @param id - Project ID
    */
-  getSignupStatus: async (id: string | number): Promise<{ signedUp: boolean; hasProject?: boolean }> => {
-    return apiRequest<{ signedUp: boolean; hasProject?: boolean }>(`/projects/${id}/signup/status`);
+  getSignupStatus: async (id: string | number): Promise<{ signedUp: boolean; hasProject?: boolean; assignedProjectId?: string | null }> => {
+    return apiRequest<{ signedUp: boolean; hasProject?: boolean; assignedProjectId?: string | null }>(`/projects/${id}/signup/status`);
   },
 
   /**
