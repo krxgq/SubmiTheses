@@ -6,6 +6,7 @@ type RateLimiterConfig = {
   windowMs: number;
   limit: number;
   message: string;
+  skipAdmin?: boolean; // when true, admin requests are never counted or blocked
 };
 
 // Use Redis store when available; fall back to in-memory if Redis is down
@@ -18,20 +19,22 @@ function getStore(): Partial<Options> {
   };
 }
 
-function createApiRateLimiter({ windowMs, limit, message }: RateLimiterConfig) {
+function createApiRateLimiter({ windowMs, limit, message, skipAdmin }: RateLimiterConfig) {
   return rateLimit({
     windowMs,
     limit,
     standardHeaders: "draft-7",
     legacyHeaders: false,
     message: { error: message },
+    ...(skipAdmin ? { skip: (req: any) => req.user?.role === "admin" } : {}),
     ...getStore(),
   });
 }
 
 export const writeRateLimiter = createApiRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 300, // general writes (create/update)
+  limit: 500, // general writes (create/update)
+  skipAdmin: true,
   message: "Too many write requests, please try again later",
 });
 
@@ -42,37 +45,37 @@ export const apiRateLimiter = createApiRateLimiter({
   message: "Too many API requests, please try again later",
 });
 
-// Admins are exempt — they frequently batch role changes, status updates, and grading
-export const sensitiveWriteRateLimiter = rateLimit({
+export const sensitiveWriteRateLimiter = createApiRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 200,
-  standardHeaders: "draft-7",
-  legacyHeaders: false,
-  message: { error: "Too many sensitive update requests, please try again later" },
-  skip: (req) => (req as any).user?.role === "admin",
-  ...getStore(),
+  limit: 200, // role changes, status updates, grading
+  skipAdmin: true,
+  message: "Too many sensitive update requests, please try again later",
 });
 
 export const destructiveActionRateLimiter = createApiRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 40, // deletes
+  limit: 100, // deletes
+  skipAdmin: true,
   message: "Too many destructive requests, please try again later",
 });
 
 export const bulkOperationRateLimiter = createApiRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 25, // bulk publish, auto-lock, bulk clone
+  limit: 60, // bulk publish, auto-lock, bulk clone
+  skipAdmin: true,
   message: "Too many bulk operation requests, please try again after 15 minutes",
 });
 
 export const invitationRateLimiter = createApiRateLimiter({
   windowMs: 60 * 60 * 1000,
-  limit: 20, // invitations, password setup/reset
+  limit: 50, // invitations, password setup/reset
+  skipAdmin: true,
   message: "Too many invitation or password setup requests, please try again later",
 });
 
 export const uploadRateLimiter = createApiRateLimiter({
   windowMs: 15 * 60 * 1000,
-  limit: 150, // file uploads
+  limit: 200, // file uploads
+  skipAdmin: true,
   message: "Too many upload requests, please try again later",
 });
