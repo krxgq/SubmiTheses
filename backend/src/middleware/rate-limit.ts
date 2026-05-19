@@ -42,10 +42,15 @@ export const apiRateLimiter = createApiRateLimiter({
   message: "Too many API requests, please try again later",
 });
 
-export const sensitiveWriteRateLimiter = createApiRateLimiter({
+// Admins are exempt — they frequently batch role changes, status updates, and grading
+export const sensitiveWriteRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 60, // role changes, status updates, grading
-  message: "Too many sensitive update requests, please try again later",
+  limit: 200,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  message: { error: "Too many sensitive update requests, please try again later" },
+  skip: (req) => (req as any).user?.role === "admin",
+  ...getStore(),
 });
 
 export const destructiveActionRateLimiter = createApiRateLimiter({
