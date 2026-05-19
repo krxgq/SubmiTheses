@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { ProjectWithRelations } from '@sumbi/shared-types';
 import { projectsApi } from '@/lib/api/projects';
-import { Lock } from 'lucide-react';
+import { Lock, Paperclip, MessageSquare, Link2, Star, CalendarDays, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 interface QuickStatsProps {
@@ -65,34 +65,40 @@ export default function QuickStats({
   };
 
   return (
-    <div className="bg-background-elevated rounded-lg border border-border p-6">
+    <div className="bg-background-elevated rounded-xl border border-border p-6">
       <h3 className="text-lg font-semibold text-text-primary mb-4">{t('title')}</h3>
 
-      <div className="space-y-4">
-        {/* Total Attachments */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('totalAttachments')}</span>
+      {/* Stats rows separated by dividers for cleaner visual rhythm */}
+      <div className="divide-y divide-border">
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <Paperclip className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('totalAttachments')}</span>
+          </div>
           <span className="text-sm font-semibold text-text-primary">{attachmentsCount}</span>
         </div>
 
-        {/* Reviews */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('reviews')}</span>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('reviews')}</span>
+          </div>
           <span className="text-sm font-semibold text-text-primary">{reviewsCount}</span>
         </div>
 
-        {/* External Links */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('externalLinks')}</span>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <Link2 className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('externalLinks')}</span>
+          </div>
           <span className="text-sm font-semibold text-text-primary">{linksCount}</span>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-border my-4"></div>
-
-        {/* Current Grade - Shows actual grade status */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('currentGrade')}</span>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <Star className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('currentGrade')}</span>
+          </div>
           {isLoadingGrades ? (
             <div className="animate-pulse h-6 w-16 bg-background-secondary rounded" />
           ) : (
@@ -106,33 +112,29 @@ export default function QuickStats({
           )}
         </div>
 
-        {/* Submission Date - Using updated_at as placeholder */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('submissionDate')}</span>
-          <span className="text-sm font-semibold text-text-primary">
-            Dec 15, 2024
-          </span>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('submissionDate')}</span>
+          </div>
+          <span className="text-sm font-semibold text-text-primary">Dec 15, 2024</span>
         </div>
 
-        {/* Last Updated */}
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-text-secondary">{t('lastUpdated')}</span>
-          <span className="text-sm font-semibold text-text-primary">
-            {formatDate(project.updated_at)}
-          </span>
+        <div className="flex items-center justify-between py-3">
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4 text-text-tertiary flex-shrink-0" />
+            <span className="text-sm text-text-secondary">{t('lastUpdated')}</span>
+          </div>
+          <span className="text-sm font-semibold text-text-primary">{formatDate(project.updated_at)}</span>
         </div>
-
-        {/* Lock status indicator */}
-        {project.status === 'locked' && (
-          <>
-            <div className="border-t border-border my-4"></div>
-            <div className="flex items-center gap-2 p-3 bg-warning/10 border border-warning rounded-lg">
-              <Lock className="w-4 h-4 text-warning flex-shrink-0" />
-              <span className="text-sm text-warning font-medium">{t('locked')}</span>
-            </div>
-          </>
-        )}
       </div>
+
+      {project.status === 'locked' && (
+        <div className="flex items-center gap-2 p-3 mt-4 bg-warning/10 border border-warning rounded-lg">
+          <Lock className="w-4 h-4 text-warning flex-shrink-0" />
+          <span className="text-sm text-warning font-medium">{t('locked')}</span>
+        </div>
+      )}
     </div>
   );
 }

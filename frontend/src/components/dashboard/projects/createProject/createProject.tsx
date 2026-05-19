@@ -1,5 +1,6 @@
 "use client";
 import { formatUserName } from "@/lib/formatters";
+import { useTranslations } from "next-intl";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -21,6 +22,7 @@ import { yearsApi, getAllYears } from "@/lib/api/years";
 // Multi-step form for creating comprehensive project with all fields
 export default function CreateProjectModule() {
   const router = useRouter();
+  const t = useTranslations("createProject");
   const { user, isLoading } = useAuth(); // Get current user for role-based logic
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -72,11 +74,11 @@ export default function CreateProjectModule() {
             prev.year_id === "" ? { ...prev, year_id: String(currentYear.id) } : prev
           );
         } else {
-          toast.warning("No active academic year found. Please contact admin.");
+          toast.warning(t("messages.noActiveYear"));
         }
       } catch (error) {
         console.error("Failed to fetch years:", error);
-        toast.error("Failed to load academic years. Please try again.");
+        toast.error(t("messages.yearLoadFailed"));
       }
     };
 
@@ -90,7 +92,7 @@ export default function CreateProjectModule() {
       try {
         const parsed = JSON.parse(savedDraft);
         setFormData(parsed);
-        toast.info("Restored unsaved draft from this session");
+        toast.info(t("draftRestored"));
       } catch (e) {
         console.error("Failed to load draft:", e);
       }
@@ -140,32 +142,32 @@ export default function CreateProjectModule() {
     switch (step) {
       case 0: // Basic Information
         if (formData.title.trim() === "") {
-          errors.title = "Project title is required";
+          errors.title = t("validation.titleRequired");
         }
         if (formData.subject_id === null) {
-          errors.subject_id = "Subject selection is required";
+          errors.subject_id = t("validation.subjectRequired");
         }
         if (!formData.year_id) {
-          errors.year_id = "Academic year selection is required";
+          errors.year_id = t("validation.yearRequired");
         }
         break;
 
       case 1: // Topic & Goals
         if (formData.topic.trim().length < 1) {
-          errors.topic = "Project topic is required";
+          errors.topic = t("validation.topicRequired");
         }
         if (formData.project_goal.trim().length < 10) {
-          errors.project_goal = "Project goal must be at least 10 characters";
+          errors.project_goal = t("validation.goalTooShort");
         }
         break;
 
       case 2: // Specification & Outputs
         if (formData.specification.trim().length < 20) {
-          errors.specification = "Project specification must be at least 20 characters";
+          errors.specification = t("validation.specTooShort");
         }
         const validOutputs = formData.needed_output.filter(item => item.trim().length >= 3);
         if (validOutputs.length < 1) {
-          errors.needed_output = "At least one required output (minimum 3 characters) is required";
+          errors.needed_output = t("validation.outputRequired");
         }
         break;
 
@@ -174,10 +176,10 @@ export default function CreateProjectModule() {
 
       case 4: // Team Selection
         if (formData.supervisor_id === null) {
-          errors.supervisor_id = "Supervisor selection is required";
+          errors.supervisor_id = t("validation.supervisorRequired");
         }
         if (formData.opponent_id && formData.supervisor_id === formData.opponent_id) {
-          errors.opponent_id = "Opponent must be different from supervisor";
+          errors.opponent_id = t("validation.opponentSameAsSupervisor");
         }
         break;
     }
@@ -263,7 +265,7 @@ export default function CreateProjectModule() {
             }
           }, 600); // Wait for slide transition (500ms + buffer)
           
-          toast.error(`Please fill in all required fields (${errorCount} error${errorCount > 1 ? 's' : ''} found)`);
+          toast.error(t("messages.validationFailed", { count: errorCount, plural: errorCount > 1 ? "s" : "" }));
           break;
         }
       }
@@ -275,7 +277,7 @@ export default function CreateProjectModule() {
 
     try {
       if (!formData.year_id) {
-        toast.error("No academic year selected. Please select a year.");
+        toast.error(t("messages.noYearSelected"));
         setIsSubmitting(false);
         return;
       }
@@ -300,7 +302,7 @@ export default function CreateProjectModule() {
 
       const createdProject = await projectsApi.createProject(payload);
 
-      toast.success("Project created successfully!");
+      toast.success(t("messages.created"));
       sessionStorage.removeItem("create-project-draft");
       router.push(`/projects/${createdProject.id}`);
     } catch (error: any) {
@@ -381,7 +383,7 @@ export default function CreateProjectModule() {
 
   // Clear draft and reset form to initial state
   const handleClearDraft = () => {
-    if (confirm("Clear saved draft and reset form?")) {
+    if (confirm(t("clearDraftConfirm"))) {
       sessionStorage.removeItem("create-project-draft");
       setFormData({
         title: "",
@@ -396,7 +398,7 @@ export default function CreateProjectModule() {
         opponent_id: null,
       });
       setCurrentStep(0);
-      toast.success("Draft cleared");
+      toast.success(t("draftCleared"));
     }
   };
 
@@ -404,7 +406,7 @@ export default function CreateProjectModule() {
   if (isLoading) {
     return (
       <div className="bg-background-elevated w-full max-w-4xl mx-auto p-6 rounded-lg shadow-md">
-        <p className="text-text-secondary">Loading...</p>
+        <p className="text-text-secondary">{t("loading")}</p>
       </div>
     );
   }
@@ -417,14 +419,14 @@ export default function CreateProjectModule() {
     <div className="bg-background-elevated w-full max-w-full sm:max-w-4xl mx-auto p-3 sm:p-6 md:p-8 rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl sm:text-2xl font-semibold text-text-primary">
-          Create New Project
+          {t("title")}
         </h1>
         <button
           type="button"
           onClick={handleClearDraft}
           className="text-sm text-text-secondary hover:text-text-primary transition-colors"
         >
-          Clear Draft
+          {t("clearDraft")}
         </button>
       </div>
 
@@ -441,7 +443,7 @@ export default function CreateProjectModule() {
           </div>
         </div>
         <p className="text-sm text-text-secondary mt-2 text-center">
-          Step {currentStep + 1} of {totalSteps}
+          {t("step", { current: currentStep + 1, total: totalSteps })}
         </p>
       </div>
 
@@ -472,37 +474,37 @@ export default function CreateProjectModule() {
             className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 0 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
           >
             <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
-              Basic Information
+              {t("steps.basicInfo")}
             </h2>
             <Input
-              label="Project Title"
+              label={t("fields.title")}
               id="title"
               name="title"
               value={formData.title}
               onChange={(e) => updateField("title", e.target.value)}
-              helperText="Enter a descriptive title for your project"
+              helperText={t("fields.titleHelper")}
               maxLength={100}
               showCharCount
               required
               error={fieldErrors.title}
             />
             <SubjectSelect
-              label="Subject"
+              label={t("fields.subject")}
               id="subject"
               value={formData.subject_id}
               onChange={(subjectId) => updateField("subject_id", subjectId)}
-              helperText="Select the course or subject area for this project"
+              helperText={t("fields.subjectHelper")}
               required
               error={fieldErrors.subject_id}
             />
             {/* Academic year selector — pre-filled with current year */}
             <Select
-              label="Academic Year"
+              label={t("fields.academicYear")}
               id="year_id"
               options={yearOptions}
               value={formData.year_id}
               onChange={(value) => updateField("year_id", value)}
-              helperText="Select the academic year this project belongs to"
+              helperText={t("fields.academicYearHelper")}
               required
               error={fieldErrors.year_id}
             />
@@ -513,28 +515,28 @@ export default function CreateProjectModule() {
             className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 1 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
           >
               <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
-                Topic & Goals
+                {t("steps.topicGoals")}
               </h2>
               <Input
-                label="Project Topic"
+                label={t("fields.topic")}
                 id="topic"
                 name="topic"
                 value={formData.topic}
                 onChange={(e) => updateField("topic", e.target.value)}
-                helperText="Brief topic or marketing name for your project"
+                helperText={t("fields.topicHelper")}
                 maxLength={150}
                 showCharCount
                 required
                 error={fieldErrors.topic}
               />
               <Textarea
-                label="Project Goal"
+                label={t("fields.projectGoal")}
                 id="project_goal"
                 name="project_goal"
                 rows={6}
                 value={formData.project_goal}
                 onChange={(e) => updateField("project_goal", e.target.value)}
-                helperText="Describe the main objective and what you aim to achieve (minimum 10 characters)"
+                helperText={t("fields.projectGoalHelper")}
                 maxLength={1000}
                 showCharCount
                 required
@@ -547,14 +549,14 @@ export default function CreateProjectModule() {
               className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 2 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
             >
               <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
-                Specification & Required Outputs
+                {t("steps.specOutputs")}
               </h2>
               <MarkdownEditor
-                label="Project Specification"
+                label={t("fields.specification")}
                 id="specification"
                 value={formData.specification}
                 onChange={(value) => updateField("specification", value)}
-                helperText="Define the detailed scope of work, requirements, and implementation plan (minimum 20 characters)"
+                helperText={t("fields.specificationHelper")}
                 maxLength={5000}
                 showCharCount
                 required
@@ -562,11 +564,11 @@ export default function CreateProjectModule() {
                 error={fieldErrors.specification}
               />
               <ArrayInput
-                label="Required Outputs"
+                label={t("fields.requiredOutputs")}
                 value={formData.needed_output}
                 onChange={(items) => updateField("needed_output", items)}
-                helperText="List all deliverables you must produce (minimum 3 characters each, e.g., 'Working application', 'User documentation')"
-                placeholder="Enter output item"
+                helperText={t("fields.requiredOutputsHelper")}
+                placeholder={t("fields.outputPlaceholder")}
                 required
                 minItems={1}
                 minLength={3}
@@ -579,10 +581,10 @@ export default function CreateProjectModule() {
               className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 3 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
             >
               <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
-                Timeline (Optional)
+                {t("steps.timeline")}
               </h2>
               <p className="text-sm text-text-secondary mb-4">
-                Create a month-by-month schedule for your project milestones. You can skip this step and add it later if needed.
+                {t("timeline.description")}
               </p>
               <ScheduleBuilder
                 value={formData.schedule}
@@ -595,17 +597,17 @@ export default function CreateProjectModule() {
               className={`w-full space-y-6 px-1 transition-all duration-500 ${currentStep === 4 ? 'opacity-100 relative' : 'opacity-0 absolute top-0 left-0 pointer-events-none'}`}
             >
               <h2 className="text-base sm:text-lg font-medium text-text-primary mb-4">
-                Team Selection
+                {t("steps.team")}
               </h2>
 
               {/* Supervisor field - editable for admin, fixed for teacher */}
               {isSupervisorEditable ? (
                 <UserSelect
-                  label="Supervisor"
+                  label={t("fields.supervisor")}
                   id="supervisor"
                   value={formData.supervisor_id}
                   onChange={(userId) => updateField("supervisor_id", userId)}
-                  helperText="Select the teacher who will supervise this project"
+                  helperText={t("fields.supervisorHelper")}
                   excludeUserId={formData.opponent_id || undefined}
                   required
                   error={fieldErrors.supervisor_id}
@@ -613,12 +615,12 @@ export default function CreateProjectModule() {
               ) : (
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-text-primary">
-                    Supervisor <span className="text-danger">*</span>
+                    {t("fields.supervisor")} <span className="text-danger">*</span>
                   </label>
                   <div className="border rounded-lg bg-background-secondary p-3 text-text-primary">
                     {formatUserName(user?.first_name, user?.last_name) || user?.email || 'You'}
                   </div>
-                  <p className="text-xs text-text-secondary">You are automatically assigned as the supervisor</p>
+                  <p className="text-xs text-text-secondary">{t("fields.supervisorAutoAssigned")}</p>
                   {fieldErrors.supervisor_id && (
                     <p className="text-sm text-danger">{fieldErrors.supervisor_id}</p>
                   )}
@@ -626,11 +628,11 @@ export default function CreateProjectModule() {
               )}
 
               <UserSelect
-                label="Opponent"
+                label={t("fields.opponent")}
                 id="opponent"
                 value={formData.opponent_id}
                 onChange={(userId) => updateField("opponent_id", userId)}
-                helperText="Select the teacher who will review this project (optional)"
+                helperText={t("fields.opponentHelper")}
                 excludeUserId={formData.supervisor_id || undefined}
                 required={false}
                 error={fieldErrors.opponent_id}
@@ -639,7 +641,7 @@ export default function CreateProjectModule() {
                 formData.opponent_id &&
                 formData.supervisor_id === formData.opponent_id && (
                   <p className="text-sm text-danger">
-                    ⚠️ Supervisor and opponent must be different people
+                    {t("fields.supervisorOpponentSame")}
                   </p>
                 )}
             </div>
@@ -653,7 +655,7 @@ export default function CreateProjectModule() {
             disabled={currentStep === 0}
             className="w-full sm:w-auto px-6 py-2 border border-border rounded-lg text-text-primary hover:bg-background-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Previous
+            {t("buttons.previous")}
           </button>
 
           {currentStep < totalSteps - 1 ? (
@@ -662,7 +664,7 @@ export default function CreateProjectModule() {
               onClick={nextStep}
               className="w-full sm:w-auto px-6 py-2 bg-primary text-text-inverse rounded-lg hover:bg-primary-dark transition-colors duration-200"
             >
-              Next
+              {t("buttons.next")}
             </button>
           ) : (
             <button
@@ -673,10 +675,10 @@ export default function CreateProjectModule() {
               {isSubmitting ? (
                 <>
                   <div className="animate-spin h-4 w-4 border-2 border-text-inverse border-t-transparent rounded-full" />
-                  Creating...
+                  {t("buttons.creating")}
                 </>
               ) : (
-                "Create Project"
+                t("buttons.create")
               )}
             </button>
           )}

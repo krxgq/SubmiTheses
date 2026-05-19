@@ -121,6 +121,7 @@ export class AuthService {
     // Invalidate user-related caches since a new user was created
     await cache.delete('users:all');
     await cache.delete(`users:role:${role}`);
+    await cache.delete(`user:auth-profile:${user.id}`);
     // If teacher/admin, also invalidate teachers cache
     if (role === 'teacher' || role === 'admin') {
       await cache.delete('users:teachers');
@@ -189,6 +190,8 @@ export class AuthService {
     // Invalidate user caches (same pattern as registerWithoutPassword)
     await cache.delete('users:all');
     await cache.delete(`users:role:${finalUser.role}`);
+    await cache.delete(`user:${finalUser.id}`);
+    await cache.delete(`user:auth-profile:${finalUser.id}`);
     if (finalUser.role === 'teacher' || finalUser.role === 'admin') {
       await cache.delete('users:teachers');
     }
@@ -237,6 +240,7 @@ export class AuthService {
 
     // Invalidate caches
     await cache.delete(`user:${userId}`);
+    await cache.delete(`user:auth-profile:${userId}`);
     await cache.delete('users:all');
     await cache.delete(`users:role:${updated.role}`);
 
@@ -270,6 +274,7 @@ export class AuthService {
 
     // Invalidate caches
     await cache.delete(`user:${userId}`);
+    await cache.delete(`user:auth-profile:${userId}`);
     await cache.delete('users:all');
     await cache.delete(`users:role:${updated.role}`);
 

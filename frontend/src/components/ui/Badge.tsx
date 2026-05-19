@@ -44,9 +44,9 @@ export const Badge = React.forwardRef<HTMLSpanElement, BadgeProps>(
 
     // Size styles
     const sizeStyles = {
-      sm: 'px-2 py-0.5 text-xs rounded-md gap-1',
-      md: 'px-2.5 py-0.5 text-sm rounded-md gap-1.5',
-      lg: 'px-3 py-1 text-base rounded-lg gap-2',
+      sm: 'px-2 py-0.5 text-xs rounded-full gap-1',
+      md: 'px-2.5 py-0.5 text-sm rounded-full gap-1.5',
+      lg: 'px-3 py-1 text-base rounded-full gap-2',
     };
 
     // Dot size styles (optional status indicator dot)

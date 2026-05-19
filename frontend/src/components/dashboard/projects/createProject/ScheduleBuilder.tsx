@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import type { ProjectScheduleEntry } from "@sumbi/shared-types";
 
 interface ScheduleBuilderProps {
@@ -29,6 +30,7 @@ export function ScheduleBuilder({
   onChange,
   error,
 }: ScheduleBuilderProps) {
+  const t = useTranslations("createProject");
   const handleAddMonth = () => {
     onChange([...value, { date: CZECH_MONTHS[0], task: "" }]);
   };
@@ -54,13 +56,13 @@ export function ScheduleBuilder({
     <div className="space-y-4">
       {/* Label */}
       <label className="block text-sm font-medium text-text-primary">
-        Časový harmonogram (Optional)
+        {t("timeline.label")}
       </label>
 
       {/* Schedule entries */}
       {value.length === 0 ? (
         <p className="text-sm text-text-secondary italic">
-          No schedule entries yet. Click "Add Month" to start creating your timeline.
+          {t("timeline.noEntries")}
         </p>
       ) : (
         <div className="space-y-4">
@@ -72,7 +74,7 @@ export function ScheduleBuilder({
               {/* Entry header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-text-primary">
-                  {index + 1}. Month
+                  {t("timeline.monthEntry", { index: index + 1 })}
                 </span>
                 <button
                   type="button"
@@ -101,7 +103,7 @@ export function ScheduleBuilder({
                   htmlFor={`month-${index}`}
                   className="block text-xs text-text-secondary mb-1"
                 >
-                  Month
+                  {t("timeline.monthLabel")}
                 </label>
                 <select
                   id={`month-${index}`}
@@ -123,14 +125,14 @@ export function ScheduleBuilder({
                   htmlFor={`tasks-${index}`}
                   className="block text-xs text-text-secondary mb-1"
                 >
-                  Tasks
+                  {t("timeline.tasksLabel")}
                 </label>
                 <textarea
                   id={`tasks-${index}`}
                   value={entry.task}
                   onChange={(e) => handleTasksChange(index, e.target.value)}
                   rows={3}
-                  placeholder="Describe what needs to be done in this month..."
+                  placeholder={t("timeline.tasksPlaceholder")}
                   className="w-full px-3 py-2 bg-background-elevated border border-border rounded-lg text-text-primary focus:outline-none focus:ring-2 focus:ring-interactive-primary/20 focus:border-interactive-primary resize-y"
                 />
               </div>
@@ -157,7 +159,7 @@ export function ScheduleBuilder({
             clipRule="evenodd"
           />
         </svg>
-        Add Month
+        {t("timeline.addMonth")}
       </button>
 
       {/* Error message */}

@@ -2,6 +2,7 @@ import { projectsApiServer } from '@/lib/api/projects';
 import { formatDistanceToNow } from 'date-fns';
 import type { ActivityLogWithUser } from '@sumbi/shared-types';
 import { getTranslations } from 'next-intl/server';
+import { Sparkles, RefreshCw, Upload, Trash2, UserRound, GraduationCap, Users, PenLine, Dot } from 'lucide-react';
 
 interface RecentActivityProps {
   projectId: string;
@@ -23,37 +24,29 @@ export default async function RecentActivity({ projectId }: RecentActivityProps)
     console.error('Failed to fetch activities:', error);
     // Return empty state on error
     return (
-      <div className="bg-background-elevated rounded-lg border border-border p-6">
+      <div className="bg-background-elevated rounded-xl border border-border p-6">
         <h3 className="text-lg font-semibold text-text-primary mb-4">{t('title')}</h3>
         <p className="text-sm text-text-secondary">{t('noActivity')}</p>
       </div>
     );
   }
 
-  // Map action types to emoji icons
+  // Map action types to Lucide icon components for consistent sizing/theming
   const getActivityIcon = (actionType: string) => {
+    const cls = 'w-4 h-4 text-text-secondary';
     switch (actionType) {
-      case 'project_created':
-        return '✨';
-      case 'status_changed':
-        return '🔄';
-      case 'file_uploaded':
-        return '📄';
-      case 'file_deleted':
-        return '🗑️';
+      case 'project_created': return <Sparkles className={cls} />;
+      case 'status_changed': return <RefreshCw className={cls} />;
+      case 'file_uploaded': return <Upload className={cls} />;
+      case 'file_deleted': return <Trash2 className={cls} />;
       case 'student_assigned':
-      case 'student_removed':
-        return '👤';
+      case 'student_removed': return <UserRound className={cls} />;
       case 'supervisor_assigned':
-      case 'supervisor_removed':
-        return '👨‍🏫';
+      case 'supervisor_removed': return <GraduationCap className={cls} />;
       case 'opponent_assigned':
-      case 'opponent_removed':
-        return '👥';
-      case 'project_updated':
-        return '📝';
-      default:
-        return '•';
+      case 'opponent_removed': return <Users className={cls} />;
+      case 'project_updated': return <PenLine className={cls} />;
+      default: return <Dot className={cls} />;
     }
   };
 

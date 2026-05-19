@@ -233,6 +233,79 @@
     "bulkAssignYearSuccess": "Assigned {count} users to year",
     "bulkAssignYearFailed": "Failed to assign year"
   },
+  "createProject": {
+    "title": "Create New Project",
+    "clearDraft": "Clear Draft",
+    "clearDraftConfirm": "Clear saved draft and reset form?",
+    "draftCleared": "Draft cleared",
+    "draftRestored": "Restored unsaved draft from this session",
+    "loading": "Loading...",
+    "step": "Step {current} of {total}",
+    "steps": {
+      "basicInfo": "Basic Information",
+      "topicGoals": "Topic & Goals",
+      "specOutputs": "Specification & Required Outputs",
+      "timeline": "Timeline (Optional)",
+      "team": "Team Selection"
+    },
+    "fields": {
+      "title": "Project Title",
+      "titleHelper": "Enter a descriptive title for your project",
+      "subject": "Subject",
+      "subjectHelper": "Select the course or subject area for this project",
+      "academicYear": "Academic Year",
+      "academicYearHelper": "Select the academic year this project belongs to",
+      "topic": "Project Topic",
+      "topicHelper": "Brief topic or marketing name for your project",
+      "projectGoal": "Project Goal",
+      "projectGoalHelper": "Describe the main objective and what you aim to achieve (minimum 10 characters)",
+      "specification": "Project Specification",
+      "specificationHelper": "Define the detailed scope of work, requirements, and implementation plan (minimum 20 characters)",
+      "requiredOutputs": "Required Outputs",
+      "requiredOutputsHelper": "List all deliverables you must produce (minimum 3 characters each, e.g., 'Working application', 'User documentation')",
+      "outputPlaceholder": "Enter output item",
+      "supervisor": "Supervisor",
+      "supervisorHelper": "Select the teacher who will supervise this project",
+      "supervisorAutoAssigned": "You are automatically assigned as the supervisor",
+      "opponent": "Opponent",
+      "opponentHelper": "Select the teacher who will review this project (optional)",
+      "supervisorOpponentSame": "⚠️ Supervisor and opponent must be different people"
+    },
+    "timeline": {
+      "description": "Create a month-by-month schedule for your project milestones. You can skip this step and add it later if needed.",
+      "label": "Schedule (Optional)",
+      "noEntries": "No schedule entries yet. Click \"Add Month\" to start creating your timeline.",
+      "monthEntry": "{index}. Month",
+      "monthLabel": "Month",
+      "tasksLabel": "Tasks",
+      "tasksPlaceholder": "Describe what needs to be done in this month...",
+      "addMonth": "Add Month"
+    },
+    "buttons": {
+      "previous": "Previous",
+      "next": "Next",
+      "creating": "Creating...",
+      "create": "Create Project"
+    },
+    "validation": {
+      "titleRequired": "Project title is required",
+      "subjectRequired": "Subject selection is required",
+      "yearRequired": "Academic year selection is required",
+      "topicRequired": "Project topic is required",
+      "goalTooShort": "Project goal must be at least 10 characters",
+      "specTooShort": "Project specification must be at least 20 characters",
+      "outputRequired": "At least one required output (minimum 3 characters) is required",
+      "supervisorRequired": "Supervisor selection is required",
+      "opponentSameAsSupervisor": "Opponent must be different from supervisor"
+    },
+    "messages": {
+      "noActiveYear": "No active academic year found. Please contact admin.",
+      "yearLoadFailed": "Failed to load academic years. Please try again.",
+      "noYearSelected": "No academic year selected. Please select a year.",
+      "created": "Project created successfully!",
+      "validationFailed": "Please fill in all required fields ({count} error{plural} found)"
+    }
+  },
   "projects": {
     "supervisor": "Supervisor",
     "opponent": "Opponent",

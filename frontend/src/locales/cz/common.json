@@ -233,6 +233,79 @@
     "bulkAssignYearSuccess": "Přiřazeno {count} uživatelů k ročníku",
     "bulkAssignYearFailed": "Nepodařilo se přiřadit ročník"
   },
+  "createProject": {
+    "title": "Vytvořit Nový Projekt",
+    "clearDraft": "Smazat koncept",
+    "clearDraftConfirm": "Smazat uložený koncept a resetovat formulář?",
+    "draftCleared": "Koncept smazán",
+    "draftRestored": "Obnoven neuložený koncept z této relace",
+    "loading": "Načítání...",
+    "step": "Krok {current} z {total}",
+    "steps": {
+      "basicInfo": "Základní informace",
+      "topicGoals": "Téma a cíle",
+      "specOutputs": "Specifikace a požadované výstupy",
+      "timeline": "Harmonogram (Volitelné)",
+      "team": "Výběr týmu"
+    },
+    "fields": {
+      "title": "Název projektu",
+      "titleHelper": "Zadejte výstižný název projektu",
+      "subject": "Předmět",
+      "subjectHelper": "Vyberte předmět nebo obor pro tento projekt",
+      "academicYear": "Akademický ročník",
+      "academicYearHelper": "Vyberte akademický ročník, do kterého projekt patří",
+      "topic": "Téma projektu",
+      "topicHelper": "Stručné téma nebo marketingový název projektu",
+      "projectGoal": "Cíl projektu",
+      "projectGoalHelper": "Popište hlavní cíl a čeho chcete dosáhnout (minimálně 10 znaků)",
+      "specification": "Specifikace projektu",
+      "specificationHelper": "Definujte podrobný rozsah prací, požadavky a implementační plán (minimálně 20 znaků)",
+      "requiredOutputs": "Požadované výstupy",
+      "requiredOutputsHelper": "Uveďte všechny výstupy, které musíte dodat (minimálně 3 znaky, např. 'Funkční aplikace', 'Uživatelská dokumentace')",
+      "outputPlaceholder": "Zadejte výstupní položku",
+      "supervisor": "Vedoucí",
+      "supervisorHelper": "Vyberte učitele, který bude tento projekt vést",
+      "supervisorAutoAssigned": "Jste automaticky přiřazen jako vedoucí",
+      "opponent": "Oponent",
+      "opponentHelper": "Vyberte učitele, který bude projekt oponovat (volitelné)",
+      "supervisorOpponentSame": "⚠️ Vedoucí a oponent musí být různé osoby"
+    },
+    "timeline": {
+      "description": "Vytvořte harmonogram projektu po měsících. Tento krok můžete přeskočit a přidat harmonogram později.",
+      "label": "Časový harmonogram (Volitelné)",
+      "noEntries": "Zatím žádné záznamy. Klikněte na 'Přidat měsíc' pro vytvoření harmonogramu.",
+      "monthEntry": "{index}. Měsíc",
+      "monthLabel": "Měsíc",
+      "tasksLabel": "Úkoly",
+      "tasksPlaceholder": "Popište, co je třeba udělat v tomto měsíci...",
+      "addMonth": "Přidat měsíc"
+    },
+    "buttons": {
+      "previous": "Předchozí",
+      "next": "Další",
+      "creating": "Vytváření...",
+      "create": "Vytvořit projekt"
+    },
+    "validation": {
+      "titleRequired": "Název projektu je povinný",
+      "subjectRequired": "Výběr předmětu je povinný",
+      "yearRequired": "Výběr akademického ročníku je povinný",
+      "topicRequired": "Téma projektu je povinné",
+      "goalTooShort": "Cíl projektu musí mít alespoň 10 znaků",
+      "specTooShort": "Specifikace projektu musí mít alespoň 20 znaků",
+      "outputRequired": "Je vyžadován alespoň jeden výstup (minimálně 3 znaky)",
+      "supervisorRequired": "Výběr vedoucího je povinný",
+      "opponentSameAsSupervisor": "Oponent musí být jiná osoba než vedoucí"
+    },
+    "messages": {
+      "noActiveYear": "Nebyl nalezen aktivní akademický ročník. Kontaktujte administrátora.",
+      "yearLoadFailed": "Nepodařilo se načíst akademické ročníky. Zkuste to znovu.",
+      "noYearSelected": "Není vybrán žádný akademický ročník. Prosím vyberte ročník.",
+      "created": "Projekt byl úspěšně vytvořen!",
+      "validationFailed": "Vyplňte prosím všechna povinná pole (nalezeno {count} chyb)"
+    }
+  },
   "projects": {
     "supervisor": "Vedoucí",
     "opponent": "Oponent",

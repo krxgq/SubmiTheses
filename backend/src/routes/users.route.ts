@@ -60,8 +60,8 @@ router.post('/', authenticated, sensitiveWriteRateLimiter, requireAdmin, createU
 // Get all users (ADMIN ONLY - matches frontend restriction)
 router.get('/', authenticated, requireAdmin, getAllUsers)
 
-// Get users by role query parameter (?role=teacher)
-router.get('/by-role', authenticated, getUsersByRole)
+// Get users by role query parameter (?role=teacher) — admin only to prevent user enumeration
+router.get('/by-role', authenticated, requireAdmin, getUsersByRole)
 
 // Get all teachers
 router.get('/teachers', authenticated, getTeachers)

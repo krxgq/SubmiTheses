@@ -478,7 +478,7 @@ export async function microsoftCallback(req: Request, res: Response) {
  * Replaces the direct database query in frontend/src/lib/auth.ts:200-204
  */
 async function getUserProfile(userId: string) {
-  const user = await UserService.getUserById(userId);
+  const user = await UserService.getAuthUserProfile(userId);
 
   if (!user) {
     throw new Error("User profile not found");

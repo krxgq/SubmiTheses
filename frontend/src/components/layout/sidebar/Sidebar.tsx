@@ -223,12 +223,12 @@ export default function AppSidebar({ userRole, isPublic = false }: AppSidebarPro
                 key={item.id}
                 onClick={() => handleNavigation(item.path)}
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium
+                  flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium
                   transition-all duration-200 relative
                   ${
                     isActive
-                      ? "bg-primary text-text-inverse shadow-sm"
-                      : "text-text-primary hover:bg-background-hover"
+                      ? "bg-background-elevated text-text-primary border-l-2 border-[#9b2c2c] rounded-l-none pl-[14px] shadow-sm"
+                      : "text-text-secondary hover:bg-background-hover hover:text-text-primary"
                   }
                 `}
               >

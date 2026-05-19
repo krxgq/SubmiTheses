@@ -2,7 +2,9 @@
 
 import { Link } from '@/lib/navigation';
 import { ChevronRight } from 'lucide-react';
-import { Button } from 'flowbite-react';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
+import { Download, Upload } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
@@ -96,12 +98,11 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
     }
   };
 
-  // Status badge styling based on status - using CSS variables
-  const statusStyles: Record<'draft' | 'submitted' | 'locked' | 'public', string> = {
-    'draft': 'bg-interactive-secondary text-text-accent',
-    'submitted': 'bg-background-secondary text-[var(--color-warning)]',
-    'locked': 'bg-background-secondary text-[var(--color-danger)]',
-    'public': 'bg-background-secondary text-[var(--color-success)]',
+  const statusBadgeVariants: Record<string, 'neutral' | 'warning' | 'danger' | 'success'> = {
+    draft: 'neutral',
+    submitted: 'warning',
+    locked: 'danger',
+    public: 'success',
   };
 
   // Format last updated date
@@ -111,55 +112,48 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
 
   return (
     <div className="mb-6">
-      {/* Title row: title/meta on left, action buttons on right */}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="space-y-3">
+      {/* Title row: accent bar anchors the title, action buttons on right */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="border-l-4 border-primary pl-4 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-text-primary">{project.title}</h1>
             {project.status && (
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusStyles[project.status as keyof typeof statusStyles]}`}>
+              <Badge variant={statusBadgeVariants[project.status] ?? 'neutral'} dot>
                 {t(`status.${project.status}`)}
-              </span>
+              </Badge>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-text-secondary">
-            <span className="px-3 py-1 bg-interactive-secondary text-text-accent rounded-md font-medium">
-              {project.subject}
-            </span>
+            <Badge variant="primary">{project.subject}</Badge>
             {lastUpdatedFormatted && (
               <span>{t('lastUpdated')} {lastUpdatedFormatted}</span>
             )}
           </div>
         </div>
 
-        {/* Action buttons — Export PDF for all canInteract, Upload only for assigned student */}
+        {/* Action buttons — compact on mobile, full size on desktop */}
         {canInteract && (
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <Button
+              variant="secondary"
+              size="sm"
               onClick={handleExportPDF}
               disabled={isExportingPDF}
-              className="px-6 py-3 text-base font-medium text-text-primary bg-background-elevated border border-border rounded-lg hover:bg-background-hover flex items-center gap-2 disabled:opacity-50"
+              loading={isExportingPDF}
+              leftIcon={!isExportingPDF ? <Download className="w-4 h-4" /> : undefined}
             >
-              {isExportingPDF ? (
-                <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
-              ) : (
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              )}
               {isExportingPDF ? t('exporting') : t('exportPdf')}
-            </button>
+            </Button>
             {isAssignedStudent && (
-              <button
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleUploadClick}
-                className="px-6 py-3 text-base font-medium text-text-inverse bg-interactive-primary rounded-lg hover:bg-interactive-primary-hover flex items-center gap-2"
+                leftIcon={<Upload className="w-4 h-4" />}
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
                 {t('uploadFile')}
-              </button>
+              </Button>
             )}
           </div>
         )}
@@ -202,11 +196,11 @@ export default function ProjectHeader({ project }: ProjectHeaderProps) {
             </div>
 
             <div className="flex items-center justify-end gap-3 p-4 border-t border-border">
-              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleCloseModal} disabled={isUploading}>
+              <Button variant="secondary" size="md" onClick={handleCloseModal} disabled={isUploading}>
                 {tButtons('cancel')}
               </Button>
-              <Button className="bg-primary hover:bg-primary-hover text-text-inverse px-6 py-2.5 rounded-lg font-medium transition-all" onClick={handleUploadSubmit} disabled={isUploading || uploadedFiles.length === 0}>
-                {isUploading ? t('uploading') : t('uploadButton')}
+              <Button variant="primary" size="md" onClick={handleUploadSubmit} loading={isUploading} disabled={isUploading || uploadedFiles.length === 0}>
+                {t('uploadButton')}
               </Button>
             </div>
           </div>

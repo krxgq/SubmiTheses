@@ -2,6 +2,7 @@ import { projectsApiServer } from "@/lib/api/projects";
 import { ApiError } from "@/lib/api/client";
 import { setRequestLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { Card } from "@/components/ui/Card";
 import ProjectHeader from "@/components/dashboard/projects/ProjectHeader";
 import ProjectOverview from "@/components/dashboard/projects/ProjectOverview";
 import QuickStats from "@/components/dashboard/projects/QuickStats";
@@ -49,29 +50,28 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
         <ProjectHeader project={project} />
 
         {/* Main content grid: 2 columns on desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left column: Main content (2/3 width) */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pb-12">
+          {/* Main content — visually second on mobile, first column on desktop */}
+          <div className="lg:col-span-2 space-y-6 order-2 lg:order-1">
             <ProjectOverview project={project} />
 
-            {/* Main documentation section */}
             {project?.main_documentation && (
-              <div className="bg-background-elevated rounded-lg border border-border p-3 sm:p-6">
+              <Card variant="accent" accentColor="primary" padding="md">
                 <h2 className="text-lg sm:text-xl font-semibold text-text-primary mb-4">
                   {t("mainDocumentation")}
                 </h2>
                 <p className="text-text-primary leading-relaxed whitespace-pre-wrap">
                   {project.main_documentation}
                 </p>
-              </div>
+              </Card>
             )}
 
             {/* Tabs: Attachments, Links, Reviews, Grades */}
             <ProjectTabs projectId={projectid} project={project} />
           </div>
 
-          {/* Right column: Sidebar (1/3 width) */}
-          <div className="space-y-6">
+          {/* Sidebar — visually first on mobile (key stats/actions visible without scrolling), second column on desktop */}
+          <div className="space-y-6 order-1 lg:order-2">
             <QuickStats project={project} />
             <ProjectActions project={project} />
             <RecentActivity projectId={projectid} />

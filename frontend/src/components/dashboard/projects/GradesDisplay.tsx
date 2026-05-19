@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
 import { Award, User, FileDown } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { useTranslations } from 'next-intl';
 import { MarkdownRenderer } from '@/components/ui/MarkdownRenderer';
 import { downloadPosudekPDF } from '@/lib/downloadPosudekPDF';
@@ -102,20 +104,17 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
 
   return (
     <div className="space-y-6">
-      {/* Export button — downloads all reviewers' grades + posudek as one PDF */}
       <div className="flex justify-end">
-        <button
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={handleExportPosudekPDF}
           disabled={isExportingPDF}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-text-primary bg-interactive-secondary rounded-lg hover:bg-interactive-secondary-hover transition-colors disabled:opacity-50"
+          loading={isExportingPDF}
+          leftIcon={!isExportingPDF ? <FileDown className="w-4 h-4" /> : undefined}
         >
-          {isExportingPDF ? (
-            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-          ) : (
-            <FileDown className="w-4 h-4 text-text-accent" />
-          )}
-          <span>{isExportingPDF ? t('exportingPosudek') : t('exportPosudekPdf')}</span>
-        </button>
+          {isExportingPDF ? t('exportingPosudek') : t('exportPosudekPdf')}
+        </Button>
       </div>
 
       {/* Display grades grouped by reviewer */}
@@ -143,7 +142,7 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
         return (
           <div
             key={reviewer.id}
-            className="p-6 bg-background-elevated border border-border rounded-lg"
+            className="p-6 bg-background-elevated border border-border rounded-xl"
           >
             {/* Reviewer header */}
             <div className="flex items-center justify-between mb-4 pb-4 border-b border-border">
@@ -155,7 +154,7 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
                   <h3 className="font-semibold text-text-primary">
                     {reviewer.first_name} {reviewer.last_name}
                   </h3>
-                  <p className="text-sm text-text-secondary">{projectRoleLabel}</p>
+                  <Badge variant={isReviewerSupervisor ? 'primary' : 'accent'} size="sm">{projectRoleLabel}</Badge>
                 </div>
               </div>
               <div className="text-right">
@@ -164,34 +163,38 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
               </div>
             </div>
 
-            {/* Individual scale grades */}
+            {/* Individual scale grades with progress bars */}
             <div className="space-y-3">
               {reviewerGrades.map((grade: any) => {
                 const value = Number(grade.value);
                 const maxVal = Number(grade.scales.maxVal);
-                const percentage = maxVal > 0 ? ((value / maxVal) * 100).toFixed(1) : '0.0';
+                const percentage = maxVal > 0 ? ((value / maxVal) * 100) : 0;
 
                 return (
-                  <div
-                    key={grade.id}
-                    className="flex items-center justify-between p-3 bg-background-secondary rounded-lg"
-                  >
-                    <div className="flex-1">
-                      <div className="font-medium text-text-primary">{grade.scales.name}</div>
-                      {grade.scales.desc && (
-                        <div className="text-sm text-text-secondary mt-1">
-                          {grade.scales.desc}
-                        </div>
-                      )}
-                    </div>
-                    <div className="text-right ml-4">
-                      <div className="text-lg font-semibold text-text-primary">
-                        {value} / {maxVal}
+                  <div key={grade.id} className="p-3 bg-background-secondary rounded-lg">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-text-primary">{grade.scales.name}</div>
+                        {grade.scales.desc && (
+                          <div className="text-sm text-text-secondary mt-0.5">{grade.scales.desc}</div>
+                        )}
                       </div>
-                      <div className="text-sm text-text-secondary">
-                        {percentage}%
+                      <div className="text-right ml-4 flex-shrink-0">
+                        <span className="text-base font-bold text-text-primary font-mono">{value}</span>
+                        <span className="text-sm text-text-secondary"> / {maxVal}</span>
                       </div>
                     </div>
+                    {/* Progress bar */}
+                    <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${Math.min(percentage, 100)}%`,
+                          backgroundColor: percentage >= 80 ? 'var(--color-success)' : percentage >= 50 ? 'var(--color-primary)' : 'var(--color-danger)',
+                        }}
+                      />
+                    </div>
+                    <div className="text-xs text-text-tertiary mt-1">{percentage.toFixed(1)}%</div>
                   </div>
                 );
               })}

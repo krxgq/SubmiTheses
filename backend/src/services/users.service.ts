@@ -3,6 +3,42 @@ import { cache } from '../lib/cache';
 import type { UserWithYear, UserRole, UpdateUserRequest } from '@sumbi/shared-types';
 import type { Prisma } from '@prisma/client';
 
+const safeUserSelect = {
+  id: true,
+  email: true,
+  first_name: true,
+  last_name: true,
+  avatar_url: true,
+  role: true,
+  year_id: true,
+  created_at: true,
+  updated_at: true,
+  class: true,
+  email_verified: true,
+  email_verified_at: true,
+} satisfies Prisma.usersSelect;
+
+const safeUserWithYearSelect = {
+  ...safeUserSelect,
+  years: true,
+} satisfies Prisma.usersSelect;
+
+const authUserProfileSelect = {
+  id: true,
+  email: true,
+  first_name: true,
+  last_name: true,
+  avatar_url: true,
+  role: true,
+  year_id: true,
+  created_at: true,
+  auth_provider: true,
+} satisfies Prisma.usersSelect;
+
+type SafeUser = Prisma.usersGetPayload<{ select: typeof safeUserSelect }>;
+type SafeUserWithYear = Prisma.usersGetPayload<{ select: typeof safeUserWithYearSelect }>;
+type AuthUserProfile = Prisma.usersGetPayload<{ select: typeof authUserProfileSelect }>;
+
 /**
  * User Service - handles operations on users table
  */
@@ -14,13 +50,11 @@ export class UserService {
   static async getAllUsers() {
     const cacheKey = 'users:all';
 
-    const cached = await cache.get(cacheKey);
+    const cached = await cache.get<SafeUserWithYear[]>(cacheKey);
     if (cached) return cached;
 
     const users = await prisma.users.findMany({
-      include: {
-        years: true, // Include related year data
-      },
+      select: safeUserWithYearSelect,
       orderBy: {
         created_at: 'desc',
       },
@@ -35,38 +69,39 @@ export class UserService {
   /**
    * Get user by ID with year information
    */
-  static async getUserById(id: string): Promise<Prisma.usersGetPayload<{ include: { years: true } }> | null> {
+  static async getUserById(id: string): Promise<SafeUserWithYear | null> {
     const cacheKey = `user:${id}`;
 
-    const cached = await cache.get<Prisma.usersGetPayload<{ include: { years: true } }>>(cacheKey);
+    const cached = await cache.get<SafeUserWithYear>(cacheKey);
     if (cached) return cached;
 
     const user = await prisma.users.findUnique({
       where: { id: String(id) },
-      select: {
-        id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        avatar_url: true,
-        role: true,
-        year_id: true,
-        created_at: true,
-        updated_at: true,
-        class: true,
-        password_hash: true,
-        email_verified: true,
-        email_verified_at: true,
-        password_reset_token: true,
-        password_reset_expires: true,
-        last_login: true,
-        auth_provider: true,  // needed by frontend to show correct settings UI
-        microsoft_id: true,   // needed to detect linked Microsoft account
-        years: true,
-      },
+      select: safeUserWithYearSelect,
     });
 
     // Cache for 5 minutes
+    if (user) {
+      await cache.set(cacheKey, user, 300);
+    }
+
+    return user;
+  }
+
+  /**
+   * Get the authenticated user's own profile for auth/session endpoints.
+   */
+  static async getAuthUserProfile(id: string): Promise<AuthUserProfile | null> {
+    const cacheKey = `user:auth-profile:${id}`;
+
+    const cached = await cache.get<AuthUserProfile>(cacheKey);
+    if (cached) return cached;
+
+    const user = await prisma.users.findUnique({
+      where: { id: String(id) },
+      select: authUserProfileSelect,
+    });
+
     if (user) {
       await cache.set(cacheKey, user, 300);
     }
@@ -80,11 +115,12 @@ export class UserService {
   static async getUsersByRole(role: 'admin' | 'teacher' | 'student') {
     const cacheKey = `users:role:${role}`;
 
-    const cached = await cache.get(cacheKey);
+    const cached = await cache.get<SafeUser[]>(cacheKey);
     if (cached) return cached;
 
     const users = await prisma.users.findMany({
       where: { role },
+      select: safeUserSelect,
       orderBy: {
         created_at: 'desc',
       },
@@ -104,7 +140,7 @@ export class UserService {
   static async getTeachers() {
     const cacheKey = 'users:teachers';
 
-    const cached = await cache.get(cacheKey);
+    const cached = await cache.get<SafeUser[]>(cacheKey);
     if (cached) return cached;
 
     const teachers = await prisma.users.findMany({
@@ -113,6 +149,7 @@ export class UserService {
           in: ['teacher', 'admin'],
         },
       },
+      select: safeUserSelect,
       orderBy: [
         { last_name: 'asc' },
         { first_name: 'asc' },
@@ -170,13 +207,12 @@ export class UserService {
         email: data.email,
         class: data.class,
       },
-      include: {
-        years: true,
-      },
+      select: safeUserWithYearSelect,
     });
 
     // Invalidate user-related caches
     await cache.delete(`user:${id}`);
+    await cache.delete(`user:auth-profile:${id}`);
     await cache.delete('users:all');
     await cache.delete(`users:role:${existingUser.role}`);
     // If teacher/admin, also invalidate teachers cache
@@ -199,13 +235,12 @@ export class UserService {
     const user = await prisma.users.update({
       where: { id: String(id) },
       data: { role },
-      include: {
-        years: true,
-      },
+      select: safeUserWithYearSelect,
     });
 
     // Invalidate user-related caches (role change affects multiple caches)
     await cache.delete(`user:${id}`);
+    await cache.delete(`user:auth-profile:${id}`);
     await cache.delete('users:all');
     await cache.delete('users:teachers');
     // Invalidate both old and new role caches
@@ -251,6 +286,7 @@ export class UserService {
 
       // Invalidate user-related caches
       await cache.delete(`user:${id}`);
+      await cache.delete(`user:auth-profile:${id}`);
       await cache.delete('users:all');
       if (existingUser?.role) {
         await cache.delete(`users:role:${existingUser.role}`);

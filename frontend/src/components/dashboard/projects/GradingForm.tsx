@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { projectsApi } from '@/lib/api/projects';
 import { Save, Calculator, UserCheck, CheckCircle, AlertCircle, Clock, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { useTranslations } from 'next-intl';
 import { MarkdownEditor } from '@/components/ui/MarkdownEditor';
 
@@ -225,29 +226,49 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
         </p>
       </div>
 
-      {/* Grading scales */}
-      <div className="space-y-4">
+      {/* Grading scales — visual rubric with live progress bars */}
+      <div className="space-y-3">
         {scaleSet.scale_set_scales.map((scaleItem: any) => {
           const scale = scaleItem.scales;
           const scaleId = String(scaleItem.scale_id);
           const currentValue = gradeValues[scaleId] || 0;
           const maxVal = Number(scale.maxVal);
+          const fillPct = maxVal > 0 ? Math.min((currentValue / maxVal) * 100, 100) : 0;
 
           return (
-            <div key={scaleId} className="p-4 bg-background-elevated border border-border rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex-1">
+            <div key={scaleId} className="p-4 bg-background-elevated border border-border rounded-xl">
+              {/* Header row: name + weight + score readout */}
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex-1 min-w-0">
                   <h4 className="font-semibold text-text-primary">{scale.name}</h4>
                   {scale.desc && (
-                    <p className="text-sm text-text-secondary mt-1">{scale.desc}</p>
+                    <p className="text-sm text-text-secondary mt-0.5">{scale.desc}</p>
                   )}
                 </div>
-                <span className="text-sm text-text-secondary ml-4 whitespace-nowrap">
-                  {t('weight', { weight: scaleItem.weight })}
-                </span>
+                <div className="ml-4 text-right flex-shrink-0">
+                  <span className="text-xl font-bold text-text-primary font-mono">
+                    {currentValue}
+                  </span>
+                  <span className="text-sm text-text-secondary"> / {maxVal}</span>
+                  <div className="text-xs text-text-tertiary mt-0.5">
+                    {t('weight', { weight: scaleItem.weight })}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-4 mt-3">
+              {/* Live progress bar */}
+              <div className="h-1.5 bg-background-secondary rounded-full mb-3 overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-150"
+                  style={{
+                    width: `${fillPct}%`,
+                    backgroundColor: fillPct >= 80 ? 'var(--color-success)' : fillPct >= 50 ? 'var(--color-primary)' : 'var(--color-danger)',
+                  }}
+                />
+              </div>
+
+              {/* Numeric input */}
+              <div className="flex items-center gap-3">
                 <input
                   type="number"
                   min="0"
@@ -256,9 +277,9 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
                   value={currentValue}
                   onChange={(e) => handleGradeChange(scaleId, e.target.value)}
                   disabled={!canGrade}
-                  className="flex-1 px-3 py-2 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-24 px-3 py-1.5 border border-border rounded-lg bg-background focus:ring-2 focus:ring-primary focus:border-transparent text-text-primary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                <span className="text-sm text-text-secondary whitespace-nowrap">
+                <span className="text-xs text-text-tertiary">
                   {t('points', { max: maxVal })}
                 </span>
               </div>
@@ -292,25 +313,17 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
         />
       </div>
 
-      {/* Submit button */}
       <div className="flex justify-end gap-3">
-        <button
+        <Button
+          variant="primary"
+          size="md"
           onClick={handleSubmit}
           disabled={isSaving || !canGrade}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-text-inverse rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          loading={isSaving}
+          leftIcon={!isSaving ? <Save className="w-4 h-4" /> : undefined}
         >
-          {isSaving ? (
-            <>
-              <div className="animate-spin h-4 w-4 border-2 border-text-inverse border-t-transparent rounded-full" />
-              {t('saving')}
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" />
-              {t('saveGrades')}
-            </>
-          )}
-        </button>
+          {t('saveGrades')}
+        </Button>
       </div>
     </div>
   );

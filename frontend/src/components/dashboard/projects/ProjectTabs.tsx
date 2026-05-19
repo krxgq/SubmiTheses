@@ -45,7 +45,7 @@ export default function ProjectTabs({ projectId, project }: ProjectTabsProps) {
   ];
 
   return (
-    <div className="bg-background-elevated rounded-lg border border-border">
+    <div className="bg-background-elevated rounded-xl border border-border">
       {/* Tab Navigation */}
       <div className="border-b border-border overflow-x-auto">
         <nav className="flex gap-4 sm:gap-6 px-3 sm:px-6" aria-label="Tabs">
