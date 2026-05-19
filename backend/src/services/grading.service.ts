@@ -171,14 +171,14 @@ export class GradingService {
     }
 
     // Validate all grade values against their scale's maxVal before writing
-    const scaleIds = grades.map((g) => Number(g.scale_id));
+    const scaleIds = grades.map((g) => g.scale_id);
     const scales = await prisma.scales.findMany({
       where: { id: { in: scaleIds } },
       select: { id: true, maxVal: true, name: true },
     });
     const scaleMap = new Map(scales.map((s) => [s.id, s]));
     for (const { scale_id, value } of grades) {
-      const scale = scaleMap.get(Number(scale_id));
+      const scale = scaleMap.get(scale_id);
       if (!scale) throw new Error(`Scale ${scale_id} not found`);
       if (value < 0) throw new Error(`Grade for "${scale.name}" cannot be negative`);
       if (value > Number(scale.maxVal))
