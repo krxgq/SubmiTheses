@@ -229,7 +229,7 @@ export default function AuthPageClient() {
                                     id="login-email"
                                     type="email"
                                     value={loginForm.email}
-                                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value }))}
+                                    onChange={(e) => setLoginForm(prev => ({ ...prev, email: e.target.value.trim() }))}
                                     error={loginErrors.email}
                                     leftIcon={<Mail className="w-5 h-5" />}
                                     required
