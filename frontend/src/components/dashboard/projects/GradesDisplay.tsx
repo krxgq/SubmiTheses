@@ -126,17 +126,20 @@ export default function GradesDisplay({ projectId, isStudent, project }: GradesD
         const isReviewerSupervisor = reviewer.id === project.supervisor_id;
         const projectRoleLabel = isReviewerSupervisor ? tProjects('supervisor') : tProjects('opponent');
 
-        // Calculate weighted average for this reviewer
-        let totalScore = 0;
-        let totalMaxPoints = 0;
+        // Weighted average matching the grading form formula: Σ(value/maxVal*100*weight) / Σ(weight)
+        let totalWeightedScore = 0;
+        let totalWeight = 0;
 
         reviewerGrades.forEach((grade: any) => {
-          totalScore += Number(grade.value);
-          totalMaxPoints += Number(grade.scales.maxVal);
+          const value = Number(grade.value);
+          const maxVal = Number(grade.scales.maxVal);
+          const weight = grade.weight ?? 1;
+          totalWeightedScore += (value / maxVal) * 100 * weight;
+          totalWeight += weight;
         });
 
-        const averagePercent = totalMaxPoints > 0
-          ? ((totalScore / totalMaxPoints) * 100).toFixed(2)
+        const averagePercent = totalWeight > 0
+          ? (totalWeightedScore / totalWeight).toFixed(2)
           : '0.00';
 
         return (

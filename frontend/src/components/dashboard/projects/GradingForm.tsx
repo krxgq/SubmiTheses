@@ -81,9 +81,16 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
 
   const handleGradeChange = (scaleId: string, value: string) => {
     const numValue = parseFloat(value);
+    if (isNaN(numValue)) {
+      setGradeValues(prev => ({ ...prev, [scaleId]: 0 }));
+      return;
+    }
+    // Clamp to [0, maxVal] so the backend max check is never the first line of defense
+    const scaleItem = scaleSet?.scale_set_scales?.find((s: any) => String(s.scale_id) === scaleId);
+    const maxVal = scaleItem ? Number(scaleItem.scales.maxVal) : Infinity;
     setGradeValues(prev => ({
       ...prev,
-      [scaleId]: isNaN(numValue) ? 0 : numValue
+      [scaleId]: Math.max(0, Math.min(numValue, maxVal))
     }));
   };
 
@@ -112,9 +119,9 @@ export default function GradingForm({ projectId, yearId, projectRole }: GradingF
   const handleSubmit = async () => {
     if (!scaleSet?.scale_set_scales) return;
 
-    // Validate all scales are graded
+    // Validate all scales are graded (0 is a valid grade, only undefined means missing)
     const missingGrades = scaleSet.scale_set_scales.filter(
-      (scaleItem: any) => !gradeValues[String(scaleItem.scale_id)]
+      (scaleItem: any) => gradeValues[String(scaleItem.scale_id)] === undefined
     );
 
     if (missingGrades.length > 0) {

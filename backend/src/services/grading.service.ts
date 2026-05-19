@@ -171,14 +171,15 @@ export class GradingService {
     }
 
     // Validate all grade values against their scale's maxVal before writing
-    const scaleIds = grades.map((g) => g.scale_id);
+    // Normalize to number — frontend may send scale_id as string
+    const scaleIds = grades.map((g) => Number(g.scale_id));
     const scales = await prisma.scales.findMany({
       where: { id: { in: scaleIds } },
       select: { id: true, maxVal: true, name: true },
     });
-    const scaleMap = new Map(scales.map((s) => [s.id, s]));
+    const scaleMap = new Map(scales.map((s) => [Number(s.id), s]));
     for (const { scale_id, value } of grades) {
-      const scale = scaleMap.get(scale_id);
+      const scale = scaleMap.get(Number(scale_id));
       if (!scale) throw new Error(`Scale ${scale_id} not found`);
       if (value < 0) throw new Error(`Grade for "${scale.name}" cannot be negative`);
       if (value > Number(scale.maxVal))
@@ -351,33 +352,65 @@ export class GradingService {
     const cached = await cache.get(cacheKey);
     if (cached) return cached;
 
-    const grades = await prisma.grades.findMany({
-      where: { project_id: Number(projectId) },
-      include: {
-        scales: true,
-        users: {
-          select: {
-            id: true,
-            first_name: true,
-            last_name: true,
-            email: true,
-            role: true,
-          },
-        },
-      },
+    // Fetch project to resolve year + reviewer roles for weight lookup
+    const project = await prisma.projects.findUnique({
+      where: { id: Number(projectId) },
+      select: { year_id: true, supervisor_id: true, opponent_id: true },
     });
 
-    // Fetch all posudeks (written evaluations) for this project
-    const reviews = await prisma.reviews.findMany({
-      where: { project_id: Number(projectId) },
-    });
-    // Build reviewer_id → posudek map for quick lookup
+    const [grades, reviews, scaleSets] = await Promise.all([
+      prisma.grades.findMany({
+        where: { project_id: Number(projectId) },
+        include: {
+          scales: true,
+          users: {
+            select: {
+              id: true,
+              first_name: true,
+              last_name: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+      }),
+      prisma.reviews.findMany({ where: { project_id: Number(projectId) } }),
+      // Fetch scale sets with weights so display can use the same formula as the grading form
+      project?.year_id
+        ? prisma.scale_sets.findMany({
+            where: { year_id: project.year_id },
+            include: { scale_set_scales: { select: { scale_id: true, weight: true } } },
+          })
+        : Promise.resolve([]),
+    ]);
+
+    // Build role → (scale_id → weight) map
+    const roleWeightMap = new Map<string, Map<number, number>>();
+    for (const ss of scaleSets) {
+      if (!ss.project_role) continue;
+      roleWeightMap.set(
+        ss.project_role,
+        new Map(ss.scale_set_scales.map((s) => [Number(s.scale_id), s.weight]))
+      );
+    }
+
+    const getWeight = (reviewerId: string, scaleId: number): number => {
+      const role =
+        reviewerId === project?.supervisor_id
+          ? 'supervisor'
+          : reviewerId === project?.opponent_id
+          ? 'opponent'
+          : null;
+      return role ? (roleWeightMap.get(role)?.get(scaleId) ?? 1) : 1;
+    };
+
+    // Build reviewer_id → posudek map
     const posudekMap: Record<string, string> = {};
     for (const review of reviews) {
       posudekMap[review.reviewer_id] = review.comments;
     }
 
-    // Group grades by reviewer and attach posudek
+    // Group grades by reviewer, attaching weight to each grade for consistent average calculation
     const gradesByReviewer = grades.reduce((acc, grade) => {
       const reviewerId = grade.reviewer_id;
       if (!acc[reviewerId]) {
@@ -387,7 +420,10 @@ export class GradingService {
           posudek: posudekMap[reviewerId] ?? null,
         };
       }
-      acc[reviewerId].grades.push(grade);
+      acc[reviewerId].grades.push({
+        ...grade,
+        weight: getWeight(reviewerId, Number(grade.scale_id)),
+      });
       return acc;
     }, {} as Record<string, any>);
 
