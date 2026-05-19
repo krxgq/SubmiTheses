@@ -1,13 +1,13 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:22 AS builder
 
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 
 # Copy workspace files from root
-COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY frontend/package.json ./frontend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 # Backend package.json needed so pnpm can install prisma + zod-prisma-types
@@ -42,7 +42,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 RUN pnpm build
 
 # Production stage
-FROM node:22-alpine AS runner
+FROM node:22 AS runner
 
 WORKDIR /app
 

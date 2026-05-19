@@ -1,13 +1,13 @@
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:22 AS builder
 
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 
 # Copy workspace files from root (`.npmrc` ensures proper Prisma hoisting)
-COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
@@ -31,15 +31,15 @@ RUN pnpm generate
 RUN pnpm build
 
 # Production stage
-FROM node:22-alpine
+FROM node:22
 
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@10
 
 # Copy workspace files from root
-COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY .npmrc pnpm-workspace.yaml pnpm-lock.yaml package.json ./
 COPY backend/package.json ./backend/
 COPY packages/shared-types/package.json ./packages/shared-types/
 
