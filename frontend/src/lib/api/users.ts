@@ -67,7 +67,7 @@ export const usersApi = {
    * Get all students
    */
   async getStudents(): Promise<User[]> {
-    return this.getByRole('student');
+    return apiRequest<User[]>('/users/students');
   },
 
   /**

@@ -580,7 +580,8 @@ Jako alternativu k přihlášení e-mailem a heslem systém podporuje jednotné 
     [PUT /users/:id], [Úprava profilu], [vlastní],
     [DELETE /users/:id], [Smazání uživatele], [admin],
     [PATCH /users/:id/role], [Změna role uživatele], [admin],
-    [GET /users/by-role?role=], [Filtr uživatelů podle role], [všichni],
+    [GET /users/by-role?role=], [Filtr uživatelů podle role], [admin],
+    [GET /users/students], [Seznam studentů pro přiřazení], [admin, učitel],
     [POST /users/:id/resend-invitation], [Opětovné odeslání pozvánky], [admin],
 
     table.cell(colspan: 3, fill: luma(230))[*Předměty*],

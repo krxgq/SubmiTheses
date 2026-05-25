@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authenticated } from '../middleware/auth'
 import {
   requireAdmin,
+  requireAdminOrTeacher,
   requireUserAccess
 } from '../middleware/authorization.middleware'
 import {
@@ -9,6 +10,7 @@ import {
   getAllUsers,
   getUserById,
   getUsersByRole,
+  getStudents,
   getTeachers,
   updateUser,
   updateUserRole,
@@ -65,6 +67,9 @@ router.get('/by-role', authenticated, requireAdmin, getUsersByRole)
 
 // Get all teachers
 router.get('/teachers', authenticated, getTeachers)
+
+// Get all students (admin/teacher only for project assignment)
+router.get('/students', authenticated, requireAdminOrTeacher, getStudents)
 
 // Bulk assign year to multiple users (admin only) — before /:id to avoid param collision
 router.put('/bulk-assign-year', authenticated, bulkOperationRateLimiter, requireAdmin, validate(bulkAssignYearSchema), bulkAssignYear)

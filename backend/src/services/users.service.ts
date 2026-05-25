@@ -133,6 +133,14 @@ export class UserService {
   }
 
   /**
+   * Get all students.
+   * Used by admins and project supervisors when assigning students to projects.
+   */
+  static async getStudents() {
+    return this.getUsersByRole('student');
+  }
+
+  /**
    * Get all teachers (users with teacher or admin role)
    * Ordered by last name, then first name
    * Heavily cached as used in dropdown selectors throughout the app

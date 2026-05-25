@@ -42,10 +42,10 @@ export function UserSelect({
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
-        // getTeachers includes admin-role users who can also supervise/oppose
+        // getTeachers includes admin-role users who can also supervise/oppose.
         const fetchedUsers = role === 'teacher'
           ? await usersApi.getTeachers()
-          : await usersApi.getByRole(role);
+          : await usersApi.getStudents();
 
         // Filter out excluded user
         const availableUsers = excludeUserId
